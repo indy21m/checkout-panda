@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LayoutDashboard, Plus, TrendingUp, DollarSign, ShoppingCart } from 'lucide-react'
+import { api } from '@/lib/trpc/server'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +14,9 @@ export default async function DashboardPage() {
   if (!userId) {
     redirect('/sign-in')
   }
+
+  // Fetch user's checkouts and products
+  const [checkouts, products] = await Promise.all([api.checkout.list(), api.product.list()])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
@@ -28,19 +33,21 @@ export default async function DashboardPage() {
               <DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$0.00</div>
-              <p className="text-muted-foreground text-xs">+0% from last month</p>
+              <div className="text-2xl font-bold">
+                ${((checkouts.reduce((sum, c) => sum + (c.revenue || 0), 0) || 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-muted-foreground text-xs">Lifetime revenue</p>
             </CardContent>
           </Card>
 
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conversions</CardTitle>
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <ShoppingCart className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-muted-foreground text-xs">0% conversion rate</p>
+              <div className="text-2xl font-bold">{products.length}</div>
+              <p className="text-muted-foreground text-xs">Available products</p>
             </CardContent>
           </Card>
 
@@ -50,19 +57,23 @@ export default async function DashboardPage() {
               <ShoppingCart className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-muted-foreground text-xs">0 published</p>
+              <div className="text-2xl font-bold">{checkouts.length}</div>
+              <p className="text-muted-foreground text-xs">
+                {checkouts.filter((c) => c.status === 'published').length} published
+              </p>
             </CardContent>
           </Card>
 
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Page Views</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
               <LayoutDashboard className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-muted-foreground text-xs">+0% from last month</p>
+              <div className="text-2xl font-bold">
+                {checkouts.reduce((sum, c) => sum + (c.views || 0), 0)}
+              </div>
+              <p className="text-muted-foreground text-xs">Across all checkouts</p>
             </CardContent>
           </Card>
         </div>
@@ -74,13 +85,38 @@ export default async function DashboardPage() {
               <CardDescription>Your most recently created checkout pages</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="py-8 text-center">
-                <p className="mb-4 text-gray-400">No checkouts created yet</p>
-                <Button variant="primary">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Checkout
-                </Button>
-              </div>
+              {checkouts.length === 0 ? (
+                <div className="py-8 text-center">
+                  <p className="mb-4 text-gray-400">No checkouts created yet</p>
+                  <Link href="/products">
+                    <Button variant="primary">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Your First Checkout
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {checkouts.slice(0, 5).map((checkout) => (
+                    <div
+                      key={checkout.id}
+                      className="flex items-center justify-between rounded-lg border border-gray-700 p-3"
+                    >
+                      <div>
+                        <p className="font-medium text-white">{checkout.name}</p>
+                        <p className="text-sm text-gray-400">
+                          {checkout.status === 'published' ? '🟢 Published' : '⚪ Draft'}
+                        </p>
+                      </div>
+                      <Link href={`/builder/${checkout.id}`}>
+                        <Button variant="ghost" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -90,18 +126,24 @@ export default async function DashboardPage() {
               <CardDescription>Common tasks and shortcuts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="secondary" className="w-full justify-start">
-                <Plus className="mr-2 h-4 w-4" />
-                Create New Checkout
-              </Button>
-              <Button variant="secondary" className="w-full justify-start">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Manage Products
-              </Button>
-              <Button variant="secondary" className="w-full justify-start">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                View Analytics
-              </Button>
+              <Link href="/checkouts/new" className="block">
+                <Button variant="secondary" className="w-full justify-start">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New Checkout
+                </Button>
+              </Link>
+              <Link href="/products" className="block">
+                <Button variant="secondary" className="w-full justify-start">
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Manage Products
+                </Button>
+              </Link>
+              <Link href="/analytics" className="block">
+                <Button variant="secondary" className="w-full justify-start">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  View Analytics
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
