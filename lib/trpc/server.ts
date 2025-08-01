@@ -2,7 +2,7 @@ import 'server-only'
 
 import { headers } from 'next/headers'
 import { cache } from 'react'
-import { createCaller } from '@/server/api/root'
+import { appRouter } from '@/server/api/root'
 import { createTRPCContext } from '@/server/api/trpc'
 
 /**
@@ -18,4 +18,15 @@ const createContext = cache(async () => {
   })
 })
 
-export const api = await createCaller(await createContext())
+/**
+ * Create a server-side caller for the tRPC API.
+ * This should be used in all server components and API routes.
+ * The function is cached to ensure consistent context within a request.
+ */
+export const createApi = cache(async () => {
+  const context = await createContext()
+  return appRouter.createCaller(context)
+})
+
+// Legacy export for backwards compatibility - will be removed
+export const api = createApi

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LayoutDashboard, Plus, TrendingUp, DollarSign, ShoppingCart } from 'lucide-react'
-import { api } from '@/lib/trpc/server'
+import { createApi } from '@/lib/trpc/server'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +15,8 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
+  // Create API instance
+  const api = await createApi()
   // Fetch user's checkouts and products
   const [checkouts, products] = await Promise.all([api.checkout.list(), api.product.list()])
 

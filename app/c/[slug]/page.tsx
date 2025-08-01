@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { api } from '@/lib/trpc/server'
+import { createApi } from '@/lib/trpc/server'
 import { CheckoutRenderer } from '@/components/checkout/checkout-renderer'
 
 interface CheckoutPageProps {
@@ -12,6 +12,8 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   try {
     // Await params to get the slug
     const { slug } = await params
+    // Create API instance
+    const api = await createApi()
     // Fetch checkout by slug (this also increments views)
     const checkout = await api.checkout.getBySlug({ slug })
 
@@ -26,6 +28,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
 export async function generateMetadata({ params }: CheckoutPageProps) {
   try {
     const { slug } = await params
+    const api = await createApi()
     const checkout = await api.checkout.getBySlug({ slug })
 
     // Extract SEO data from checkout settings
