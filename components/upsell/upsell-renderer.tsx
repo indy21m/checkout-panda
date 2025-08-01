@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -47,26 +47,14 @@ interface UpsellRendererProps {
 export function UpsellRenderer({ session }: UpsellRendererProps) {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
-
-  if (!session.funnelData) {
-    // Redirect to thank you page if no funnel data
-    router.push(`/thank-you/${session.id}`)
-    return null
-  }
-
   const [timeLeft, setTimeLeft] = useState(
-    session.funnelData.currentOffer.timerMinutes
+    session.funnelData?.currentOffer.timerMinutes
       ? session.funnelData.currentOffer.timerMinutes * 60
       : 0
   )
 
-  const offer = session.funnelData.currentOffer
-  const displayPrice = offer.discountPercent
-    ? Math.round(offer.product.price * (1 - offer.discountPercent / 100))
-    : offer.product.price
-
   // Timer countdown
-  useState(() => {
+  useEffect(() => {
     if (timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft((prev) => {
@@ -80,7 +68,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
       return () => clearInterval(timer)
     }
     return undefined
-  })
+  }, [timeLeft])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -122,7 +110,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
     setIsProcessing(true)
     handleAccept.mutate({
       sessionId: session.id,
-      offerId: offer.id,
+      offerId: session.funnelData?.currentOffer.id || '',
     })
   }
 
@@ -130,9 +118,21 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
     setIsProcessing(true)
     handleDecline.mutate({
       sessionId: session.id,
-      offerId: offer.id,
+      offerId: session.funnelData?.currentOffer.id || '',
     })
   }
+
+  // Early return after all hooks
+  if (!session.funnelData) {
+    // Redirect to thank you page if no funnel data
+    router.push(`/thank-you/${session.id}`)
+    return null
+  }
+
+  const offer = session.funnelData.currentOffer
+  const displayPrice = offer.discountPercent
+    ? Math.round(offer.product.price * (1 - offer.discountPercent / 100))
+    : offer.product.price
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">

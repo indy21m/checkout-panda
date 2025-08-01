@@ -9,7 +9,7 @@ import {
   Star,
   Shield,
   Layers,
-  Image,
+  Image as ImageIcon,
   Zap,
   Gift,
 } from 'lucide-react'
@@ -73,7 +73,7 @@ const blockTypes: BlockType[] = [
     id: 'gallery',
     name: 'Image Gallery',
     description: 'Showcase multiple product images',
-    icon: <Image className="h-5 w-5" aria-hidden="true" />,
+    icon: <ImageIcon className="h-5 w-5" aria-hidden="true" />,
     category: 'content',
     pro: true,
   },
