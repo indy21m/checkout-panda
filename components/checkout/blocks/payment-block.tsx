@@ -17,6 +17,7 @@ import {
 import { loadStripe } from '@stripe/stripe-js'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
+import { useCheckoutStore } from '@/stores/checkout-store'
 
 interface PaymentBlockProps {
   data: {
@@ -192,17 +193,27 @@ function PaymentForm({
 export function PaymentBlock({ data, styles, checkoutId, productId, amount }: PaymentBlockProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { selectedBumps, availableBumps, setMainProduct, total, calculateTotals } = useCheckoutStore()
   
   // Create payment intent
   const createPaymentIntent = api.payment.createIntent.useMutation()
 
+  // Set main product in store
   useEffect(() => {
-    // Create a payment intent when component mounts
+    setMainProduct(productId, amount)
+    calculateTotals()
+  }, [productId, amount, setMainProduct, calculateTotals])
+
+  // Calculate total with bumps
+  const totalAmount = total || amount
+
+  useEffect(() => {
+    // Create a payment intent when component mounts or total changes
     createPaymentIntent.mutate(
       {
         checkoutId,
         productId,
-        amount,
+        amount: totalAmount,
       },
       {
         onSuccess: (data) => {
@@ -216,7 +227,7 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
         },
       }
     )
-  }, [checkoutId, productId, amount])
+  }, [checkoutId, productId, totalAmount])
 
   if (isLoading) {
     return (

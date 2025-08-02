@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, Zap, Percent } from 'lucide-react'
+import { useCheckoutStore } from '@/stores/checkout-store'
 
 interface BumpBlockProps {
   data: {
@@ -26,17 +27,43 @@ interface BumpBlockProps {
     backgroundColor?: string
     className?: string
   }
-  onAccept?: (productId: string) => void
+  bumpId?: string
 }
 
-export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
+export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
+  const { selectedBumps, toggleBump, setAvailableBumps, availableBumps } = useCheckoutStore()
   const [isChecked, setIsChecked] = useState(false)
 
-  const handleCheckChange = (checked: boolean) => {
-    setIsChecked(checked)
-    if (checked && data.productId && onAccept) {
-      onAccept(data.productId)
+  // Generate bump ID if not provided
+  const actualBumpId = bumpId || `bump-${data.productId || Date.now()}`
+
+  // Register this bump in the store
+  useEffect(() => {
+    if (data.productId && data.discountedPrice) {
+      const existingBump = availableBumps.find(b => b.id === actualBumpId)
+      if (!existingBump) {
+        setAvailableBumps([
+          ...availableBumps,
+          {
+            id: actualBumpId,
+            productId: data.productId,
+            name: data.headline,
+            price: data.discountedPrice,
+            originalPrice: data.originalPrice,
+            discountPercent: data.discountPercent,
+          },
+        ])
+      }
     }
+  }, [actualBumpId, data, availableBumps, setAvailableBumps])
+
+  // Sync with store state
+  useEffect(() => {
+    setIsChecked(selectedBumps.includes(actualBumpId))
+  }, [selectedBumps, actualBumpId])
+
+  const handleCheckChange = (checked: boolean) => {
+    toggleBump(actualBumpId)
   }
 
   const showDiscount = data.discountPercent && data.discountPercent > 0
@@ -58,7 +85,10 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
         >
           <Card
             variant="glass"
-            className={cn('relative overflow-hidden p-6', isChecked && 'ring-primary ring-2')}
+            className={cn(
+              'relative overflow-hidden p-6 transition-all',
+              isChecked && 'ring-2 ring-purple-500 shadow-xl shadow-purple-500/20'
+            )}
           >
             {/* Badge */}
             {data.badge && (
@@ -71,8 +101,8 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
 
             {/* Urgency Text */}
             {data.urgencyText && (
-              <div className="mb-4 flex items-center justify-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400">
-                <Zap className="h-4 w-4" />
+              <div className="mb-4 flex items-center justify-center gap-2 text-sm font-medium text-orange-400">
+                <Zap className="h-4 w-4 animate-pulse" />
                 <span>{data.urgencyText}</span>
               </div>
             )}
@@ -81,18 +111,18 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
               {/* Checkbox */}
               <div className="pt-1">
                 <Checkbox
-                  id="order-bump"
+                  id={actualBumpId}
                   checked={isChecked}
                   onCheckedChange={handleCheckChange}
-                  className="h-6 w-6"
+                  className="h-6 w-6 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
                 />
               </div>
 
               {/* Content */}
               <div className="flex-1">
-                <label htmlFor="order-bump" className="cursor-pointer">
+                <label htmlFor={actualBumpId} className="cursor-pointer">
                   {/* Headline */}
-                  <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  <h3 className="mb-2 text-lg font-bold text-white">
                     {data.checkboxText || 'Yes! Add this to my order'}
                   </h3>
 
@@ -112,12 +142,12 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
 
                     {/* Text Content */}
                     <div className="flex-1">
-                      <h4 className="mb-2 font-semibold text-gray-800 dark:text-gray-200">
+                      <h4 className="mb-2 font-semibold text-gray-200">
                         {data.headline}
                       </h4>
 
                       {data.description && (
-                        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mb-3 text-sm text-gray-400">
                           {data.description}
                         </p>
                       )}
@@ -127,8 +157,8 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
                         <ul className="mb-3 space-y-1">
                           {data.features.map((feature, index) => (
                             <li key={index} className="flex items-start gap-2 text-sm">
-                              <Plus className="mt-0.5 h-3 w-3 flex-shrink-0 text-green-500" />
-                              <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                              <Plus className="mt-0.5 h-3 w-3 flex-shrink-0 text-green-400" />
+                              <span className="text-gray-300">{feature}</span>
                             </li>
                           ))}
                         </ul>
@@ -141,14 +171,14 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
                             <span className="text-sm text-gray-500 line-through">
                               ${(data.originalPrice / 100).toFixed(2)}
                             </span>
-                            <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span className="flex items-center gap-1 rounded-full bg-green-900/30 px-2 py-1 text-xs font-semibold text-green-400">
                               <Percent className="h-3 w-3" />
                               {data.discountPercent}% OFF
                             </span>
                           </>
                         )}
                         {displayPrice && (
-                          <span className="text-primary text-xl font-bold">
+                          <span className="text-2xl font-bold text-purple-400">
                             ${(displayPrice / 100).toFixed(2)}
                           </span>
                         )}
@@ -158,6 +188,31 @@ export function BumpBlock({ data, styles, onAccept }: BumpBlockProps) {
                 </label>
               </div>
             </div>
+
+            {/* Selection Animation */}
+            {isChecked && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="absolute -top-2 -right-2"
+              >
+                <div className="rounded-full bg-purple-500 p-2">
+                  <svg
+                    className="h-5 w-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              </motion.div>
+            )}
           </Card>
         </motion.div>
       </div>
