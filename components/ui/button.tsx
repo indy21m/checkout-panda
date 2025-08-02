@@ -3,41 +3,54 @@ import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         primary: [
-          'bg-gradient-to-r from-primary to-secondary text-white',
-          'hover:shadow-lg hover:shadow-[rgba(10,132,255,0.25)]',
-          'focus-visible:ring-primary',
+          'bg-primary text-white',
+          'hover:bg-primary-hover active:bg-primary-pressed',
+          'shadow-sm hover:shadow-md',
         ],
         secondary: [
-          'text-primary bg-[rgba(255,255,255,0.1)] backdrop-blur-md',
-          'border border-[rgba(10,132,255,0.2)]',
-          'hover:border-[rgba(10,132,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]',
-          'dark:bg-[rgba(0,0,0,0.1)] dark:hover:bg-[rgba(0,0,0,0.2)]',
+          'bg-background-secondary text-text',
+          'hover:bg-background-tertiary',
+          'border border-border',
         ],
         ghost: [
-          'text-primary hover:bg-[rgba(10,132,255,0.1)]',
-          'dark:hover:bg-[rgba(10,132,255,0.2)]',
+          'text-text-secondary',
+          'hover:text-text hover:bg-background-secondary',
         ],
         glass: [
-          'bg-[rgba(255,255,255,0.1)] text-white backdrop-blur-xl',
-          'border border-[rgba(255,255,255,0.2)]',
-          'hover:border-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]',
-          'shadow-xl shadow-[rgba(0,0,0,0.1)]',
+          'bg-background-glass backdrop-blur-xl',
+          'border border-border-light',
+          'hover:shadow-lg hover:-translate-y-0.5',
+          'text-text',
         ],
         destructive: [
-          'bg-destructive text-destructive-foreground',
-          'hover:bg-destructive/90',
-          'focus-visible:ring-destructive',
+          'bg-accent text-white',
+          'hover:bg-accent/90',
+          'shadow-sm hover:shadow-md',
+        ],
+        outline: [
+          'border border-border',
+          'bg-background hover:bg-background-secondary',
+          'text-text',
+        ],
+        link: [
+          'text-primary underline-offset-4',
+          'hover:underline',
+        ],
+        gradient: [
+          'bg-gradient-to-r from-primary to-secondary',
+          'text-white',
+          'shadow-sm hover:shadow-md hover:-translate-y-0.5',
         ],
       },
       size: {
         sm: 'h-9 px-3 text-sm',
-        md: 'h-11 px-6 text-base',
-        lg: 'h-14 px-8 text-lg',
+        md: 'h-10 px-4 text-sm',
+        lg: 'h-12 px-6 text-base',
         icon: 'h-10 w-10',
       },
     },

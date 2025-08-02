@@ -5,26 +5,37 @@ import { cn } from '@/lib/utils'
 import { forwardRef } from 'react'
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'glass' | 'gradient'
+  variant?: 'default' | 'glass' | 'gradient' | 'solid'
   interactive?: boolean
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', interactive = false, children, ...props }, ref) => {
     const variants = {
-      default: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800',
+      default: [
+        'bg-background',
+        'border border-border-light',
+        'shadow-sm',
+        interactive && 'hover:shadow-md hover:-translate-y-0.5',
+      ].filter(Boolean).join(' '),
       glass: [
-        'bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(0,0,0,0.1)]',
-        'backdrop-blur-xl backdrop-saturate-150',
-        'border border-[rgba(255,255,255,0.2)] dark:border-[rgba(255,255,255,0.1)]',
-        'shadow-xl shadow-[rgba(0,0,0,0.1)]',
-      ].join(' '),
+        'bg-background-glass backdrop-blur-xl',
+        'border border-border-light',
+        'shadow-lg shadow-black/5',
+        interactive && 'hover:shadow-xl hover:-translate-y-0.5',
+      ].filter(Boolean).join(' '),
       gradient: [
-        'bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)]',
-        'dark:from-[rgba(0,0,0,0.1)] dark:to-[rgba(0,0,0,0.05)]',
-        'backdrop-blur-xl',
-        'border border-[rgba(255,255,255,0.2)] dark:border-[rgba(255,255,255,0.1)]',
-      ].join(' '),
+        'bg-gradient-to-br from-primary/5 to-secondary/5',
+        'border border-primary/10',
+        'shadow-sm',
+        interactive && 'hover:shadow-md hover:-translate-y-0.5',
+      ].filter(Boolean).join(' '),
+      solid: [
+        'bg-background-secondary',
+        'border border-border',
+        'shadow-sm',
+        interactive && 'hover:shadow-md',
+      ].filter(Boolean).join(' '),
     }
 
     if (interactive) {
@@ -32,13 +43,14 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         <motion.div
           ref={ref}
           className={cn(
-            'rounded-xl p-6 transition-all duration-300',
+            'rounded-xl p-6 transition-all duration-200',
             variants[variant],
-            'cursor-pointer hover:scale-[1.02] hover:shadow-2xl',
+            'cursor-pointer',
             className
           )}
-          whileHover={{ y: -4 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
+          {...props}
         >
           {children}
         </motion.div>
@@ -48,7 +60,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn('rounded-xl p-6 transition-all duration-300', variants[variant], className)}
+        className={cn('rounded-xl p-6 transition-all duration-200', variants[variant], className)}
         {...props}
       >
         {children}
@@ -83,7 +95,7 @@ const CardDescription = forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+  <p ref={ref} className={cn('text-sm text-text-secondary', className)} {...props} />
 ))
 
 CardDescription.displayName = 'CardDescription'
