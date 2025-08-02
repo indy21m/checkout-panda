@@ -33,6 +33,8 @@ Copy `.env.example` to `.env.local` and fill in your values:
 cp .env.example .env.local
 ```
 
+**Important**: Since the database is connected via Vercel's native Neon integration, you'll need to copy the `DATABASE_URL` from your Vercel project settings. See [Local Development Setup](./docs/LOCAL_DEVELOPMENT.md) for detailed instructions.
+
 ### Installation
 
 ```bash

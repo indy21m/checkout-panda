@@ -182,7 +182,6 @@ export default function ProductsContent() {
                   id="name"
                   {...createForm.register('name')}
                   placeholder="e.g., Premium Course"
-                  className="form-input"
                 />
                 {createForm.formState.errors.name && (
                   <p className="mt-1 text-sm text-accent">
@@ -196,7 +195,6 @@ export default function ProductsContent() {
                   id="description"
                   {...createForm.register('description')}
                   placeholder="Brief description of your product"
-                  className="form-input"
                 />
               </div>
               <div>
@@ -207,7 +205,7 @@ export default function ProductsContent() {
                     id="price"
                     {...createForm.register('price')}
                     placeholder="99.00"
-                    className="form-input pl-8"
+                    className="pl-8"
                   />
                 </div>
                 {createForm.formState.errors.price && (
@@ -346,7 +344,6 @@ export default function ProductsContent() {
                 id="edit-name"
                 {...editForm.register('name')}
                 placeholder="e.g., Premium Course"
-                className="form-input"
               />
               {editForm.formState.errors.name && (
                 <p className="mt-1 text-sm text-accent">
@@ -360,7 +357,6 @@ export default function ProductsContent() {
                 id="edit-description"
                 {...editForm.register('description')}
                 placeholder="Brief description of your product"
-                className="form-input"
               />
             </div>
             <div>
@@ -371,7 +367,7 @@ export default function ProductsContent() {
                   id="edit-price"
                   {...editForm.register('price')}
                   placeholder="99.00"
-                  className="form-input pl-8"
+                  className="pl-8"
                 />
               </div>
               {editForm.formState.errors.price && (
