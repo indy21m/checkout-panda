@@ -35,7 +35,7 @@ export async function GET() {
         ORDER BY table_name
       `)
       
-      results.database.tables = tables.rows.map((row: { table_name: string }) => row.table_name)
+      results.database.tables = tables.rows.map((row) => (row as { table_name: string }).table_name)
 
       // Get counts for main tables
       try {
