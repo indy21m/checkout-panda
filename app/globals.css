@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import "tailwindcss" layer(base, components, utilities);
+
+/* Content source paths for Tailwind CSS v4 */
+@source "./app/**/*.{js,ts,jsx,tsx,mdx}";
+@source "./components/**/*.{js,ts,jsx,tsx,mdx}";
+@source "./lib/**/*.{js,ts,jsx,tsx,mdx}";
 
 @theme {
   /* Primary Colors */
@@ -83,13 +88,13 @@
 
 @layer base {
   * {
-    border-color: theme(colors.border);
+    border-color: var(--color-border);
   }
   
   body {
-    background-color: theme(colors.background);
-    color: theme(colors.foreground);
-    font-family: theme(fontFamily.sans);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-family-sans);
   }
 }
 
