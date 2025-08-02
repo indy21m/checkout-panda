@@ -18,9 +18,9 @@ export default async function DashboardPage() {
   interface DashboardCheckout {
     id: string
     name: string
-    status: string
-    revenue?: number
-    views?: number
+    status: string | null
+    revenue?: number | null
+    views?: number | null
   }
 
   interface DashboardProduct {
