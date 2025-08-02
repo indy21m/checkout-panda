@@ -19,8 +19,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center border-b border-gray-800 px-6">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <span className="text-2xl">🐼</span>
+            <Link href="/dashboard" className="flex items-center space-x-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="Checkout Panda" className="h-8 w-8 object-contain" />
               <span className="from-primary to-secondary bg-gradient-to-r bg-clip-text text-xl font-bold text-transparent">
                 Checkout Panda
               </span>

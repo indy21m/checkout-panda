@@ -5,6 +5,8 @@ export default function HomePage() {
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
       <div className="container mx-auto px-4 py-16">
         <div className="flex min-h-[80vh] flex-col items-center justify-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Checkout Panda" className="mb-6 h-24 w-24 object-contain md:h-32 md:w-32" />
           <h1 className="mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-5xl font-bold text-transparent md:text-7xl">
             Checkout Panda
           </h1>
