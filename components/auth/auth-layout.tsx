@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 
 interface AuthLayoutProps {
@@ -52,10 +53,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           className="text-center mb-8"
         >
           <Link href="/" className="inline-flex items-center gap-3">
-            <img 
+            <Image 
               src="/logo.png" 
               alt="Checkout Panda" 
               className="h-12 w-12 object-contain"
+              width={48}
+              height={48}
             />
             <span className="text-2xl font-bold">Checkout Panda</span>
           </Link>

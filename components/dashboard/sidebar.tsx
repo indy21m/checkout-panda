@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UserButton } from '@clerk/nextjs'
@@ -116,10 +117,12 @@ export function Sidebar() {
                 collapsed && "lg:justify-center"
               )}
             >
-              <img 
+              <Image 
                 src="/logo.png" 
                 alt="Checkout Panda" 
                 className="h-8 w-8 object-contain flex-shrink-0"
+                width={32}
+                height={32}
               />
               <AnimatePresence>
                 {!collapsed && (
