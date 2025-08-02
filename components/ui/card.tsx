@@ -14,16 +14,16 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     const variants = {
       default: 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800',
       glass: [
-        'bg-(rgba(255,255,255,0.1)) dark:bg-(rgba(0,0,0,0.1))',
+        'bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(0,0,0,0.1)]',
         'backdrop-blur-xl backdrop-saturate-150',
-        'border border-(rgba(255,255,255,0.2)) dark:border-(rgba(255,255,255,0.1))',
-        'shadow-xl shadow-(rgba(0,0,0,0.1))',
+        'border border-[rgba(255,255,255,0.2)] dark:border-[rgba(255,255,255,0.1)]',
+        'shadow-xl shadow-[rgba(0,0,0,0.1)]',
       ].join(' '),
       gradient: [
-        'bg-gradient-to-br from-(rgba(255,255,255,0.1)) to-(rgba(255,255,255,0.05))',
-        'dark:from-(rgba(0,0,0,0.1)) dark:to-(rgba(0,0,0,0.05))',
+        'bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)]',
+        'dark:from-[rgba(0,0,0,0.1)] dark:to-[rgba(0,0,0,0.05)]',
         'backdrop-blur-xl',
-        'border border-(rgba(255,255,255,0.2)) dark:border-(rgba(255,255,255,0.1))',
+        'border border-[rgba(255,255,255,0.2)] dark:border-[rgba(255,255,255,0.1)]',
       ].join(' '),
     }
 

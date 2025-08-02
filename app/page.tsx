@@ -15,13 +15,13 @@ export default function HomePage() {
           <div className="flex gap-4">
             <Link
               href="/sign-in"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-3 text-base font-medium text-white transition-all hover:shadow-lg hover:shadow-(rgba(10,132,255,0.25))"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-3 text-base font-medium text-white transition-all hover:shadow-lg hover:shadow-[rgba(10,132,255,0.25)]"
             >
               Get Started
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center rounded-lg border border-(rgba(10,132,255,0.2)) bg-(rgba(255,255,255,0.1)) px-8 py-3 text-base font-medium text-primary backdrop-blur-md transition-all hover:border-(rgba(10,132,255,0.3)) hover:bg-(rgba(255,255,255,0.2))"
+              className="inline-flex items-center justify-center rounded-lg border border-[rgba(10,132,255,0.2)] bg-[rgba(255,255,255,0.1)] px-8 py-3 text-base font-medium text-primary backdrop-blur-md transition-all hover:border-[rgba(10,132,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]"
             >
               View Demo
             </Link>
