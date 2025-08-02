@@ -46,6 +46,8 @@ interface CheckoutRendererProps {
       }
     }
   }
+  productId?: string
+  amount?: number
 }
 
 // Map block types to components
@@ -60,7 +62,7 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
   bump: BumpBlock,
 }
 
-export function CheckoutRenderer({ checkout }: CheckoutRendererProps) {
+export function CheckoutRenderer({ checkout, productId, amount }: CheckoutRendererProps) {
   const { blocks, settings } = checkout.pageData
 
   // Sort blocks by position
@@ -84,6 +86,11 @@ export function CheckoutRenderer({ checkout }: CheckoutRendererProps) {
             return null
           }
 
+          // Pass additional props to payment block
+          const additionalProps = block.type === 'payment' && productId && amount
+            ? { checkoutId: checkout.id, productId, amount }
+            : {}
+
           return (
             <motion.div
               key={block.id}
@@ -91,7 +98,11 @@ export function CheckoutRenderer({ checkout }: CheckoutRendererProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <BlockComponent data={block.data} styles={block.styles} />
+              <BlockComponent 
+                data={block.data} 
+                styles={block.styles} 
+                {...additionalProps}
+              />
             </motion.div>
           )
         })}
