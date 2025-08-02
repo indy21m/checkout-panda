@@ -1,9 +1,6 @@
 import Link from 'next/link'
 
 export default function HomePage() {
-  const isClerkConfigured = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('your_clerk')
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
       <div className="container mx-auto px-4 py-16">
@@ -16,28 +13,18 @@ export default function HomePage() {
             highly profitable customer journeys
           </p>
           <div className="flex gap-4">
-            {isClerkConfigured ? (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-3 text-base font-medium text-white transition-all hover:shadow-lg hover:shadow-[rgba(10,132,255,0.25)]"
-                >
-                  Get Started
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center rounded-lg border border-[rgba(10,132,255,0.2)] bg-[rgba(255,255,255,0.1)] px-8 py-3 text-base font-medium text-primary backdrop-blur-md transition-all hover:border-[rgba(10,132,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]"
-                >
-                  View Demo
-                </Link>
-              </>
-            ) : (
-              <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-6 py-4 text-yellow-300">
-                <p className="text-sm">
-                  ⚠️ Clerk authentication is not configured. Please add your Clerk keys to the environment variables.
-                </p>
-              </div>
-            )}
+            <Link
+              href="/sign-in"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-8 py-3 text-base font-medium text-white transition-all hover:shadow-lg hover:shadow-[rgba(10,132,255,0.25)]"
+            >
+              Get Started
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-lg border border-[rgba(10,132,255,0.2)] bg-[rgba(255,255,255,0.1)] px-8 py-3 text-base font-medium text-primary backdrop-blur-md transition-all hover:border-[rgba(10,132,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]"
+            >
+              View Demo
+            </Link>
           </div>
         </div>
       </div>

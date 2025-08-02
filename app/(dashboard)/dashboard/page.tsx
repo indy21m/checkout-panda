@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Plus, TrendingUp, DollarSign, ShoppingCart } from 'lucide-react'
+import { LayoutDashboard, Plus, TrendingUp, DollarSign, ShoppingCart, AlertCircle } from 'lucide-react'
 import { createApi } from '@/lib/trpc/server'
 import Link from 'next/link'
 
@@ -15,10 +15,24 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  // Create API instance
-  const api = await createApi()
-  // Fetch user's checkouts and products
-  const [checkouts, products] = await Promise.all([api.checkout.list(), api.product.list()])
+  let checkouts: any[] = []
+  let products: any[] = []
+  let databaseError = false
+
+  try {
+    // Create API instance
+    const api = await createApi()
+    // Fetch user's checkouts and products
+    const results = await Promise.all([
+      api.checkout.list().catch(() => []),
+      api.product.list().catch(() => [])
+    ])
+    checkouts = results[0]
+    products = results[1]
+  } catch (error) {
+    console.error('Dashboard data fetch error:', error)
+    databaseError = true
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
@@ -28,39 +42,54 @@ export default async function DashboardPage() {
           <p className="text-gray-300">Welcome to your Checkout Panda dashboard</p>
         </div>
 
+        {databaseError && (
+          <div className="mb-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-yellow-300 mb-1">Database Connection Required</h3>
+                <p className="text-yellow-300/80 text-sm">
+                  To use the dashboard features, please configure your database connection in the environment variables.
+                  Add your Neon database URL to the <code className="bg-yellow-500/20 px-1 rounded">DATABASE_URL</code> variable.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="text-muted-foreground h-4 w-4" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 ${((checkouts.reduce((sum, c) => sum + (c.revenue || 0), 0) || 0) / 100).toFixed(2)}
               </div>
-              <p className="text-muted-foreground text-xs">Lifetime revenue</p>
+              <p className="text-xs text-muted-foreground">Lifetime revenue</p>
             </CardContent>
           </Card>
 
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <ShoppingCart className="text-muted-foreground h-4 w-4" />
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{products.length}</div>
-              <p className="text-muted-foreground text-xs">Available products</p>
+              <p className="text-xs text-muted-foreground">Available products</p>
             </CardContent>
           </Card>
 
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Checkouts</CardTitle>
-              <ShoppingCart className="text-muted-foreground h-4 w-4" />
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{checkouts.length}</div>
-              <p className="text-muted-foreground text-xs">
+              <p className="text-xs text-muted-foreground">
                 {checkouts.filter((c) => c.status === 'published').length} published
               </p>
             </CardContent>
@@ -69,13 +98,13 @@ export default async function DashboardPage() {
           <Card variant="glass">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <LayoutDashboard className="text-muted-foreground h-4 w-4" />
+              <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {checkouts.reduce((sum, c) => sum + (c.views || 0), 0)}
               </div>
-              <p className="text-muted-foreground text-xs">Across all checkouts</p>
+              <p className="text-xs text-muted-foreground">Across all checkouts</p>
             </CardContent>
           </Card>
         </div>
