@@ -4,13 +4,19 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { forwardRef } from 'react'
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps {
   variant?: 'default' | 'glass' | 'gradient' | 'solid'
   interactive?: boolean
+  className?: string
+  children?: React.ReactNode
+  onClick?: () => void
+  style?: React.CSSProperties
+  id?: string
+  'data-testid'?: string
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'default', interactive = false, children, ...props }, ref) => {
+  ({ className, variant = 'default', interactive = false, children, onClick, style, id, 'data-testid': dataTestId }, ref) => {
     const variants = {
       default: [
         'bg-background',
@@ -50,7 +56,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          {...props}
+          onClick={onClick}
+          style={style}
+          id={id}
+          data-testid={dataTestId}
         >
           {children}
         </motion.div>
@@ -61,7 +70,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn('rounded-xl p-6 transition-all duration-200', variants[variant], className)}
-        {...props}
+        onClick={onClick}
+        style={style}
+        id={id}
+        data-testid={dataTestId}
       >
         {children}
       </div>
