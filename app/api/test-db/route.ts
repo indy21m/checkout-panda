@@ -24,7 +24,7 @@ export async function GET() {
 
     try {
       // Test database connection
-      const testQuery = await db.execute(sql`SELECT 1 as test`)
+      await db.execute(sql`SELECT 1 as test`)
       results.database.connected = true
 
       // Get all tables
@@ -35,32 +35,32 @@ export async function GET() {
         ORDER BY table_name
       `)
       
-      results.database.tables = tables.rows.map((row: any) => row.table_name)
+      results.database.tables = tables.rows.map((row: { table_name: string }) => row.table_name)
 
       // Get counts for main tables
       try {
         const userCount = await db.select({ count: sql<number>`count(*)` }).from(users)
         results.database.counts.users = Number(userCount[0]?.count || 0)
-      } catch (e) {
+      } catch {
         results.database.counts.users = -1
       }
 
       try {
         const productCount = await db.select({ count: sql<number>`count(*)` }).from(products)
         results.database.counts.products = Number(productCount[0]?.count || 0)
-      } catch (e) {
+      } catch {
         results.database.counts.products = -1
       }
 
       try {
         const checkoutCount = await db.select({ count: sql<number>`count(*)` }).from(checkouts)
         results.database.counts.checkouts = Number(checkoutCount[0]?.count || 0)
-      } catch (e) {
+      } catch {
         results.database.counts.checkouts = -1
       }
 
-    } catch (dbError: any) {
-      results.database.error = dbError.message || 'Unknown database error'
+    } catch (dbError) {
+      results.database.error = dbError instanceof Error ? dbError.message : 'Unknown database error'
     }
 
     return NextResponse.json(results, { 
@@ -69,10 +69,10 @@ export async function GET() {
         'Content-Type': 'application/json',
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({
       error: 'Failed to run database test',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 })
   }
