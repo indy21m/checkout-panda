@@ -2,24 +2,21 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Trash2, Eye, EyeOff } from 'lucide-react'
+import { GripVertical, Trash2, Eye, EyeOff, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
+import { useBuilderStore, Block } from '@/stores/builder-store'
 
 interface SortableBlockProps {
-  block: {
-    id: string
-    type: string
-    data: Record<string, unknown>
-  }
+  block: Block
   isSelected: boolean
   onSelect: () => void
-  onDelete: () => void
 }
 
-export function SortableBlock({ block, isSelected, onSelect, onDelete }: SortableBlockProps) {
+export function SortableBlock({ block, isSelected, onSelect }: SortableBlockProps) {
   const [isVisible, setIsVisible] = useState(true)
+  const { deleteBlock, addBlock } = useBuilderStore()
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
@@ -30,16 +27,25 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
     transition,
   }
 
+  const handleDuplicate = () => {
+    const newBlock: Block = {
+      ...block,
+      id: `block-${Date.now()}`,
+      position: block.position + 1,
+    }
+    addBlock(newBlock)
+  }
+
   const getBlockPreview = () => {
     switch (block.type) {
       case 'hero':
         return (
           <div className="rounded-md bg-gradient-to-r from-purple-100 to-pink-100 p-6 dark:from-purple-900/20 dark:to-pink-900/20">
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-white">
               {String(block.data.headline || 'Hero Section')}
             </h3>
             {block.data.subheadline ? (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-sm text-gray-300">
                 {String(block.data.subheadline)}
               </p>
             ) : null}
@@ -48,50 +54,48 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
       case 'product':
         return (
           <div className="rounded-md bg-blue-50 p-6 dark:bg-blue-900/20">
-            <h3 className="text-lg font-semibold">
-              {String(block.data.productName || 'Product Showcase')}
-            </h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              ${(((block.data.price as number) || 0) / 100).toFixed(2)}
+            <h3 className="text-lg font-semibold text-white">Product Showcase</h3>
+            <p className="mt-2 text-sm text-gray-300">
+              Display your product with pricing and features
             </p>
           </div>
         )
       case 'payment':
         return (
           <div className="rounded-md bg-green-50 p-6 dark:bg-green-900/20">
-            <h3 className="text-lg font-semibold">Payment Form</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Collects customer payment information
+            <h3 className="text-lg font-semibold text-white">Payment Form</h3>
+            <p className="mt-2 text-sm text-gray-300">
+              Secure checkout with Stripe integration
             </p>
           </div>
         )
       case 'testimonial':
         return (
           <div className="rounded-md bg-yellow-50 p-6 dark:bg-yellow-900/20">
-            <h3 className="text-lg font-semibold">Testimonials</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {(block.data.testimonials as Array<unknown>)?.length || 0} testimonials
+            <h3 className="text-lg font-semibold text-white">Testimonials</h3>
+            <p className="mt-2 text-sm text-gray-300">
+              Customer reviews and social proof
             </p>
           </div>
         )
       case 'trust':
         return (
           <div className="rounded-md bg-gray-100 p-6 dark:bg-gray-800/50">
-            <h3 className="text-lg font-semibold">Trust Badges</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {(block.data.badges as Array<unknown>)?.length || 0} badges
+            <h3 className="text-lg font-semibold text-white">Trust Badges</h3>
+            <p className="mt-2 text-sm text-gray-300">
+              Security and guarantee badges
             </p>
           </div>
         )
       case 'bump':
         return (
           <div className="rounded-md bg-gradient-to-r from-orange-50 to-pink-50 p-6 dark:from-orange-900/20 dark:to-pink-900/20">
-            <h3 className="text-lg font-semibold">Order Bump</h3>
-            <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h3 className="text-lg font-semibold text-white">Order Bump</h3>
+            <p className="mt-1 text-sm font-medium text-gray-200">
               {String(block.data.headline || 'Special Offer')}
             </p>
             {block.data.discountPercent ? (
-              <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+              <p className="mt-2 text-sm text-green-400">
                 {String(block.data.discountPercent)}% OFF
               </p>
             ) : null}
@@ -100,7 +104,7 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
       default:
         return (
           <div className="rounded-md bg-gray-100 p-6 dark:bg-gray-800/50">
-            <h3 className="text-lg font-semibold capitalize">{block.type} Block</h3>
+            <h3 className="text-lg font-semibold text-white capitalize">{block.type} Block</h3>
           </div>
         )
     }
@@ -111,8 +115,8 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative rounded-lg border-2 bg-white transition-all dark:bg-gray-900',
-        isSelected ? 'border-primary shadow-lg' : 'border-gray-200 dark:border-gray-700',
+        'group relative rounded-lg border-2 bg-gray-900 transition-all',
+        isSelected ? 'border-purple-500 shadow-xl shadow-purple-500/20' : 'border-gray-700',
         isDragging ? 'opacity-50' : '',
         !isVisible && 'opacity-60'
       )}
@@ -120,7 +124,7 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
     >
       {/* Drag Handle */}
       <div
-        className="absolute top-0 bottom-0 left-0 flex w-10 cursor-grab items-center justify-center rounded-l-lg bg-gray-50 dark:bg-gray-800"
+        className="absolute top-0 bottom-0 left-0 flex w-10 cursor-grab items-center justify-center rounded-l-lg bg-gray-800 active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
@@ -149,6 +153,7 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
             setIsVisible(!isVisible)
           }}
           className="h-8 w-8"
+          title={isVisible ? 'Hide block' : 'Show block'}
         >
           {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
         </Button>
@@ -157,9 +162,22 @@ export function SortableBlock({ block, isSelected, onSelect, onDelete }: Sortabl
           size="icon"
           onClick={(e) => {
             e.stopPropagation()
-            onDelete()
+            handleDuplicate()
+          }}
+          className="h-8 w-8"
+          title="Duplicate block"
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation()
+            deleteBlock(block.id)
           }}
           className="h-8 w-8 text-red-500 hover:text-red-600"
+          title="Delete block"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
