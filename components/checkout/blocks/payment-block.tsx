@@ -37,7 +37,9 @@ interface PaymentBlockProps {
 }
 
 // Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null
 
 interface PaymentFormProps {
   data: PaymentBlockProps['data']
@@ -246,6 +248,26 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
             <div className="flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
               <span className="ml-2 text-gray-400">Loading payment form...</span>
+            </div>
+          </Card>
+        </div>
+      </section>
+    )
+  }
+
+  if (!stripePromise) {
+    return (
+      <section
+        className={cn('px-6 py-12', styles?.className)}
+        style={{
+          backgroundColor: styles?.backgroundColor,
+          padding: styles?.padding,
+        }}
+      >
+        <div className="container mx-auto max-w-xl">
+          <Card variant="glass" className="p-8">
+            <div className="text-center text-red-500">
+              Stripe is not configured. Please add your Stripe API keys.
             </div>
           </Card>
         </div>
