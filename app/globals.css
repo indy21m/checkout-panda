@@ -1,7 +1,9 @@
-@import "tailwindcss" layer(base, components, utilities);
+@import "tailwindcss";
 
-/* Link to Tailwind config for v4 */
-@config "../tailwind.config.ts";
+/* Content paths for Tailwind v4 */
+@source "../src/**/*.{js,ts,jsx,tsx,mdx}";
+@source "./**/*.{js,ts,jsx,tsx,mdx}";
+@source "../components/**/*.{js,ts,jsx,tsx,mdx}";
 
 @layer base {
   :root {
@@ -218,4 +220,37 @@
   .animate-gradient-shift {
     animation: gradient-shift 15s ease infinite;
   }
+}
+
+/* Tailwind v4 Theme Extensions */
+@theme {
+  /* Container */
+  --container-center: true;
+  --container-padding: 2rem;
+  
+  /* Screens */
+  --screen-2xl: 1400px;
+  
+  /* Colors mapped to Tailwind utilities */
+  --color-primary: #0a84ff;
+  --color-primary-hover: #0066cc;
+  --color-primary-pressed: #004499;
+  --color-primary-foreground: #ffffff;
+  
+  --color-secondary: #5856d6;
+  --color-secondary-foreground: #ffffff;
+  
+  --color-destructive: #ff3b30;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-accent: #ff3b30;
+  --color-accent-foreground: #ffffff;
+  
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  
+  /* Border radius values */
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+  --radius-sm: var(--radius-sm);
 }
