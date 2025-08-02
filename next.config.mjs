@@ -10,10 +10,6 @@ const nextConfig = {
   },
   // Strict React mode for better development experience
   reactStrictMode: true,
-  // Optimize CSS for production
-  experimental: {
-    optimizeCss: true,
-  },
 }
 
 export default nextConfig
