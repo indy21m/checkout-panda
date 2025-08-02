@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { CreditCard, Lock, Loader2 } from 'lucide-react'
+import { Lock, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import {
   Elements,
@@ -39,12 +39,15 @@ interface PaymentBlockProps {
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
+interface PaymentFormProps {
+  data: PaymentBlockProps['data']
+  checkoutId: string
+}
+
 function PaymentForm({ 
   data, 
-  checkoutId, 
-  productId, 
-  amount 
-}: Omit<PaymentBlockProps, 'styles'>) {
+  checkoutId 
+}: PaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -193,7 +196,7 @@ function PaymentForm({
 export function PaymentBlock({ data, styles, checkoutId, productId, amount }: PaymentBlockProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { selectedBumps, availableBumps, setMainProduct, total, calculateTotals } = useCheckoutStore()
+  const { setMainProduct, total, calculateTotals } = useCheckoutStore()
   
   // Create payment intent
   const createPaymentIntent = api.payment.createIntent.useMutation()
@@ -227,7 +230,7 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
         },
       }
     )
-  }, [checkoutId, productId, totalAmount])
+  }, [checkoutId, productId, totalAmount, createPaymentIntent])
 
   if (isLoading) {
     return (
@@ -301,7 +304,6 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
                   variables: {
                     colorPrimary: '#0a84ff',
                     colorBackground: '#1f2937',
-                    colorSurface: '#374151',
                     colorText: '#f3f4f6',
                     colorDanger: '#ef4444',
                     fontFamily: 'system-ui, sans-serif',
@@ -313,8 +315,6 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
               <PaymentForm 
                 data={data} 
                 checkoutId={checkoutId}
-                productId={productId}
-                amount={amount}
               />
             </Elements>
           </Card>

@@ -68,7 +68,16 @@ export const useBuilderStore = create<BuilderState>()(
       set((state) => {
         const blockIndex = state.blocks.findIndex((b) => b.id === blockId)
         if (blockIndex !== -1) {
-          state.blocks[blockIndex] = { ...state.blocks[blockIndex], ...updates }
+          const currentBlock = state.blocks[blockIndex]
+          if (!currentBlock) return
+          
+          state.blocks[blockIndex] = {
+            id: currentBlock.id,
+            type: currentBlock.type,
+            data: updates.data !== undefined ? updates.data : currentBlock.data,
+            styles: updates.styles !== undefined ? updates.styles : currentBlock.styles,
+            position: updates.position !== undefined ? updates.position : currentBlock.position,
+          }
           state.hasUnsavedChanges = true
         }
       }),
@@ -89,14 +98,16 @@ export const useBuilderStore = create<BuilderState>()(
 
         if (activeIndex !== -1 && overIndex !== -1) {
           const [movedBlock] = state.blocks.splice(activeIndex, 1)
-          state.blocks.splice(overIndex, 0, movedBlock)
-          
-          // Update positions
-          state.blocks.forEach((block, index) => {
-            block.position = index
-          })
-          
-          state.hasUnsavedChanges = true
+          if (movedBlock) {
+            state.blocks.splice(overIndex, 0, movedBlock)
+            
+            // Update positions
+            state.blocks.forEach((block, index) => {
+              block.position = index
+            })
+            
+            state.hasUnsavedChanges = true
+          }
         }
       }),
 

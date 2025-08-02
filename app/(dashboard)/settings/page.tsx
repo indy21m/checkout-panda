@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Settings, CreditCard, Bell, Shield, Webhook, Mail } from 'lucide-react'
+import { CreditCard, Bell, Shield, Webhook, Mail } from 'lucide-react'
 
 export default async function SettingsPage() {
   const { userId } = await auth()

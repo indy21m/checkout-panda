@@ -5,13 +5,14 @@ import { useParams } from 'next/navigation'
 import { api } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Save, Eye, Rocket, ArrowLeft, Palette, Code, Plus, Loader2 } from 'lucide-react'
+import { Save, Eye, Rocket, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { BuilderCanvas } from '@/components/builder/builder-canvas'
 import { BlockLibrary } from '@/components/builder/block-library'
 import { PropertiesPanel } from '@/components/builder/properties-panel'
 import { useBuilderStore } from '@/stores/builder-store'
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 import debounce from 'lodash.debounce'
 
 export default function BuilderPage() {
@@ -21,13 +22,9 @@ export default function BuilderPage() {
   // Zustand store
   const {
     blocks,
-    selectedBlockId,
     canvasSettings,
     hasUnsavedChanges,
     setBlocks,
-    selectBlock,
-    updateBlock,
-    deleteBlock,
     reorderBlocks,
     updateCanvasSettings,
     setHasUnsavedChanges,
@@ -56,30 +53,14 @@ export default function BuilderPage() {
   useEffect(() => {
     if (checkout?.pageData) {
       setBlocks(checkout.pageData.blocks || [])
-      updateCanvasSettings(checkout.pageData.settings || {})
+      const settings = checkout.pageData.settings || {}
+      updateCanvasSettings({
+        ...settings,
+        theme: (settings.theme as 'light' | 'dark' | 'auto') || 'dark'
+      })
       setHasUnsavedChanges(false)
     }
   }, [checkout, setBlocks, updateCanvasSettings, setHasUnsavedChanges])
-
-  // Auto-save functionality
-  const debouncedSave = useMemo(
-    () =>
-      debounce(() => {
-        if (hasUnsavedChanges && !saveCheckout.isPending) {
-          handleSave(false)
-        }
-      }, 5000),
-    [hasUnsavedChanges, saveCheckout.isPending]
-  )
-
-  useEffect(() => {
-    if (hasUnsavedChanges) {
-      debouncedSave()
-    }
-    return () => {
-      debouncedSave.cancel()
-    }
-  }, [hasUnsavedChanges, debouncedSave])
 
   const handleSave = useCallback(
     (publish = false) => {
@@ -99,6 +80,26 @@ export default function BuilderPage() {
     },
     [blocks, canvasSettings, checkoutId, saveCheckout]
   )
+
+  // Auto-save functionality
+  const debouncedSave = useMemo(
+    () =>
+      debounce(() => {
+        if (hasUnsavedChanges && !saveCheckout.isPending) {
+          handleSave(false)
+        }
+      }, 5000),
+    [hasUnsavedChanges, saveCheckout.isPending, handleSave]
+  )
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      debouncedSave()
+    }
+    return () => {
+      debouncedSave.cancel()
+    }
+  }, [hasUnsavedChanges, debouncedSave])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event

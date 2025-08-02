@@ -69,7 +69,7 @@ export default async function NewCheckoutPage() {
                     className="bg-gray-800/50"
                   />
                   <p className="text-xs text-gray-400">
-                    This is for your reference only - customers won't see this
+                    This is for your reference only - customers won&apos;t see this
                   </p>
                 </div>
 

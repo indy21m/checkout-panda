@@ -6,7 +6,8 @@ import { GripVertical, Trash2, Eye, EyeOff, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
-import { useBuilderStore, Block } from '@/stores/builder-store'
+import { useBuilderStore } from '@/stores/builder-store'
+import type { Block } from '@/stores/builder-store'
 
 interface SortableBlockProps {
   block: Block

@@ -100,6 +100,10 @@ export class StripeService {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       })
       .returning()
+    
+    if (!session) {
+      throw new Error('Failed to create checkout session')
+    }
 
     // Create Stripe checkout session
     const stripeSession = await stripe.checkout.sessions.create({

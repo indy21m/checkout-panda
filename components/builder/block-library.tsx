@@ -12,7 +12,6 @@ import {
   Image as ImageIcon,
   Zap,
   Gift,
-  Plus,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'

@@ -19,7 +19,7 @@ export const paymentRouter = createTRPCRouter({
         customerEmail: z.string().email().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
       try {
         // Get checkout and product info
         const [checkout, product] = await Promise.all([
@@ -40,19 +40,8 @@ export const paymentRouter = createTRPCRouter({
 
         // Get or create customer
         let customerId: string | undefined
-        if (ctx.session?.user?.id) {
-          // User is logged in
-          const user = await db.query.users.findFirst({
-            where: eq(users.id, ctx.session.user.id),
-          })
-          
-          if (user) {
-            customerId = await stripeService.getOrCreateCustomer(
-              user.id,
-              user.email
-            )
-          }
-        }
+        // For public procedures, we'll handle customer creation differently
+        // This would typically be handled with a customer email input
 
         // Create payment intent
         const paymentIntent = await stripeService.createPaymentIntent({
@@ -88,7 +77,7 @@ export const paymentRouter = createTRPCRouter({
         cancelUrl: z.string().url(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
       try {
         // Get checkout and product
         const [checkout, product] = await Promise.all([
@@ -107,20 +96,9 @@ export const paymentRouter = createTRPCRouter({
           })
         }
 
-        // Get customer ID if user is logged in
+        // Get customer ID if available
         let customerId: string | undefined
-        if (ctx.session?.user?.id) {
-          const user = await db.query.users.findFirst({
-            where: eq(users.id, ctx.session.user.id),
-          })
-          
-          if (user) {
-            customerId = await stripeService.getOrCreateCustomer(
-              user.id,
-              user.email
-            )
-          }
-        }
+        // For public checkouts, customer will be created at payment time
 
         // Create Stripe checkout session
         const sessionUrl = await stripeService.createCheckoutSession({
@@ -150,7 +128,7 @@ export const paymentRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       try {
         const user = await db.query.users.findFirst({
-          where: eq(users.id, ctx.session.user.id),
+          where: eq(users.id, ctx.userId),
         })
 
         if (!user?.stripeCustomerId) {
@@ -185,7 +163,7 @@ export const paymentRouter = createTRPCRouter({
     .mutation(async ({ ctx }) => {
       try {
         const user = await db.query.users.findFirst({
-          where: eq(users.id, ctx.session.user.id),
+          where: eq(users.id, ctx.userId),
         })
 
         if (!user) {

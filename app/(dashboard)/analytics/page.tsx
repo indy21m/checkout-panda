@@ -150,7 +150,7 @@ export default async function AnalyticsPage() {
               Advanced Analytics Coming Soon
             </h3>
             <p className="text-gray-400 max-w-md mx-auto">
-              We're building powerful analytics tools including cohort analysis, A/B test results,
+              We&apos;re building powerful analytics tools including cohort analysis, A/B test results,
               and detailed customer journey tracking.
             </p>
           </CardContent>

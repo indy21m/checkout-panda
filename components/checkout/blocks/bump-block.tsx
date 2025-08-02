@@ -62,7 +62,7 @@ export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
     setIsChecked(selectedBumps.includes(actualBumpId))
   }, [selectedBumps, actualBumpId])
 
-  const handleCheckChange = (checked: boolean) => {
+  const handleCheckChange = (_checked: boolean) => {
     toggleBump(actualBumpId)
   }
 
