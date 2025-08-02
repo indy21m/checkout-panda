@@ -15,8 +15,22 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  let checkouts: any[] = []
-  let products: any[] = []
+  interface DashboardCheckout {
+    id: string
+    name: string
+    status: string
+    revenue?: number
+    views?: number
+  }
+
+  interface DashboardProduct {
+    id: string
+    name: string
+    price: number
+  }
+
+  let checkouts: DashboardCheckout[] = []
+  let products: DashboardProduct[] = []
   let databaseError = false
 
   try {
