@@ -1,10 +1,7 @@
 'use client'
 
 import { useDroppable } from '@dnd-kit/core'
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableBlock } from './sortable-block'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,7 +10,7 @@ import { cn } from '@/lib/utils'
 
 export function BuilderCanvas() {
   const { blocks, selectedBlockId, selectBlock, addBlock } = useBuilderStore()
-  
+
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable',
     data: {
@@ -43,8 +40,8 @@ export function BuilderCanvas() {
       <div
         ref={setNodeRef}
         className={cn(
-          "mx-auto max-w-4xl min-h-full p-8 transition-colors",
-          isOver && "bg-purple-900/10"
+          'mx-auto min-h-full max-w-4xl p-8 transition-colors',
+          isOver && 'bg-purple-900/10'
         )}
       >
         {blocks.length === 0 ? (
@@ -54,7 +51,7 @@ export function BuilderCanvas() {
               <h3 className="mb-2 text-2xl font-semibold text-white">
                 Start Building Your Checkout
               </h3>
-              <p className="mb-6 text-gray-400 max-w-md mx-auto">
+              <p className="mx-auto mb-6 max-w-md text-gray-400">
                 Drag blocks from the left panel or click the button below to get started
               </p>
               <Button onClick={handleAddFirstBlock} variant="primary" size="lg">
@@ -64,10 +61,7 @@ export function BuilderCanvas() {
             </div>
           </div>
         ) : (
-          <SortableContext 
-            items={blocks.map((b) => b.id)} 
-            strategy={verticalListSortingStrategy}
-          >
+          <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-4">
               {blocks.map((block) => (
                 <SortableBlock
@@ -77,7 +71,7 @@ export function BuilderCanvas() {
                   onSelect={() => selectBlock(block.id)}
                 />
               ))}
-              
+
               {/* Add block button at the bottom */}
               <div className="pt-8 pb-16 text-center">
                 <Button

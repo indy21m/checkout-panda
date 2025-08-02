@@ -8,15 +8,13 @@ export default function BuilderPage() {
   // Redirect to checkouts page
   // Users need to select a checkout to edit
   redirect('/checkouts')
-  
+
   // This code won't run due to redirect, but keeping for type safety
   return (
     <div className="container mx-auto max-w-6xl px-6 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Checkout Builder</h1>
-        <p className="mt-2 text-gray-400">
-          Select a checkout to customize its design and content
-        </p>
+        <p className="mt-2 text-gray-400">Select a checkout to customize its design and content</p>
       </div>
 
       <Card variant="glass" className="mx-auto max-w-2xl">

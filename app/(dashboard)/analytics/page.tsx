@@ -41,7 +41,7 @@ export default async function AnalyticsPage() {
               <div className="text-2xl font-bold text-white">
                 ${(stats.totalRevenue / 100).toFixed(2)}
               </div>
-              <p className="text-xs text-gray-400 mt-1">All time revenue</p>
+              <p className="mt-1 text-xs text-gray-400">All time revenue</p>
             </CardContent>
           </Card>
 
@@ -52,7 +52,7 @@ export default async function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stats.conversionRate}%</div>
-              <p className="text-xs text-gray-400 mt-1">Visitors to customers</p>
+              <p className="mt-1 text-xs text-gray-400">Visitors to customers</p>
             </CardContent>
           </Card>
 
@@ -65,7 +65,7 @@ export default async function AnalyticsPage() {
               <div className="text-2xl font-bold text-white">
                 ${(stats.avgOrderValue / 100).toFixed(2)}
               </div>
-              <p className="text-xs text-gray-400 mt-1">Per transaction</p>
+              <p className="mt-1 text-xs text-gray-400">Per transaction</p>
             </CardContent>
           </Card>
 
@@ -76,7 +76,7 @@ export default async function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stats.pageViews}</div>
-              <p className="text-xs text-gray-400 mt-1">Total checkout views</p>
+              <p className="mt-1 text-xs text-gray-400">Total checkout views</p>
             </CardContent>
           </Card>
         </div>
@@ -89,11 +89,11 @@ export default async function AnalyticsPage() {
               <CardDescription>Your revenue trends for the last 30 days</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 flex items-center justify-center text-gray-400">
+              <div className="flex h-64 items-center justify-center text-gray-400">
                 <div className="text-center">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <TrendingUp className="mx-auto mb-2 h-12 w-12 opacity-50" />
                   <p>Revenue chart will be displayed here</p>
-                  <p className="text-sm mt-1">Connect your payment processor to see data</p>
+                  <p className="mt-1 text-sm">Connect your payment processor to see data</p>
                 </div>
               </div>
             </CardContent>
@@ -107,13 +107,13 @@ export default async function AnalyticsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between mb-1">
+                  <div className="mb-1 flex justify-between">
                     <span className="text-sm text-gray-300">Order Bumps</span>
                     <span className="text-sm font-medium text-white">
                       {stats.bumpConversionRate}%
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-700">
                     <div
                       className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
                       style={{ width: `${stats.bumpConversionRate}%` }}
@@ -121,13 +121,13 @@ export default async function AnalyticsPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="flex justify-between mb-1">
+                  <div className="mb-1 flex justify-between">
                     <span className="text-sm text-gray-300">Upsells</span>
                     <span className="text-sm font-medium text-white">
                       {stats.upsellConversionRate}%
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-700">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-cyan-500"
                       style={{ width: `${stats.upsellConversionRate}%` }}
@@ -135,9 +135,7 @@ export default async function AnalyticsPage() {
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-4">
-                Track how your offers are performing
-              </p>
+              <p className="mt-4 text-xs text-gray-400">Track how your offers are performing</p>
             </CardContent>
           </Card>
         </div>
@@ -145,13 +143,13 @@ export default async function AnalyticsPage() {
         {/* Coming Soon Notice */}
         <Card variant="glass" className="mt-6">
           <CardContent className="py-8 text-center">
-            <TrendingUp className="h-12 w-12 mx-auto mb-4 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <TrendingUp className="mx-auto mb-4 h-12 w-12 text-purple-400" />
+            <h3 className="mb-2 text-lg font-semibold text-white">
               Advanced Analytics Coming Soon
             </h3>
-            <p className="text-gray-400 max-w-md mx-auto">
-              We&apos;re building powerful analytics tools including cohort analysis, A/B test results,
-              and detailed customer journey tracking.
+            <p className="mx-auto max-w-md text-gray-400">
+              We&apos;re building powerful analytics tools including cohort analysis, A/B test
+              results, and detailed customer journey tracking.
             </p>
           </CardContent>
         </Card>

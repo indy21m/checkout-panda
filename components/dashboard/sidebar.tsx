@@ -6,14 +6,14 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UserButton } from '@clerk/nextjs'
-import { 
-  Home, 
-  ShoppingCart, 
-  Package, 
-  LayoutDashboard, 
-  TrendingUp, 
+import {
+  Home,
+  ShoppingCart,
+  Package,
+  LayoutDashboard,
+  TrendingUp,
   Settings,
-  ChevronLeft
+  ChevronLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -86,7 +86,7 @@ export function Sidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setCollapsed(true)}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -100,27 +100,27 @@ export function Sidebar() {
         }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         className={cn(
-          'fixed left-0 top-0 h-screen z-50',
+          'fixed top-0 left-0 z-50 h-screen',
           'bg-background-glass backdrop-blur-xl',
-          'border-r border-border-light',
+          'border-border-light border-r',
           'shadow-xl shadow-black/5',
           'lg:relative lg:z-auto'
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between border-b border-border-light px-4">
-            <Link 
-              href="/dashboard" 
+          <div className="border-border-light flex h-16 items-center justify-between border-b px-4">
+            <Link
+              href="/dashboard"
               className={cn(
-                "flex items-center gap-3 transition-opacity",
-                collapsed && "lg:justify-center"
+                'flex items-center gap-3 transition-opacity',
+                collapsed && 'lg:justify-center'
               )}
             >
-              <Image 
-                src="/logo.png" 
-                alt="Checkout Panda" 
-                className="h-8 w-8 object-contain flex-shrink-0"
+              <Image
+                src="/logo.png"
+                alt="Checkout Panda"
+                className="h-8 w-8 flex-shrink-0 object-contain"
                 width={32}
                 height={32}
               />
@@ -130,7 +130,7 @@ export function Sidebar() {
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
-                    className="font-semibold text-lg whitespace-nowrap overflow-hidden"
+                    className="overflow-hidden text-lg font-semibold whitespace-nowrap"
                   >
                     Checkout Panda
                   </motion.span>
@@ -143,17 +143,14 @@ export function Sidebar() {
               variant="ghost"
               size="icon"
               onClick={() => setCollapsed(!collapsed)}
-              className={cn(
-                "lg:flex hidden",
-                collapsed && "lg:hidden"
-              )}
+              className={cn('hidden lg:flex', collapsed && 'lg:hidden')}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+          <nav className="flex-1 space-y-1 overflow-y-auto p-2">
             {navItems.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
@@ -168,7 +165,7 @@ export function Sidebar() {
                   >
                     <div
                       className={cn(
-                        'relative flex items-center gap-3 px-3 py-2.5 rounded-lg',
+                        'relative flex items-center gap-3 rounded-lg px-3 py-2.5',
                         'transition-all duration-200',
                         'group cursor-pointer',
                         isActive
@@ -181,12 +178,12 @@ export function Sidebar() {
                       <div
                         className={cn(
                           'relative flex items-center justify-center',
-                          'w-8 h-8 rounded-lg transition-all duration-200',
+                          'h-8 w-8 rounded-lg transition-all duration-200',
                           isActive
-                            ? 'bg-gradient-to-br from-primary to-primary/80 text-white shadow-md'
+                            ? 'from-primary to-primary/80 bg-gradient-to-br text-white shadow-md'
                             : hoveredItem === item.href
-                            ? 'bg-gradient-to-br from-primary/20 to-primary/10'
-                            : 'bg-background-tertiary'
+                              ? 'from-primary/20 to-primary/10 bg-gradient-to-br'
+                              : 'bg-background-tertiary'
                         )}
                       >
                         <Icon className="h-4 w-4" />
@@ -208,14 +205,14 @@ export function Sidebar() {
 
                       {/* Badge */}
                       {item.badge && !collapsed && (
-                        <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        <span className="bg-primary/10 text-primary ml-auto rounded-full px-2 py-0.5 text-xs">
                           {item.badge}
                         </span>
                       )}
 
                       {/* Tooltip for collapsed state */}
                       {collapsed && (
-                        <div className="absolute left-full ml-2 px-2 py-1 bg-background-secondary text-text text-sm rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg">
+                        <div className="bg-background-secondary text-text pointer-events-none absolute left-full ml-2 rounded-md px-2 py-1 text-sm whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                           {item.title}
                         </div>
                       )}
@@ -227,11 +224,8 @@ export function Sidebar() {
           </nav>
 
           {/* User Section */}
-          <div className="border-t border-border-light p-4">
-            <div className={cn(
-              "flex items-center gap-3",
-              collapsed && "justify-center"
-            )}>
+          <div className="border-border-light border-t p-4">
+            <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
               <UserButton afterSignOutUrl="/" />
               <AnimatePresence>
                 {!collapsed && (
@@ -242,7 +236,7 @@ export function Sidebar() {
                     className="flex flex-col"
                   >
                     <span className="text-sm font-medium">My Account</span>
-                    <span className="text-xs text-text-tertiary">Cmd+\ to collapse</span>
+                    <span className="text-text-tertiary text-xs">Cmd+\ to collapse</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -256,7 +250,7 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(false)}
-            className="absolute -right-3 top-8 bg-background border border-border-light shadow-sm rounded-full w-6 h-6 p-0 flex items-center justify-center"
+            className="bg-background border-border-light absolute top-8 -right-3 flex h-6 w-6 items-center justify-center rounded-full border p-0 shadow-sm"
           >
             <ChevronLeft className="h-3 w-3 rotate-180" />
           </Button>

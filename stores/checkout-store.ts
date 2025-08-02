@@ -14,19 +14,19 @@ interface CheckoutState {
   // Main product
   mainProductId: string | null
   mainProductPrice: number
-  
+
   // Order bumps
   selectedBumps: string[] // Array of bump IDs
   availableBumps: OrderBump[]
-  
+
   // Customer info
   customerEmail: string
   customerName: string
-  
+
   // Cart totals
   subtotal: number
   total: number
-  
+
   // Actions
   setMainProduct: (productId: string, price: number) => void
   toggleBump: (bumpId: string) => void

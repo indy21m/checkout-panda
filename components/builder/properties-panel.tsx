@@ -18,14 +18,14 @@ import { useBuilderStore } from '@/stores/builder-store'
 
 export function PropertiesPanel() {
   const { blocks, selectedBlockId, selectBlock, updateBlock } = useBuilderStore()
-  
+
   const block = blocks.find((b) => b.id === selectedBlockId)
 
   if (!block) {
     return (
       <div className="h-full bg-gray-900 p-6">
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <Settings className="h-12 w-12 text-gray-600 mb-4" />
+        <div className="flex h-full flex-col items-center justify-center text-center">
+          <Settings className="mb-4 h-12 w-12 text-gray-600" />
           <p className="text-gray-400">Select a block to edit its properties</p>
         </div>
       </div>
@@ -46,7 +46,9 @@ export function PropertiesPanel() {
         return (
           <>
             <div>
-              <Label htmlFor="headline" className="text-white">Headline</Label>
+              <Label htmlFor="headline" className="text-white">
+                Headline
+              </Label>
               <Input
                 id="headline"
                 value={(block.data.headline as string) || ''}
@@ -55,7 +57,9 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="subheadline" className="text-white">Subheadline</Label>
+              <Label htmlFor="subheadline" className="text-white">
+                Subheadline
+              </Label>
               <Textarea
                 id="subheadline"
                 value={(block.data.subheadline as string) || ''}
@@ -65,7 +69,9 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="backgroundType" className="text-white">Background Type</Label>
+              <Label htmlFor="backgroundType" className="text-white">
+                Background Type
+              </Label>
               <Select
                 value={(block.data.backgroundType as string) || 'gradient'}
                 onValueChange={(value: string) => handleDataChange('backgroundType', value)}
@@ -82,7 +88,9 @@ export function PropertiesPanel() {
             </div>
             {block.data.backgroundType === 'gradient' && (
               <div>
-                <Label htmlFor="gradientType" className="text-white">Gradient Style</Label>
+                <Label htmlFor="gradientType" className="text-white">
+                  Gradient Style
+                </Label>
                 <Select
                   value={
                     ((block.data.gradient as Record<string, unknown>)?.type as string) || 'aurora'
@@ -112,7 +120,9 @@ export function PropertiesPanel() {
         return (
           <>
             <div>
-              <Label htmlFor="layout" className="text-white">Layout</Label>
+              <Label htmlFor="layout" className="text-white">
+                Layout
+              </Label>
               <Select
                 value={(block.data.layout as string) || 'side-by-side'}
                 onValueChange={(value: string) => handleDataChange('layout', value)}
@@ -128,7 +138,9 @@ export function PropertiesPanel() {
               </Select>
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="showPricing" className="text-white">Show Pricing</Label>
+              <Label htmlFor="showPricing" className="text-white">
+                Show Pricing
+              </Label>
               <Switch
                 id="showPricing"
                 checked={(block.data.showPricing as boolean) !== false}
@@ -142,7 +154,9 @@ export function PropertiesPanel() {
         return (
           <>
             <div className="flex items-center justify-between">
-              <Label htmlFor="showExpressCheckout" className="text-white">Express Checkout</Label>
+              <Label htmlFor="showExpressCheckout" className="text-white">
+                Express Checkout
+              </Label>
               <Switch
                 id="showExpressCheckout"
                 checked={(block.data.showExpressCheckout as boolean) || false}
@@ -163,7 +177,10 @@ export function PropertiesPanel() {
                       if (e.target.checked) {
                         handleDataChange('fields', [...fields, 'email'])
                       } else {
-                        handleDataChange('fields', fields.filter(f => f !== 'email'))
+                        handleDataChange(
+                          'fields',
+                          fields.filter((f) => f !== 'email')
+                        )
                       }
                     }}
                   />
@@ -178,7 +195,10 @@ export function PropertiesPanel() {
                       if (e.target.checked) {
                         handleDataChange('fields', [...fields, 'name'])
                       } else {
-                        handleDataChange('fields', fields.filter(f => f !== 'name'))
+                        handleDataChange(
+                          'fields',
+                          fields.filter((f) => f !== 'name')
+                        )
                       }
                     }}
                   />
@@ -193,7 +213,9 @@ export function PropertiesPanel() {
         return (
           <>
             <div>
-              <Label htmlFor="headline" className="text-white">Headline</Label>
+              <Label htmlFor="headline" className="text-white">
+                Headline
+              </Label>
               <Input
                 id="headline"
                 value={(block.data.headline as string) || ''}
@@ -202,7 +224,9 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="description" className="text-white">Description</Label>
+              <Label htmlFor="description" className="text-white">
+                Description
+              </Label>
               <Textarea
                 id="description"
                 value={(block.data.description as string) || ''}
@@ -212,7 +236,9 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="style" className="text-white">Style</Label>
+              <Label htmlFor="style" className="text-white">
+                Style
+              </Label>
               <Select
                 value={(block.data.style as string) || 'highlighted'}
                 onValueChange={(value: string) => handleDataChange('style', value)}
@@ -242,13 +268,13 @@ export function PropertiesPanel() {
   return (
     <div className="h-full overflow-y-auto bg-gray-900">
       <div className="sticky top-0 flex items-center justify-between border-b border-gray-800 bg-gray-900 p-4">
-        <h3 className="font-semibold capitalize text-white">
-          <Type className="inline-block h-4 w-4 mr-2" />
+        <h3 className="font-semibold text-white capitalize">
+          <Type className="mr-2 inline-block h-4 w-4" />
           {block.type} Properties
         </h3>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => selectBlock(null)}
           className="text-gray-400 hover:text-white"
         >
@@ -259,7 +285,7 @@ export function PropertiesPanel() {
       <div className="space-y-6 p-6">
         {/* Block Properties */}
         <Card variant="glass" className="p-4">
-          <h4 className="mb-4 font-medium text-white flex items-center gap-2">
+          <h4 className="mb-4 flex items-center gap-2 font-medium text-white">
             <Settings className="h-4 w-4" />
             Content
           </h4>
@@ -268,13 +294,15 @@ export function PropertiesPanel() {
 
         {/* Style Properties */}
         <Card variant="glass" className="p-4">
-          <h4 className="mb-4 font-medium text-white flex items-center gap-2">
+          <h4 className="mb-4 flex items-center gap-2 font-medium text-white">
             <Palette className="h-4 w-4" />
             Styles
           </h4>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="padding" className="text-white">Padding</Label>
+              <Label htmlFor="padding" className="text-white">
+                Padding
+              </Label>
               <Input
                 id="padding"
                 value={(block.styles.padding as string) || ''}
@@ -284,7 +312,9 @@ export function PropertiesPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="className" className="text-white">Custom CSS Classes</Label>
+              <Label htmlFor="className" className="text-white">
+                Custom CSS Classes
+              </Label>
               <Input
                 id="className"
                 value={(block.styles.className as string) || ''}

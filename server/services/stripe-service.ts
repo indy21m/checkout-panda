@@ -27,10 +27,7 @@ export class StripeService {
     })
 
     // Update user record with Stripe customer ID
-    await db
-      .update(users)
-      .set({ stripeCustomerId: customer.id })
-      .where(eq(users.id, userId))
+    await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, userId))
 
     return customer.id
   }
@@ -100,7 +97,7 @@ export class StripeService {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       })
       .returning()
-    
+
     if (!session) {
       throw new Error('Failed to create checkout session')
     }
@@ -149,7 +146,7 @@ export class StripeService {
   async handlePaymentSuccess(paymentIntentId: string): Promise<void> {
     // Get payment intent from Stripe
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-    
+
     // Find session by payment intent ID
     const session = await db.query.checkoutSessions.findFirst({
       where: eq(checkoutSessions.stripePaymentIntentId, paymentIntentId),

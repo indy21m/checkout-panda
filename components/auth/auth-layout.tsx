@@ -11,14 +11,14 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background-secondary/30 to-background" />
-      
+      <div className="from-background via-background-secondary/30 to-background absolute inset-0 bg-gradient-to-br" />
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.div 
-          className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-[120px]"
+        <motion.div
+          className="bg-primary/10 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-[120px]"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -26,11 +26,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: 'easeInOut',
           }}
         />
-        <motion.div 
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/10 rounded-full blur-[120px]"
+        <motion.div
+          className="bg-secondary/10 absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-[120px]"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -38,24 +38,24 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
+            ease: 'easeInOut',
+            delay: 1,
           }}
         />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-8"
+          className="mb-8 text-center"
         >
           <Link href="/" className="inline-flex items-center gap-3">
-            <Image 
-              src="/logo.png" 
-              alt="Checkout Panda" 
+            <Image
+              src="/logo.png"
+              alt="Checkout Panda"
               className="h-12 w-12 object-contain"
               width={48}
               height={48}
@@ -70,17 +70,15 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <GlassmorphicCard className="p-8">
-            {children}
-          </GlassmorphicCard>
+          <GlassmorphicCard className="p-8">{children}</GlassmorphicCard>
         </motion.div>
 
         {/* Footer */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center mt-8 text-sm text-text-tertiary"
+          className="text-text-tertiary mt-8 text-center text-sm"
         >
           By continuing, you agree to our{' '}
           <Link href="/terms" className="text-primary hover:underline">

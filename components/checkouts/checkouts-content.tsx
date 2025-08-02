@@ -4,7 +4,17 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
-import { Plus, Edit, Trash2, ShoppingCart, ExternalLink, Copy, BarChart, Eye, TrendingUp } from 'lucide-react'
+import {
+  Plus,
+  Edit,
+  Trash2,
+  ShoppingCart,
+  ExternalLink,
+  Copy,
+  BarChart,
+  Eye,
+  TrendingUp,
+} from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import {
   Dialog,
@@ -33,9 +43,9 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 }
 
 const itemVariants = {
@@ -45,9 +55,9 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: 'easeOut' as const
-    }
-  }
+      ease: 'easeOut' as const,
+    },
+  },
 }
 
 export default function CheckoutsContent() {
@@ -117,7 +127,7 @@ export default function CheckoutsContent() {
 
   const getConversionRate = (views: number | null, conversions: number | null) => {
     if (!views || views === 0) return '0'
-    return ((conversions || 0) / views * 100).toFixed(1)
+    return (((conversions || 0) / views) * 100).toFixed(1)
   }
 
   return (
@@ -125,15 +135,13 @@ export default function CheckoutsContent() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="p-8 space-y-8"
+      className="space-y-8 p-8"
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Checkouts</h1>
-          <p className="text-text-secondary text-lg">
-            Create and manage your checkout pages
-          </p>
+          <h1 className="mb-2 text-4xl font-bold">Checkouts</h1>
+          <p className="text-text-secondary text-lg">Create and manage your checkout pages</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -159,7 +167,7 @@ export default function CheckoutsContent() {
                   className="form-input"
                 />
                 {createForm.formState.errors.name && (
-                  <p className="mt-1 text-sm text-accent">
+                  <p className="text-accent mt-1 text-sm">
                     {createForm.formState.errors.name.message}
                   </p>
                 )}
@@ -188,8 +196,8 @@ export default function CheckoutsContent() {
       {isLoading ? (
         <motion.div variants={itemVariants} className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-background-secondary rounded-full mb-4">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="bg-background-secondary mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full">
+              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
             </div>
             <p className="text-text-secondary">Loading checkouts...</p>
           </div>
@@ -198,11 +206,13 @@ export default function CheckoutsContent() {
         <motion.div variants={itemVariants}>
           <GlassmorphicCard className="p-12">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full mb-4">
-                <ShoppingCart className="h-8 w-8 text-primary" />
+              <div className="from-primary/10 to-primary/5 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br">
+                <ShoppingCart className="text-primary h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No checkouts yet</h3>
-              <p className="text-text-secondary mb-6">Create your first checkout page to get started</p>
+              <h3 className="mb-2 text-xl font-semibold">No checkouts yet</h3>
+              <p className="text-text-secondary mb-6">
+                Create your first checkout page to get started
+              </p>
               <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Checkout
@@ -211,37 +221,44 @@ export default function CheckoutsContent() {
           </GlassmorphicCard>
         </motion.div>
       ) : (
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
           {checkouts?.map((checkout) => (
             <motion.div key={checkout.id} variants={itemVariants}>
-              <GlassmorphicCard className="p-6 h-full group" hover>
-                <div className="flex flex-col h-full">
+              <GlassmorphicCard className="group h-full p-6" hover>
+                <div className="flex h-full flex-col">
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="mb-4 flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                      <h3 className="group-hover:text-primary mb-1 line-clamp-1 text-lg font-semibold transition-colors">
                         {checkout.name}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 text-xs ${
-                          checkout.status === 'published' 
-                            ? 'text-success' 
-                            : checkout.status === 'archived'
-                            ? 'text-text-tertiary'
-                            : 'text-warning'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            checkout.status === 'published' 
-                              ? 'bg-success' 
+                        <span
+                          className={`inline-flex items-center gap-1 text-xs ${
+                            checkout.status === 'published'
+                              ? 'text-success'
                               : checkout.status === 'archived'
-                              ? 'bg-text-tertiary'
-                              : 'bg-warning'
-                          }`} />
-                          {checkout.status === 'published' ? 'Published' : 
-                           checkout.status === 'archived' ? 'Archived' : 'Draft'}
+                                ? 'text-text-tertiary'
+                                : 'text-warning'
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              checkout.status === 'published'
+                                ? 'bg-success'
+                                : checkout.status === 'archived'
+                                  ? 'bg-text-tertiary'
+                                  : 'bg-warning'
+                            }`}
+                          />
+                          {checkout.status === 'published'
+                            ? 'Published'
+                            : checkout.status === 'archived'
+                              ? 'Archived'
+                              : 'Draft'}
                         </span>
                       </div>
                     </div>
@@ -249,40 +266,40 @@ export default function CheckoutsContent() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(checkout.id, checkout.name)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-accent hover:text-accent/80"
+                      className="text-accent hover:text-accent/80 opacity-0 transition-opacity group-hover:opacity-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
 
                   {/* Stats */}
-                  <div className="space-y-3 mb-6 flex-1">
+                  <div className="mb-6 flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <div className="text-text-secondary flex items-center gap-2 text-sm">
                         <Eye className="h-4 w-4" />
                         <span>Views</span>
                       </div>
                       <span className="font-semibold">{checkout.views || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <div className="text-text-secondary flex items-center gap-2 text-sm">
                         <TrendingUp className="h-4 w-4" />
                         <span>Conversions</span>
                       </div>
                       <span className="font-semibold">{checkout.conversions || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <div className="text-text-secondary flex items-center gap-2 text-sm">
                         <BarChart className="h-4 w-4" />
                         <span>Rate</span>
                       </div>
-                      <span className="font-semibold text-primary">
+                      <span className="text-primary font-semibold">
                         {getConversionRate(checkout.views, checkout.conversions)}%
                       </span>
                     </div>
-                    <div className="pt-3 border-t border-border-light flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Revenue</span>
-                      <span className="text-lg font-bold text-success">
+                    <div className="border-border-light flex items-center justify-between border-t pt-3">
+                      <span className="text-text-secondary text-sm">Revenue</span>
+                      <span className="text-success text-lg font-bold">
                         ${((checkout.revenue || 0) / 100).toFixed(2)}
                       </span>
                     </div>

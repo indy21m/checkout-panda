@@ -40,9 +40,9 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
-    }
-  }
+      staggerChildren: 0.1,
+    },
+  },
 }
 
 const itemVariants = {
@@ -52,9 +52,9 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: 'easeOut' as const
-    }
-  }
+      ease: 'easeOut' as const,
+    },
+  },
 }
 
 export default function ProductsContent() {
@@ -151,15 +151,13 @@ export default function ProductsContent() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="p-8 space-y-8"
+      className="space-y-8 p-8"
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Products</h1>
-          <p className="text-text-secondary text-lg">
-            Manage your products and pricing
-          </p>
+          <h1 className="mb-2 text-4xl font-bold">Products</h1>
+          <p className="text-text-secondary text-lg">Manage your products and pricing</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -184,7 +182,7 @@ export default function ProductsContent() {
                   placeholder="e.g., Premium Course"
                 />
                 {createForm.formState.errors.name && (
-                  <p className="mt-1 text-sm text-accent">
+                  <p className="text-accent mt-1 text-sm">
                     {createForm.formState.errors.name.message}
                   </p>
                 )}
@@ -200,7 +198,9 @@ export default function ProductsContent() {
               <div>
                 <Label htmlFor="price">Price</Label>
                 <div className="relative">
-                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary">$</span>
+                  <span className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2">
+                    $
+                  </span>
                   <Input
                     id="price"
                     {...createForm.register('price')}
@@ -209,7 +209,7 @@ export default function ProductsContent() {
                   />
                 </div>
                 {createForm.formState.errors.price && (
-                  <p className="mt-1 text-sm text-accent">
+                  <p className="text-accent mt-1 text-sm">
                     {createForm.formState.errors.price.message}
                   </p>
                 )}
@@ -238,8 +238,8 @@ export default function ProductsContent() {
       {isLoading ? (
         <motion.div variants={itemVariants} className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-background-secondary rounded-full mb-4">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="bg-background-secondary mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full">
+              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
             </div>
             <p className="text-text-secondary">Loading products...</p>
           </div>
@@ -248,10 +248,10 @@ export default function ProductsContent() {
         <motion.div variants={itemVariants}>
           <GlassmorphicCard className="p-12">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/5 rounded-full mb-4">
-                <Package className="h-8 w-8 text-primary" />
+              <div className="from-primary/10 to-primary/5 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br">
+                <Package className="text-primary h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No products yet</h3>
+              <h3 className="mb-2 text-xl font-semibold">No products yet</h3>
               <p className="text-text-secondary mb-6">Create your first product to get started</p>
               <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
@@ -261,26 +261,30 @@ export default function ProductsContent() {
           </GlassmorphicCard>
         </motion.div>
       ) : (
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
           {products?.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
-              <GlassmorphicCard className="p-6 h-full group" hover>
-                <div className="flex flex-col h-full">
-                  <div className="flex items-start justify-between mb-4">
+              <GlassmorphicCard className="group h-full p-6" hover>
+                <div className="flex h-full flex-col">
+                  <div className="mb-4 flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">
+                      <h3 className="group-hover:text-primary mb-1 text-lg font-semibold transition-colors">
                         {product.name}
                       </h3>
-                      <p className="text-sm text-text-secondary">
+                      <p className="text-text-secondary text-sm">
                         {product.description || 'No description'}
                       </p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="opacity-0 transition-opacity group-hover:opacity-100"
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -295,30 +299,28 @@ export default function ProductsContent() {
                             })
                           }}
                         >
-                          <Edit className="h-4 w-4 mr-2" />
+                          <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(product.id)}
                           className="text-accent"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  
-                  <div className="mt-auto pt-4 border-t border-border-light">
+
+                  <div className="border-border-light mt-auto border-t pt-4">
                     <div className="flex items-baseline justify-between">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-primary">
+                        <span className="text-primary text-2xl font-bold">
                           ${(product.price / 100).toFixed(2)}
                         </span>
                         {product.isRecurring && (
-                          <span className="text-sm text-text-tertiary">
-                            /{product.interval}
-                          </span>
+                          <span className="text-text-tertiary text-sm">/{product.interval}</span>
                         )}
                       </div>
                     </div>
@@ -346,9 +348,7 @@ export default function ProductsContent() {
                 placeholder="e.g., Premium Course"
               />
               {editForm.formState.errors.name && (
-                <p className="mt-1 text-sm text-accent">
-                  {editForm.formState.errors.name.message}
-                </p>
+                <p className="text-accent mt-1 text-sm">{editForm.formState.errors.name.message}</p>
               )}
             </div>
             <div>
@@ -362,7 +362,9 @@ export default function ProductsContent() {
             <div>
               <Label htmlFor="edit-price">Price</Label>
               <div className="relative">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-text-secondary">$</span>
+                <span className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   id="edit-price"
                   {...editForm.register('price')}
@@ -371,7 +373,7 @@ export default function ProductsContent() {
                 />
               </div>
               {editForm.formState.errors.price && (
-                <p className="mt-1 text-sm text-accent">
+                <p className="text-accent mt-1 text-sm">
                   {editForm.formState.errors.price.message}
                 </p>
               )}

@@ -16,32 +16,52 @@ interface CardProps {
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant = 'default', interactive = false, children, onClick, style, id, 'data-testid': dataTestId }, ref) => {
+  (
+    {
+      className,
+      variant = 'default',
+      interactive = false,
+      children,
+      onClick,
+      style,
+      id,
+      'data-testid': dataTestId,
+    },
+    ref
+  ) => {
     const variants = {
       default: [
         'bg-background',
         'border border-border-light',
         'shadow-sm',
         interactive && 'hover:shadow-md hover:-translate-y-0.5',
-      ].filter(Boolean).join(' '),
+      ]
+        .filter(Boolean)
+        .join(' '),
       glass: [
         'bg-background-glass backdrop-blur-xl',
         'border border-border-light',
         'shadow-lg shadow-black/5',
         interactive && 'hover:shadow-xl hover:-translate-y-0.5',
-      ].filter(Boolean).join(' '),
+      ]
+        .filter(Boolean)
+        .join(' '),
       gradient: [
         'bg-gradient-to-br from-primary/5 to-secondary/5',
         'border border-primary/10',
         'shadow-sm',
         interactive && 'hover:shadow-md hover:-translate-y-0.5',
-      ].filter(Boolean).join(' '),
+      ]
+        .filter(Boolean)
+        .join(' '),
       solid: [
         'bg-background-secondary',
         'border border-border',
         'shadow-sm',
         interactive && 'hover:shadow-md',
-      ].filter(Boolean).join(' '),
+      ]
+        .filter(Boolean)
+        .join(' '),
     }
 
     if (interactive) {
@@ -107,7 +127,7 @@ const CardDescription = forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-text-secondary', className)} {...props} />
+  <p ref={ref} className={cn('text-text-secondary text-sm', className)} {...props} />
 ))
 
 CardDescription.displayName = 'CardDescription'

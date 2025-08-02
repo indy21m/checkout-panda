@@ -114,7 +114,7 @@ function DraggableBlock({ block }: { block: BlockType }) {
       <Card
         className={cn(
           'cursor-move p-4 transition-all hover:shadow-md',
-          block.pro && 'relative overflow-hidden opacity-60 cursor-not-allowed'
+          block.pro && 'relative cursor-not-allowed overflow-hidden opacity-60'
         )}
       >
         {block.pro && (
@@ -127,12 +127,9 @@ function DraggableBlock({ block }: { block: BlockType }) {
             className={cn(
               'rounded-lg p-2',
               block.category === 'content' && 'bg-blue-100 text-blue-600 dark:bg-blue-900/20',
-              block.category === 'commerce' &&
-                'bg-green-100 text-green-600 dark:bg-green-900/20',
-              block.category === 'social' &&
-                'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20',
-              block.category === 'utility' &&
-                'bg-purple-100 text-purple-600 dark:bg-purple-900/20'
+              block.category === 'commerce' && 'bg-green-100 text-green-600 dark:bg-green-900/20',
+              block.category === 'social' && 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20',
+              block.category === 'utility' && 'bg-purple-100 text-purple-600 dark:bg-purple-900/20'
             )}
           >
             {block.icon}
@@ -252,8 +249,8 @@ export function BlockLibrary() {
       </div>
 
       {/* Quick Add Button */}
-      <div className="mt-6 pt-6 border-t border-gray-800">
-        <p className="text-sm text-gray-400 mb-3">Or quickly add a block:</p>
+      <div className="mt-6 border-t border-gray-800 pt-6">
+        <p className="mb-3 text-sm text-gray-400">Or quickly add a block:</p>
         <div className="grid grid-cols-2 gap-2">
           {blockTypes
             .filter((b) => !b.pro)

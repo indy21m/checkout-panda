@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card'
 
 export default function TestCheckoutPage() {
   const { total, selectedBumps } = useCheckoutStore()
-  
+
   // Test data
   const testCheckoutId = '550e8400-e29b-41d4-a716-446655440000'
   const testProductId = '550e8400-e29b-41d4-a716-446655440001'
@@ -31,7 +31,8 @@ export default function TestCheckoutPage() {
       <ProductBlock
         data={{
           productName: 'Premium Course Bundle',
-          productDescription: 'Get lifetime access to our comprehensive course with all future updates included.',
+          productDescription:
+            'Get lifetime access to our comprehensive course with all future updates included.',
           price: mainProductPrice,
           currency: 'USD',
           features: [
@@ -49,7 +50,7 @@ export default function TestCheckoutPage() {
       />
 
       {/* Order Bumps */}
-      <div className="py-8 space-y-6">
+      <div className="space-y-6 py-8">
         <BumpBlock
           data={{
             productId: 'bump-001',
@@ -94,7 +95,7 @@ export default function TestCheckoutPage() {
       {/* Order Summary */}
       <div className="container mx-auto max-w-2xl px-6 py-8">
         <Card variant="glass" className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+          <h3 className="mb-4 text-lg font-semibold text-white">Order Summary</h3>
           <div className="space-y-2 text-gray-300">
             <div className="flex justify-between">
               <span>Premium Course Bundle</span>
@@ -102,7 +103,7 @@ export default function TestCheckoutPage() {
             </div>
             {selectedBumps.length > 0 && (
               <>
-                <div className="border-t border-gray-700 my-2" />
+                <div className="my-2 border-t border-gray-700" />
                 {selectedBumps.includes('coaching-bump') && (
                   <div className="flex justify-between text-green-400">
                     <span>✓ 1-on-1 Coaching Session</span>
@@ -117,8 +118,8 @@ export default function TestCheckoutPage() {
                 )}
               </>
             )}
-            <div className="border-t border-gray-700 pt-2 mt-4">
-              <div className="flex justify-between font-bold text-white text-lg">
+            <div className="mt-4 border-t border-gray-700 pt-2">
+              <div className="flex justify-between text-lg font-bold text-white">
                 <span>Total</span>
                 <span>${(total / 100).toFixed(2)}</span>
               </div>

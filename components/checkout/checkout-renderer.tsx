@@ -87,9 +87,10 @@ export function CheckoutRenderer({ checkout, productId, amount }: CheckoutRender
           }
 
           // Pass additional props to payment block
-          const additionalProps = block.type === 'payment' && productId && amount
-            ? { checkoutId: checkout.id, productId, amount }
-            : {}
+          const additionalProps =
+            block.type === 'payment' && productId && amount
+              ? { checkoutId: checkout.id, productId, amount }
+              : {}
 
           return (
             <motion.div
@@ -98,11 +99,7 @@ export function CheckoutRenderer({ checkout, productId, amount }: CheckoutRender
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <BlockComponent 
-                data={block.data} 
-                styles={block.styles} 
-                {...additionalProps}
-              />
+              <BlockComponent data={block.data} styles={block.styles} {...additionalProps} />
             </motion.div>
           )
         })}

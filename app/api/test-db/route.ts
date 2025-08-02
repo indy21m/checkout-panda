@@ -7,19 +7,19 @@ import { sql } from 'drizzle-orm'
 export async function GET() {
   try {
     const { userId } = await auth()
-    
+
     const results = {
       timestamp: new Date().toISOString(),
       auth: {
         isAuthenticated: !!userId,
-        userId: userId || 'Not authenticated'
+        userId: userId || 'Not authenticated',
       },
       database: {
         connected: false,
         tables: [] as string[],
         counts: {} as Record<string, number>,
-        error: null as string | null
-      }
+        error: null as string | null,
+      },
     }
 
     try {
@@ -34,7 +34,7 @@ export async function GET() {
         WHERE table_schema = 'public' 
         ORDER BY table_name
       `)
-      
+
       results.database.tables = tables.rows.map((row) => (row as { table_name: string }).table_name)
 
       // Get counts for main tables
@@ -58,22 +58,24 @@ export async function GET() {
       } catch {
         results.database.counts.checkouts = -1
       }
-
     } catch (dbError) {
       results.database.error = dbError instanceof Error ? dbError.message : 'Unknown database error'
     }
 
-    return NextResponse.json(results, { 
+    return NextResponse.json(results, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     })
   } catch (error) {
-    return NextResponse.json({
-      error: 'Failed to run database test',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'Failed to run database test',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    )
   }
 }

@@ -65,15 +65,18 @@ Your app should now be running at [http://localhost:3000](http://localhost:3000)
 ## Troubleshooting
 
 ### "DATABASE_URL is not set" Error
+
 - Make sure you've saved `.env.local` after adding the database URL
 - Restart your development server after changing environment variables
 
 ### tRPC Mutation Errors
+
 - Verify your database URL is correct and includes `?sslmode=require`
 - Check that all migrations have been applied
 - Ensure your Clerk user ID matches the database records
 
 ### Connection Refused
+
 - Verify your Neon database is active (not paused)
 - Check that your IP is not blocked by any firewall rules
 - Ensure the database URL is properly formatted

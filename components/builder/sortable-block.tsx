@@ -46,9 +46,7 @@ export function SortableBlock({ block, isSelected, onSelect }: SortableBlockProp
               {String(block.data.headline || 'Hero Section')}
             </h3>
             {block.data.subheadline ? (
-              <p className="mt-2 text-sm text-gray-300">
-                {String(block.data.subheadline)}
-              </p>
+              <p className="mt-2 text-sm text-gray-300">{String(block.data.subheadline)}</p>
             ) : null}
           </div>
         )
@@ -65,27 +63,21 @@ export function SortableBlock({ block, isSelected, onSelect }: SortableBlockProp
         return (
           <div className="rounded-md bg-green-50 p-6 dark:bg-green-900/20">
             <h3 className="text-lg font-semibold text-white">Payment Form</h3>
-            <p className="mt-2 text-sm text-gray-300">
-              Secure checkout with Stripe integration
-            </p>
+            <p className="mt-2 text-sm text-gray-300">Secure checkout with Stripe integration</p>
           </div>
         )
       case 'testimonial':
         return (
           <div className="rounded-md bg-yellow-50 p-6 dark:bg-yellow-900/20">
             <h3 className="text-lg font-semibold text-white">Testimonials</h3>
-            <p className="mt-2 text-sm text-gray-300">
-              Customer reviews and social proof
-            </p>
+            <p className="mt-2 text-sm text-gray-300">Customer reviews and social proof</p>
           </div>
         )
       case 'trust':
         return (
           <div className="rounded-md bg-gray-100 p-6 dark:bg-gray-800/50">
             <h3 className="text-lg font-semibold text-white">Trust Badges</h3>
-            <p className="mt-2 text-sm text-gray-300">
-              Security and guarantee badges
-            </p>
+            <p className="mt-2 text-sm text-gray-300">Security and guarantee badges</p>
           </div>
         )
       case 'bump':

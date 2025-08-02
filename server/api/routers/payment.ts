@@ -124,73 +124,68 @@ export const paymentRouter = createTRPCRouter({
       }
     }),
 
-  getPaymentMethods: protectedProcedure
-    .query(async ({ ctx }) => {
-      try {
-        const user = await db.query.users.findFirst({
-          where: eq(users.id, ctx.userId),
-        })
+  getPaymentMethods: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, ctx.userId),
+      })
 
-        if (!user?.stripeCustomerId) {
-          return { paymentMethods: [] }
-        }
+      if (!user?.stripeCustomerId) {
+        return { paymentMethods: [] }
+      }
 
-        // Get payment methods from Stripe
-        const paymentMethods = await stripe.paymentMethods.list({
-          customer: user.stripeCustomerId,
-          type: 'card',
-        })
+      // Get payment methods from Stripe
+      const paymentMethods = await stripe.paymentMethods.list({
+        customer: user.stripeCustomerId,
+        type: 'card',
+      })
 
-        return {
-          paymentMethods: paymentMethods.data.map((pm) => ({
-            id: pm.id,
-            brand: pm.card?.brand,
-            last4: pm.card?.last4,
-            expMonth: pm.card?.exp_month,
-            expYear: pm.card?.exp_year,
-          })),
-        }
-      } catch (error) {
-        console.error('Get payment methods error:', error)
+      return {
+        paymentMethods: paymentMethods.data.map((pm) => ({
+          id: pm.id,
+          brand: pm.card?.brand,
+          last4: pm.card?.last4,
+          expMonth: pm.card?.exp_month,
+          expYear: pm.card?.exp_year,
+        })),
+      }
+    } catch (error) {
+      console.error('Get payment methods error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to get payment methods',
+      })
+    }
+  }),
+
+  setupIntent: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, ctx.userId),
+      })
+
+      if (!user) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get payment methods',
+          code: 'NOT_FOUND',
+          message: 'User not found',
         })
       }
-    }),
 
-  setupIntent: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      try {
-        const user = await db.query.users.findFirst({
-          where: eq(users.id, ctx.userId),
-        })
+      // Get or create customer
+      const customerId = await stripeService.getOrCreateCustomer(user.id, user.email)
 
-        if (!user) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'User not found',
-          })
-        }
+      // Create setup intent
+      const setupIntent = await stripeService.createSetupIntent(customerId)
 
-        // Get or create customer
-        const customerId = await stripeService.getOrCreateCustomer(
-          user.id,
-          user.email
-        )
-
-        // Create setup intent
-        const setupIntent = await stripeService.createSetupIntent(customerId)
-
-        return {
-          clientSecret: setupIntent.client_secret!,
-        }
-      } catch (error) {
-        console.error('Setup intent creation error:', error)
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create setup intent',
-        })
+      return {
+        clientSecret: setupIntent.client_secret!,
       }
-    }),
+    } catch (error) {
+      console.error('Setup intent creation error:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create setup intent',
+      })
+    }
+  }),
 })

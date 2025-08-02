@@ -30,7 +30,7 @@ interface BuilderState {
   isDragging: boolean
   canvasSettings: CanvasSettings
   hasUnsavedChanges: boolean
-  
+
   // Actions
   addBlock: (block: Block) => void
   updateBlock: (blockId: string, updates: Partial<Block>) => void
@@ -70,7 +70,7 @@ export const useBuilderStore = create<BuilderState>()(
         if (blockIndex !== -1) {
           const currentBlock = state.blocks[blockIndex]
           if (!currentBlock) return
-          
+
           state.blocks[blockIndex] = {
             id: currentBlock.id,
             type: currentBlock.type,
@@ -100,12 +100,12 @@ export const useBuilderStore = create<BuilderState>()(
           const [movedBlock] = state.blocks.splice(activeIndex, 1)
           if (movedBlock) {
             state.blocks.splice(overIndex, 0, movedBlock)
-            
+
             // Update positions
             state.blocks.forEach((block, index) => {
               block.position = index
             })
-            
+
             state.hasUnsavedChanges = true
           }
         }

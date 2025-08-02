@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+  'focus-visible:ring-primary inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -15,36 +15,26 @@ const buttonVariants = cva(
         secondary: [
           'bg-background-secondary text-text',
           'hover:bg-background-tertiary',
-          'border border-border',
+          'border-border border',
         ],
-        ghost: [
-          'text-text-secondary',
-          'hover:text-text hover:bg-background-secondary',
-        ],
+        ghost: ['text-text-secondary', 'hover:text-text hover:bg-background-secondary'],
         glass: [
           'bg-background-glass backdrop-blur-xl',
-          'border border-border-light',
-          'hover:shadow-lg hover:-translate-y-0.5',
+          'border-border-light border',
+          'hover:-translate-y-0.5 hover:shadow-lg',
           'text-text',
         ],
-        destructive: [
-          'bg-accent text-white',
-          'hover:bg-accent/90',
-          'shadow-sm hover:shadow-md',
-        ],
+        destructive: ['bg-accent text-white', 'hover:bg-accent/90', 'shadow-sm hover:shadow-md'],
         outline: [
-          'border border-border',
+          'border-border border',
           'bg-background hover:bg-background-secondary',
           'text-text',
         ],
-        link: [
-          'text-primary underline-offset-4',
-          'hover:underline',
-        ],
+        link: ['text-primary underline-offset-4', 'hover:underline'],
         gradient: [
-          'bg-gradient-to-r from-primary to-secondary',
+          'from-primary to-secondary bg-gradient-to-r',
           'text-white',
-          'shadow-sm hover:shadow-md hover:-translate-y-0.5',
+          'shadow-sm hover:-translate-y-0.5 hover:shadow-md',
         ],
       },
       size: {

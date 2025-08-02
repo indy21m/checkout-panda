@@ -40,7 +40,7 @@ export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
   // Register this bump in the store
   useEffect(() => {
     if (data.productId && data.discountedPrice) {
-      const existingBump = availableBumps.find(b => b.id === actualBumpId)
+      const existingBump = availableBumps.find((b) => b.id === actualBumpId)
       if (!existingBump) {
         setAvailableBumps([
           ...availableBumps,
@@ -87,7 +87,7 @@ export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
             variant="glass"
             className={cn(
               'relative overflow-hidden p-6 transition-all',
-              isChecked && 'ring-2 ring-purple-500 shadow-xl shadow-purple-500/20'
+              isChecked && 'shadow-xl ring-2 shadow-purple-500/20 ring-purple-500'
             )}
           >
             {/* Badge */}
@@ -114,7 +114,7 @@ export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
                   id={actualBumpId}
                   checked={isChecked}
                   onCheckedChange={handleCheckChange}
-                  className="h-6 w-6 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
+                  className="h-6 w-6 data-[state=checked]:border-purple-500 data-[state=checked]:bg-purple-500"
                 />
               </div>
 
@@ -142,14 +142,10 @@ export function BumpBlock({ data, styles, bumpId }: BumpBlockProps) {
 
                     {/* Text Content */}
                     <div className="flex-1">
-                      <h4 className="mb-2 font-semibold text-gray-200">
-                        {data.headline}
-                      </h4>
+                      <h4 className="mb-2 font-semibold text-gray-200">{data.headline}</h4>
 
                       {data.description && (
-                        <p className="mb-3 text-sm text-gray-400">
-                          {data.description}
-                        </p>
+                        <p className="mb-3 text-sm text-gray-400">{data.description}</p>
                       )}
 
                       {/* Features */}

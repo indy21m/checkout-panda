@@ -4,7 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createApi } from '@/lib/trpc/server'
 import { ArrowRight, ShoppingCart, Package } from 'lucide-react'
 import Link from 'next/link'
@@ -29,7 +35,7 @@ export default async function NewCheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto max-w-2xl px-4 py-8">
         <div className="mb-8">
           <h1 className="mb-2 text-4xl font-bold text-white">Create New Checkout</h1>
           <p className="text-gray-300">Set up a beautiful checkout page for your product</p>
@@ -38,9 +44,9 @@ export default async function NewCheckoutPage() {
         {!hasProducts ? (
           <Card variant="glass">
             <CardContent className="py-12 text-center">
-              <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-              <h2 className="text-2xl font-semibold text-white mb-2">No Products Yet</h2>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              <Package className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+              <h2 className="mb-2 text-2xl font-semibold text-white">No Products Yet</h2>
+              <p className="mx-auto mb-6 max-w-md text-gray-400">
                 You need to create a product before you can build a checkout page.
               </p>
               <Link href="/products">
@@ -56,7 +62,9 @@ export default async function NewCheckoutPage() {
             <Card variant="glass">
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
-                <CardDescription>Give your checkout page a name and select a product</CardDescription>
+                <CardDescription>
+                  Give your checkout page a name and select a product
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -153,12 +161,7 @@ export default async function NewCheckoutPage() {
                   </label>
 
                   <label className="relative">
-                    <input
-                      type="radio"
-                      name="template"
-                      value="minimal"
-                      className="peer sr-only"
-                    />
+                    <input type="radio" name="template" value="minimal" className="peer sr-only" />
                     <div className="cursor-pointer rounded-lg border-2 border-gray-700 p-4 transition-all peer-checked:border-purple-500 peer-checked:bg-purple-500/10">
                       <div className="flex items-center justify-between">
                         <div>

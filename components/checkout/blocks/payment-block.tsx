@@ -8,12 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Lock, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
@@ -37,7 +32,7 @@ interface PaymentBlockProps {
 }
 
 // Initialize Stripe
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null
 
@@ -46,17 +41,14 @@ interface PaymentFormProps {
   checkoutId: string
 }
 
-function PaymentForm({ 
-  data, 
-  checkoutId 
-}: PaymentFormProps) {
+function PaymentForm({ data, checkoutId }: PaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [isProcessing, setIsProcessing] = useState(false)
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  
+
   const fields = data.fields || ['email', 'card']
   const buttonText = data.buttonText || 'Complete Purchase'
 
@@ -133,11 +125,11 @@ function PaymentForm({
           </div>
           <div>
             <Label htmlFor="lastName">Last Name</Label>
-            <Input 
-              id="lastName" 
-              type="text" 
-              placeholder="Doe" 
-              required 
+            <Input
+              id="lastName"
+              type="text"
+              placeholder="Doe"
+              required
               className="mt-1"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -151,7 +143,7 @@ function PaymentForm({
         <div>
           <Label htmlFor="card">Card Information</Label>
           <div className="mt-1">
-            <PaymentElement 
+            <PaymentElement
               options={{
                 layout: 'tabs',
                 defaultValues: {
@@ -199,7 +191,7 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { setMainProduct, total, calculateTotals } = useCheckoutStore()
-  
+
   // Create payment intent
   const createPaymentIntent = api.payment.createIntent.useMutation()
 
@@ -334,10 +326,7 @@ export function PaymentBlock({ data, styles, checkoutId, productId, amount }: Pa
                 },
               }}
             >
-              <PaymentForm 
-                data={data} 
-                checkoutId={checkoutId}
-              />
+              <PaymentForm data={data} checkoutId={checkoutId} />
             </Elements>
           </Card>
         </motion.div>

@@ -56,7 +56,7 @@ export default function BuilderPage() {
       const settings = checkout.pageData.settings || {}
       updateCanvasSettings({
         ...settings,
-        theme: (settings.theme as 'light' | 'dark' | 'auto') || 'dark'
+        theme: (settings.theme as 'light' | 'dark' | 'auto') || 'dark',
       })
       setHasUnsavedChanges(false)
     }
@@ -152,9 +152,7 @@ export default function BuilderPage() {
               </Link>
               <div>
                 <h1 className="text-lg font-semibold text-white">{checkout.name}</h1>
-                {hasUnsavedChanges && (
-                  <p className="text-xs text-gray-400">Unsaved changes</p>
-                )}
+                {hasUnsavedChanges && <p className="text-xs text-gray-400">Unsaved changes</p>}
               </div>
             </div>
 
