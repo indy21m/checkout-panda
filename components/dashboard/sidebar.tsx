@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -14,15 +14,20 @@ import {
   TrendingUp,
   Settings,
   ChevronLeft,
+  ChevronRight,
+  Search,
+  Plus,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
+import { GradientText } from '@/components/ui/gradient-text'
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
   badge?: string
+  color: string
 }
 
 const navItems: NavItem[] = [
@@ -30,51 +35,77 @@ const navItems: NavItem[] = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: Home,
+    color: 'from-blue-400 to-blue-600',
   },
   {
     title: 'Products',
     href: '/products',
     icon: Package,
+    color: 'from-emerald-400 to-emerald-600',
   },
   {
     title: 'Checkouts',
     href: '/checkouts',
     icon: ShoppingCart,
+    color: 'from-purple-400 to-purple-600',
   },
   {
     title: 'Builder',
     href: '/builder',
     icon: LayoutDashboard,
+    color: 'from-amber-400 to-amber-600',
   },
   {
     title: 'Analytics',
     href: '/analytics',
     icon: TrendingUp,
+    color: 'from-pink-400 to-pink-600',
   },
   {
     title: 'Settings',
     href: '/settings',
     icon: Settings,
+    color: 'from-gray-400 to-gray-600',
   },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [isHovering, setIsHovering] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
-  // Keyboard shortcut for sidebar toggle
+  // Load sidebar state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('checkout-panda-sidebar-collapsed')
+    if (saved !== null) {
+      setCollapsed(JSON.parse(saved))
+    }
+  }, [])
+
+  // Save sidebar state to localStorage
+  const toggleSidebar = useCallback(() => {
+    const newState = !collapsed
+    setCollapsed(newState)
+    localStorage.setItem('checkout-panda-sidebar-collapsed', JSON.stringify(newState))
+  }, [collapsed])
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault()
-        setCollapsed(!collapsed)
+        toggleSidebar()
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setShowSearch(true)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [collapsed])
+  }, [collapsed, toggleSidebar])
 
   return (
     <>
@@ -95,108 +126,138 @@ export function Sidebar() {
       <motion.aside
         initial={false}
         animate={{
-          width: collapsed ? '5rem' : '16rem',
+          width: collapsed && !isHovering ? '5rem' : '16rem',
           x: 0,
         }}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen',
-          'bg-background-glass backdrop-blur-xl',
-          'border-border-light border-r',
+          'relative flex h-screen flex-col',
+          'bg-white/60 backdrop-blur-xl',
+          'border-r border-white/20',
           'shadow-xl shadow-black/5',
-          'lg:relative lg:z-auto'
+          'z-50'
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo Section */}
-          <div className="border-border-light flex h-16 items-center justify-between border-b px-4">
-            <Link
-              href="/dashboard"
-              className={cn(
-                'flex items-center gap-3 transition-opacity',
-                collapsed && 'lg:justify-center'
-              )}
-            >
-              <Image
-                src="/logo.png"
-                alt="Checkout Panda"
-                className="h-8 w-8 flex-shrink-0 object-contain"
-                width={32}
-                height={32}
-              />
+          <div className="p-6">
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className="relative h-10 w-10 flex-shrink-0"
+              >
+                <Image
+                  src="/logo.png"
+                  alt="Checkout Panda"
+                  className="h-full w-full object-contain"
+                  width={40}
+                  height={40}
+                />
+              </motion.div>
               <AnimatePresence>
-                {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="overflow-hidden text-lg font-semibold whitespace-nowrap"
+                {(!collapsed || isHovering) && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    Checkout Panda
-                  </motion.span>
+                    <GradientText as="h2" className="text-xl font-bold" gradient="primary">
+                      Checkout Panda
+                    </GradientText>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </Link>
-
-            {/* Collapse Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCollapsed(!collapsed)}
-              className={cn('hidden lg:flex', collapsed && 'lg:hidden')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
           </div>
 
+          {/* Search Bar */}
+          <AnimatePresence>
+            {(!collapsed || isHovering) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="px-6 pb-4"
+              >
+                <GlassmorphicCard
+                  className="relative cursor-pointer"
+                  variant="light"
+                  blur="md"
+                  onClick={() => setShowSearch(true)}
+                >
+                  <Search className="text-text-tertiary absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
+                  <div className="text-text-tertiary py-3 pr-4 pl-12 text-sm">
+                    Search...{' '}
+                    <kbd className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs">⌘K</kbd>
+                  </div>
+                </GlassmorphicCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 overflow-y-auto p-2">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
+          <nav className="custom-scrollbar flex-1 space-y-1 overflow-y-auto p-2">
+            {navItems.map((item, index) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== '/dashboard' && pathname.startsWith(item.href))
               const Icon = item.icon
 
               return (
-                <Link key={item.href} href={item.href}>
-                  <motion.div
-                    onHoverStart={() => setHoveredItem(item.href)}
-                    onHoverEnd={() => setHoveredItem(null)}
-                    whileHover={{ x: 2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link href={item.href}>
                     <div
                       className={cn(
-                        'relative flex items-center gap-3 rounded-lg px-3 py-2.5',
-                        'transition-all duration-200',
-                        'group cursor-pointer',
+                        'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200',
                         isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-text-secondary hover:text-text hover:bg-background-secondary',
-                        collapsed && 'justify-center'
+                          ? 'text-white shadow-lg'
+                          : 'text-text-secondary hover:text-text hover:bg-white/50',
+                        collapsed && !isHovering && 'justify-center'
                       )}
                     >
-                      {/* Icon with gradient background on hover/active */}
-                      <div
-                        className={cn(
-                          'relative flex items-center justify-center',
-                          'h-8 w-8 rounded-lg transition-all duration-200',
-                          isActive
-                            ? 'from-primary to-primary/80 bg-gradient-to-br text-white shadow-md'
-                            : hoveredItem === item.href
-                              ? 'from-primary/20 to-primary/10 bg-gradient-to-br'
-                              : 'bg-background-tertiary'
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
+                      {/* Active background */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className={cn('absolute inset-0 rounded-xl bg-gradient-to-r', item.color)}
+                          initial={false}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      )}
+
+                      {/* Icon */}
+                      <div className="relative z-10">
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={cn(
+                            'rounded-lg p-2 transition-all duration-200',
+                            isActive
+                              ? 'bg-white/20'
+                              : 'group-hover:bg-gradient-to-br group-hover:from-gray-100 group-hover:to-gray-200'
+                          )}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </motion.div>
                       </div>
 
                       {/* Label */}
                       <AnimatePresence>
-                        {!collapsed && (
+                        {(!collapsed || isHovering) && (
                           <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="font-medium whitespace-nowrap"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            className="relative z-10 font-medium"
                           >
                             {item.title}
                           </motion.span>
@@ -204,24 +265,49 @@ export function Sidebar() {
                       </AnimatePresence>
 
                       {/* Badge */}
-                      {item.badge && !collapsed && (
-                        <span className="bg-primary/10 text-primary ml-auto rounded-full px-2 py-0.5 text-xs">
+                      {item.badge && (!collapsed || isHovering) && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className="relative z-10 ml-auto rounded-full bg-white/20 px-2 py-0.5 text-xs"
+                        >
                           {item.badge}
-                        </span>
+                        </motion.span>
                       )}
 
-                      {/* Tooltip for collapsed state */}
-                      {collapsed && (
-                        <div className="bg-background-secondary text-text pointer-events-none absolute left-full ml-2 rounded-md px-2 py-1 text-sm whitespace-nowrap opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                          {item.title}
-                        </div>
+                      {/* Hover effect */}
+                      {!isActive && (
+                        <motion.div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-100/0 to-gray-100/0 transition-all duration-300 group-hover:from-gray-100/50 group-hover:to-gray-200/50" />
                       )}
                     </div>
-                  </motion.div>
-                </Link>
+                  </Link>
+                </motion.div>
               )
             })}
           </nav>
+
+          {/* Quick Actions */}
+          <AnimatePresence>
+            {(!collapsed || isHovering) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="border-t border-gray-200/50 p-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="from-primary to-secondary flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-4 py-2.5 text-white shadow-lg transition-all duration-200 hover:shadow-xl"
+                  onClick={() => (window.location.href = '/checkouts/new')}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="font-medium">Create Checkout</span>
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* User Section */}
           <div className="border-border-light border-t p-4">
@@ -244,18 +330,57 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Expand button for collapsed state */}
-        {collapsed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCollapsed(false)}
-            className="bg-background border-border-light absolute top-8 -right-3 flex h-6 w-6 items-center justify-center rounded-full border p-0 shadow-sm"
-          >
-            <ChevronLeft className="h-3 w-3 rotate-180" />
-          </Button>
-        )}
+        {/* Collapse Toggle Button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleSidebar}
+          className="absolute top-1/2 -right-3 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-lg transition-shadow duration-200 hover:shadow-xl"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3 w-3 text-gray-600" />
+          ) : (
+            <ChevronLeft className="h-3 w-3 text-gray-600" />
+          )}
+        </motion.button>
       </motion.aside>
+
+      {/* Search Modal */}
+      <AnimatePresence>
+        {showSearch && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSearch(false)}
+              className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2"
+            >
+              <GlassmorphicCard className="p-0" variant="light" blur="xl" shadow>
+                <div className="relative">
+                  <Search className="text-text-tertiary absolute top-1/2 left-6 h-5 w-5 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search products, checkouts, analytics..."
+                    onKeyDown={(e) => e.key === 'Escape' && setShowSearch(false)}
+                    className="w-full bg-transparent py-6 pr-6 pl-16 text-lg focus:outline-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="border-t border-gray-200/50 p-4">
+                  <p className="text-text-tertiary text-sm">Type to search or press ESC to close</p>
+                </div>
+              </GlassmorphicCard>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }

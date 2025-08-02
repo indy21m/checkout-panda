@@ -2,42 +2,57 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 
-interface GradientTextProps extends React.HTMLAttributes<HTMLSpanElement> {
+interface GradientTextProps {
   children: React.ReactNode
-  gradient?: 'primary' | 'secondary' | 'accent' | 'custom'
-  from?: string
-  to?: string
-  via?: string
+  className?: string
+  gradient?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'custom'
+  customGradient?: string
+  animate?: boolean
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span'
 }
 
 export function GradientText({
   children,
   className,
   gradient = 'primary',
-  from,
-  to,
-  via,
-  ...props
+  customGradient,
+  animate = false,
+  as: Component = 'span',
 }: GradientTextProps) {
-  const gradientClasses = {
-    primary: 'from-blue-400 to-blue-600',
-    secondary: 'from-purple-400 to-purple-600',
-    accent: 'from-pink-400 to-pink-600',
-    custom: '',
+  const gradients = {
+    primary: 'from-primary to-secondary',
+    secondary: 'from-secondary to-accent',
+    success: 'from-success to-emerald-400',
+    warning: 'from-warning to-danger',
+    danger: 'from-danger to-pink-600',
+    custom: customGradient || 'from-primary to-secondary',
   }
 
-  const customGradient =
-    gradient === 'custom' && from && to
-      ? `${from} ${via ? `via-${via}` : ''} ${to}`
-      : gradientClasses[gradient]
-
-  return (
-    <span
-      className={cn('bg-gradient-to-r bg-clip-text text-transparent', customGradient, className)}
-      {...props}
+  const content = (
+    <Component
+      className={cn(
+        'bg-gradient-to-r bg-clip-text text-transparent',
+        gradients[gradient],
+        className
+      )}
     >
       {children}
-    </span>
+    </Component>
   )
+
+  if (animate) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        {content}
+      </motion.div>
+    )
+  }
+
+  return content
 }

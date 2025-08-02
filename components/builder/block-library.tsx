@@ -1,7 +1,8 @@
 'use client'
 
-import { Card } from '@/components/ui/card'
+import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 import {
   Type,
   ShoppingCart,
@@ -109,38 +110,49 @@ function DraggableBlock({ block }: { block: BlockType }) {
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const iconColors = {
+    content: 'from-blue-400 to-blue-600',
+    commerce: 'from-emerald-400 to-emerald-600',
+    social: 'from-amber-400 to-amber-600',
+    utility: 'from-purple-400 to-purple-600',
+  }
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <GlassmorphicCard
         className={cn(
-          'cursor-move p-4 transition-all hover:shadow-md',
-          block.pro && 'relative cursor-not-allowed overflow-hidden opacity-60'
+          'hover-lift cursor-move p-4',
+          block.pro && 'relative cursor-not-allowed opacity-60'
         )}
+        variant="light"
+        hover
       >
         {block.pro && (
-          <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-500 to-pink-500 px-2 py-1 text-xs font-semibold text-white">
+          <div className="absolute top-0 right-0 rounded-bl-lg bg-gradient-to-l from-purple-500 to-pink-500 px-2 py-1 text-xs font-semibold text-white">
             PRO
           </div>
         )}
         <div className="flex items-start gap-3">
-          <div
-            className={cn(
-              'rounded-lg p-2',
-              block.category === 'content' && 'bg-blue-100 text-blue-600 dark:bg-blue-900/20',
-              block.category === 'commerce' && 'bg-green-100 text-green-600 dark:bg-green-900/20',
-              block.category === 'social' && 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/20',
-              block.category === 'utility' && 'bg-purple-100 text-purple-600 dark:bg-purple-900/20'
-            )}
+          <motion.div
+            whileHover={{ rotate: 5 }}
+            className={cn('rounded-lg bg-gradient-to-br p-3 shadow-sm', iconColors[block.category])}
           >
-            {block.icon}
-          </div>
+            <div className="text-white">{block.icon}</div>
+          </motion.div>
           <div className="flex-1">
-            <h3 className="font-medium text-white">{block.name}</h3>
-            <p className="mt-1 text-sm text-gray-400">{block.description}</p>
+            <h3 className="text-text font-semibold">{block.name}</h3>
+            <p className="text-text-secondary mt-1 text-sm">{block.description}</p>
           </div>
         </div>
-      </Card>
-    </div>
+      </GlassmorphicCard>
+    </motion.div>
   )
 }
 
@@ -216,15 +228,15 @@ export function BlockLibrary() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-900 p-6">
-      <h2 className="mb-4 text-lg font-semibold text-white">Block Library</h2>
+    <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-50 to-white p-6">
+      <h2 className="text-text mb-4 text-lg font-semibold">Block Library</h2>
 
       {/* Search */}
       <Input
         placeholder="Search blocks..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4 bg-gray-800/50"
+        className="glass-morphism mb-4"
       />
 
       {/* Categories */}
@@ -249,8 +261,8 @@ export function BlockLibrary() {
       </div>
 
       {/* Quick Add Button */}
-      <div className="mt-6 border-t border-gray-800 pt-6">
-        <p className="mb-3 text-sm text-gray-400">Or quickly add a block:</p>
+      <div className="border-border mt-6 border-t pt-6">
+        <p className="text-text-secondary mb-3 text-sm">Or quickly add a block:</p>
         <div className="grid grid-cols-2 gap-2">
           {blockTypes
             .filter((b) => !b.pro)
@@ -271,7 +283,9 @@ export function BlockLibrary() {
       </div>
 
       {filteredBlocks.length === 0 && (
-        <div className="py-8 text-center text-gray-500">No blocks found matching your search</div>
+        <div className="text-text-tertiary py-8 text-center">
+          No blocks found matching your search
+        </div>
       )}
     </div>
   )
