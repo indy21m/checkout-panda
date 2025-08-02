@@ -184,7 +184,7 @@ export function DashboardContent({ checkouts, products, databaseError }: Dashboa
                                 }`} />
                                 {checkout.status === 'published' ? 'Published' : 'Draft'}
                               </span>
-                              {checkout.views !== null && checkout.views > 0 && (
+                              {checkout.views !== null && checkout.views !== undefined && checkout.views > 0 && (
                                 <span className="text-xs text-text-tertiary">
                                   {checkout.views} views
                                 </span>
