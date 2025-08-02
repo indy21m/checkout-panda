@@ -18,18 +18,26 @@ Checkout Panda is an elite, conversion-focused checkout platform that transforms
 
 - **Language:** TypeScript 5.3+ (STRICT MODE ENFORCED)
 - **Framework:** Next.js 15+ (App Router ONLY)
-- **Authentication:** Clerk (`@clerk/nextjs`)
-- **Database:** Neon Serverless Postgres (`@neondatabase/serverless`)
-- **ORM:** Drizzle (`drizzle-orm`)
-- **API Layer:** tRPC (`@trpc/server`) with React Query
-- **Styling:** Tailwind CSS 4.0 + CVA
-- **UI Components:** Radix UI + shadcn/ui patterns
-- **Animation:** Framer Motion (essential for modern UI)
-- **Forms:** React Hook Form + Zod (MANDATORY)
-- **Data Visualization:** Recharts (with gradients per Design Guidelines)
-- **Notifications:** Sonner (for toast notifications)
+- **Authentication:** Clerk (`@clerk/nextjs@latest`)
+- **Database:** Neon Serverless Postgres (`@neondatabase/serverless@latest`)
+- **ORM:** Drizzle (`drizzle-orm@latest`)
+- **API Layer:** tRPC (`@trpc/server@latest`) with React Query
+- **Styling:** Tailwind CSS 4.0+ (NEVER downgrade to v3)
+- **UI Components:** Radix UI + shadcn/ui patterns (latest versions)
+- **Animation:** Framer Motion (`framer-motion@latest`)
+- **Forms:** React Hook Form + Zod (latest versions)
+- **Data Visualization:** Recharts (`recharts@latest`)
+- **Notifications:** Sonner (`sonner@latest`)
+- **State Management:** URL state + Server Components + React Query (NO Zustand by default)
 - **Deployment:** Vercel Edge Functions
 - **Package Manager:** pnpm
+
+### Dependency Management Rules
+
+- **ALWAYS USE LATEST**: Install packages with `@latest` tag
+- **NO DOWNGRADES**: Never downgrade to older major versions
+- **CHECK COMPATIBILITY**: If conflicts arise, find forward-compatible solutions
+- **EXPLICIT VERSIONS**: When user specifies a version (e.g., "v4"), that's the MINIMUM
 
 ### Essential Commands
 
@@ -235,7 +243,7 @@ export const userRouter = createTRPCRouter({
 
 ```typescript
 // env.mjs
-import { z } from 'zod'
+import { z } from "zod"
 
 const envSchema = z.object({
   DATABASE_URL: z.string(),
@@ -280,17 +288,18 @@ export async function getUserById(id: string) {
 1. Writes production-ready code following all standards
 2. Tests locally using `pnpm dev` to verify functionality
 3. Runs ALL quality checks before declaring ready:
-
    ```bash
-   pnpm formatpnpm lint --fixpnpm type-checkpnpm testpnpm build  # Verify production build
+   pnpm format
+   pnpm lint --fix
+   pnpm type-check
+   pnpm test
+   pnpm build  # Verify production build
    ```
-
 4. Generates migration files when schema changes:
-
    ```bash
-   pnpm drizzle-kit generate:pg# Saves output to /migrations/YYYY-MM-DD_description.sql
+   pnpm drizzle-kit generate:pg
+   # Saves output to /migrations/YYYY-MM-DD_description.sql
    ```
-
 5. Updates documentation as needed
 6. Reports when code is ready to commit
 
@@ -319,19 +328,18 @@ When schema changes are needed:
 
 1. Update Drizzle schema files in `src/server/db/schema.ts`
 2. Generate migration using Drizzle Kit:
-
    ```bash
    pnpm drizzle-kit generate:pg
    ```
-
 3. Migration file is automatically saved to `/migrations/` directory
 4. File naming: `YYYY-MM-DD_descriptive_name.sql`
 5. Commit both schema changes and migration file
 6. After deployment, user executes migration in Neon console
 7. Example migration content:
-
    ```sql
-   -- migrations/2025-07-27_add_user_role.sqlALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';CREATE INDEX idx_users_role ON users(role);
+   -- migrations/2025-07-27_add_user_role.sql
+   ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user';
+   CREATE INDEX idx_users_role ON users(role);
    ```
 
 ### Pre-Commit Checklist
@@ -397,14 +405,14 @@ When preparing to commit:
 // ❌ AI often generates
 export const getServerSideProps = async () => {} // Pages Router
 const handleSubmit = (data: any) => {} // Untyped
-import fs from 'fs' // In Client Component
-;('Run npm dev to test locally') // Wrong - user doesn't test
-;('Manually create migration SQL') // Wrong - use drizzle-kit
+import fs from "fs" // In Client Component
+;("Run npm dev to test locally") // Wrong - user doesn't test
+;("Manually create migration SQL") // Wrong - use drizzle-kit
 
 // ✅ Correct patterns
 export default async function Page() {} // App Router
 const handleSubmit = (data: FormData) => {} // Typed
-;('use server') // For server-only code
+;("use server") // For server-only code
 ;("I'll test this with pnpm dev, then you can commit") // Correct
 ;("I'll generate migration with pnpm drizzle-kit generate:pg") // Correct
 ```
@@ -460,7 +468,7 @@ try {
     // Handle known errors
   } else {
     // Log unknown errors
-    console.error('Unexpected error:', error)
+    console.error("Unexpected error:", error)
   }
 }
 ```
