@@ -8,25 +8,25 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          'from-primary to-secondary bg-gradient-to-r text-white',
-          'hover:shadow-lg hover:shadow-[rgba(10,132,255,0.25)]',
+          'bg-gradient-to-r from-primary to-secondary text-white',
+          'hover:shadow-lg hover:shadow-(rgba(10,132,255,0.25))',
           'focus-visible:ring-primary',
         ],
         secondary: [
-          'text-primary bg-[rgba(255,255,255,0.1)] backdrop-blur-md',
-          'border border-[rgba(10,132,255,0.2)]',
-          'hover:border-[rgba(10,132,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]',
-          'dark:bg-[rgba(0,0,0,0.1)] dark:hover:bg-[rgba(0,0,0,0.2)]',
+          'text-primary bg-(rgba(255,255,255,0.1)) backdrop-blur-md',
+          'border border-(rgba(10,132,255,0.2))',
+          'hover:border-(rgba(10,132,255,0.3)) hover:bg-(rgba(255,255,255,0.2))',
+          'dark:bg-(rgba(0,0,0,0.1)) dark:hover:bg-(rgba(0,0,0,0.2))',
         ],
         ghost: [
-          'text-primary hover:bg-[rgba(10,132,255,0.1)]',
-          'dark:hover:bg-[rgba(10,132,255,0.2)]',
+          'text-primary hover:bg-(rgba(10,132,255,0.1))',
+          'dark:hover:bg-(rgba(10,132,255,0.2))',
         ],
         glass: [
-          'bg-[rgba(255,255,255,0.1)] text-white backdrop-blur-xl',
-          'border border-[rgba(255,255,255,0.2)]',
-          'hover:border-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.2)]',
-          'shadow-xl shadow-[rgba(0,0,0,0.1)]',
+          'bg-(rgba(255,255,255,0.1)) text-white backdrop-blur-xl',
+          'border border-(rgba(255,255,255,0.2))',
+          'hover:border-(rgba(255,255,255,0.3)) hover:bg-(rgba(255,255,255,0.2))',
+          'shadow-xl shadow-(rgba(0,0,0,0.1))',
         ],
         destructive: [
           'bg-destructive text-destructive-foreground',
