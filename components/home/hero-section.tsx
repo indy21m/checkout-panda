@@ -121,7 +121,7 @@ export function HeroSection() {
             variants={containerVariants}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl"
           >
-            {features.map((feature, index) => (
+            {features.map((feature) => (
               <motion.div key={feature.title} variants={itemVariants}>
                 <GlassmorphicCard className="p-6 h-full text-left group" hover>
                   <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} mb-4 group-hover:scale-110 transition-transform`}>

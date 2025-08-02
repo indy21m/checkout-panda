@@ -12,13 +12,10 @@ import {
   LayoutDashboard, 
   TrendingUp, 
   Settings,
-  Menu,
-  X,
   ChevronLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 
 interface NavItem {
   title: string

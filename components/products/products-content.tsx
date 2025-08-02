@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
-import { Plus, Edit, Trash2, DollarSign, Package, MoreVertical } from 'lucide-react'
+import { Plus, Edit, Trash2, Package, MoreVertical } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import {
   Dialog,
@@ -268,7 +267,7 @@ export default function ProductsContent() {
           variants={containerVariants}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
-          {products?.map((product, index) => (
+          {products?.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
               <GlassmorphicCard className="p-6 h-full group" hover>
                 <div className="flex flex-col h-full">

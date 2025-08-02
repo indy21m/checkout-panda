@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, Trash2, ShoppingCart, ExternalLink, Copy, BarChart, Eye, TrendingUp } from 'lucide-react'
@@ -147,7 +146,7 @@ export default function CheckoutsContent() {
             <DialogHeader>
               <DialogTitle>Create New Checkout</DialogTitle>
               <DialogDescription>
-                Give your checkout a name and we'll set up a new page for you.
+                Give your checkout a name and we&apos;ll set up a new page for you.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
@@ -216,7 +215,7 @@ export default function CheckoutsContent() {
           variants={containerVariants}
           className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
         >
-          {checkouts?.map((checkout, index) => (
+          {checkouts?.map((checkout) => (
             <motion.div key={checkout.id} variants={itemVariants}>
               <GlassmorphicCard className="p-6 h-full group" hover>
                 <div className="flex flex-col h-full">

@@ -3,9 +3,8 @@
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
-import { GradientText } from '@/components/ui/gradient-text'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Plus, TrendingUp, DollarSign, ShoppingCart, AlertCircle, ArrowRight, Activity, Eye } from 'lucide-react'
+import { Plus, TrendingUp, DollarSign, ShoppingCart, AlertCircle, ArrowRight, Activity, Eye } from 'lucide-react'
 import Link from 'next/link'
 
 interface DashboardContentProps {
@@ -121,7 +120,7 @@ export function DashboardContent({ checkouts, products, databaseError }: Dashboa
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <motion.div key={stat.title} variants={itemVariants}>
             <GlassmorphicCard className="p-6 h-full" hover>
               <div className="flex items-start justify-between mb-4">

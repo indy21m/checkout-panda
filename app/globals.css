@@ -86,13 +86,25 @@
 @layer components {
   /* Glassmorphism effect */
   .glass {
-    @apply bg-background-glass backdrop-blur-xl border border-border-light;
+    background-color: var(--color-background-glass);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    border: 1px solid var(--color-border-light);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   }
   
   .glass-hover {
-    @apply glass transition-all duration-200;
-    @apply hover:shadow-lg hover:-translate-y-0.5;
+    background-color: var(--color-background-glass);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    transition: all 200ms;
+  }
+  
+  .glass-hover:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
   
   /* Button base styles */
@@ -122,8 +134,19 @@
   }
   
   .card-glass {
-    @apply glass rounded-xl p-6 transition-all duration-200;
-    @apply hover:shadow-lg hover:-translate-y-0.5;
+    background-color: var(--color-background-glass);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    border: 1px solid var(--color-border-light);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 200ms;
+  }
+  
+  .card-glass:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
   }
   
   /* Form input styles */
