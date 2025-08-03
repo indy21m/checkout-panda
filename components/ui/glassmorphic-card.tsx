@@ -32,8 +32,8 @@ export function GlassmorphicCard({
   }
 
   const variantClasses = {
-    light: 'bg-white/70 dark:bg-gray-900/70',
-    dark: 'bg-gray-900/70 dark:bg-white/10',
+    light: 'bg-white/70',
+    dark: 'bg-gray-900/70',
     colored: 'bg-gradient-to-br from-primary/10 to-secondary/10',
   }
 
@@ -43,7 +43,7 @@ export function GlassmorphicCard({
         'relative overflow-hidden rounded-xl',
         blurClasses[blur],
         variantClasses[variant],
-        border && 'border border-white/20 dark:border-white/10',
+        border && 'border border-white/20',
         shadow && 'shadow-lg shadow-black/5',
         hover &&
           'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/10',

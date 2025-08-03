@@ -38,11 +38,11 @@ export function HeroBlock({ data, styles }: HeroBlockProps) {
         } else if (data.gradient?.type === 'ocean') {
           return 'bg-gradient-to-br from-blue-400 via-teal-500 to-green-500'
         }
-        return 'bg-gradient-to-br from-gray-900 to-gray-800'
+        return 'bg-gradient-to-br from-purple-100 to-pink-100'
       case 'solid':
         return ''
       default:
-        return 'bg-gray-900'
+        return 'bg-gradient-to-br from-purple-50 to-pink-50'
     }
   }
 
@@ -68,7 +68,7 @@ export function HeroBlock({ data, styles }: HeroBlockProps) {
           />
           {data.image.overlay && (
             <div
-              className="absolute inset-0 bg-black"
+              className="absolute inset-0 bg-gray-900"
               style={{ opacity: data.image.overlayOpacity || 0.5 }}
             />
           )}

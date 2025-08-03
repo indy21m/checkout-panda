@@ -45,7 +45,7 @@ export function TrustBlock({ data, styles }: TrustBlockProps) {
 
   return (
     <section
-      className={cn('bg-gray-50 px-6 py-8 dark:bg-gray-900', styles?.className)}
+      className={cn('bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-8', styles?.className)}
       style={{
         backgroundColor: styles?.backgroundColor,
         padding: styles?.padding,

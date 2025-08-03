@@ -53,13 +53,13 @@ export function TestimonialBlock({ data, styles }: TestimonialBlockProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800"
+      className="rounded-lg border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm"
     >
       {data.showRating && testimonial.rating && (
         <div className="mb-4">{renderStars(testimonial.rating)}</div>
       )}
 
-      <p className="mb-4 text-gray-700 dark:text-gray-300">&ldquo;{testimonial.content}&rdquo;</p>
+      <p className="mb-4 text-gray-700">&ldquo;{testimonial.content}&rdquo;</p>
 
       <div className="flex items-center gap-3">
         {testimonial.image && (

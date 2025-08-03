@@ -227,7 +227,7 @@ export default function CheckoutsContent() {
         >
           {checkouts?.map((checkout) => (
             <motion.div key={checkout.id} variants={itemVariants}>
-              <GlassmorphicCard className="group h-full p-6" hover>
+              <GlassmorphicCard className="group h-full p-6" variant="light" hover>
                 <div className="flex h-full flex-col">
                   {/* Header */}
                   <div className="mb-4 flex items-start justify-between">

@@ -5,7 +5,7 @@ import { ProductBlock } from '@/components/checkout/blocks/product-block'
 import { BumpBlock } from '@/components/checkout/blocks/bump-block'
 import { PaymentBlock } from '@/components/checkout/blocks/payment-block'
 import { useCheckoutStore } from '@/stores/checkout-store'
-import { Card } from '@/components/ui/card'
+import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 
 export default function TestCheckoutPage() {
   const { total, selectedBumps } = useCheckoutStore()
@@ -16,7 +16,7 @@ export default function TestCheckoutPage() {
   const mainProductPrice = 9900 // $99.00
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* Hero Section */}
       <HeroBlock
         data={{
@@ -94,38 +94,38 @@ export default function TestCheckoutPage() {
 
       {/* Order Summary */}
       <div className="container mx-auto max-w-2xl px-6 py-8">
-        <Card variant="glass" className="p-6">
-          <h3 className="mb-4 text-lg font-semibold text-white">Order Summary</h3>
-          <div className="space-y-2 text-gray-300">
+        <GlassmorphicCard variant="light" className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Order Summary</h3>
+          <div className="text-text-secondary space-y-2">
             <div className="flex justify-between">
               <span>Premium Course Bundle</span>
               <span>${(mainProductPrice / 100).toFixed(2)}</span>
             </div>
             {selectedBumps.length > 0 && (
               <>
-                <div className="my-2 border-t border-gray-700" />
+                <div className="my-2 border-t border-gray-200" />
                 {selectedBumps.includes('coaching-bump') && (
-                  <div className="flex justify-between text-green-400">
+                  <div className="flex justify-between text-green-600">
                     <span>✓ 1-on-1 Coaching Session</span>
                     <span>$149.00</span>
                   </div>
                 )}
                 {selectedBumps.includes('templates-bump') && (
-                  <div className="flex justify-between text-green-400">
+                  <div className="flex justify-between text-green-600">
                     <span>✓ Exclusive Templates Pack</span>
                     <span>$39.00</span>
                   </div>
                 )}
               </>
             )}
-            <div className="mt-4 border-t border-gray-700 pt-2">
-              <div className="flex justify-between text-lg font-bold text-white">
+            <div className="mt-4 border-t border-gray-200 pt-2">
+              <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
                 <span>${(total / 100).toFixed(2)}</span>
               </div>
             </div>
           </div>
-        </Card>
+        </GlassmorphicCard>
       </div>
 
       {/* Payment Section */}
