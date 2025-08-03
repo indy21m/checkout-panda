@@ -236,7 +236,7 @@ export function EnhancedBlockLibrary() {
 
       {/* Helper Text */}
       {sections.length === 0 || !selectedType || selectedType !== 'column' ? (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
           <p className="text-sm text-blue-700">{getHelperText()}</p>
         </div>
       ) : null}
@@ -273,7 +273,7 @@ export function EnhancedBlockLibrary() {
       {/* Quick Add Instructions */}
       <div className="border-border mt-6 border-t pt-6">
         <p className="text-text-secondary mb-3 text-sm font-medium">How to add blocks:</p>
-        <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+        <ol className="list-inside list-decimal space-y-1 text-sm text-gray-600">
           <li>Switch to the Sections tab and add a section</li>
           <li>Click on a column within the section</li>
           <li>Drag blocks from here into the column</li>

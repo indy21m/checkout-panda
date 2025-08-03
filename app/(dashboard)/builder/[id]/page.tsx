@@ -5,18 +5,18 @@ import { useParams } from 'next/navigation'
 import { api } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { 
-  Save, 
-  Eye, 
-  Rocket, 
-  ArrowLeft, 
-  Loader2, 
-  Undo, 
+import {
+  Save,
+  Eye,
+  Rocket,
+  ArrowLeft,
+  Loader2,
+  Undo,
   Redo,
   Smartphone,
   Tablet,
   Monitor,
-  Grid3X3
+  Grid3X3,
 } from 'lucide-react'
 import Link from 'next/link'
 import { EnhancedCanvas } from '@/components/builder/enhanced-canvas'
@@ -54,6 +54,7 @@ export default function EnhancedBuilderPage() {
     migrateFromLegacyBlocks,
     addSection,
     reorderSections,
+    addBlockToColumn,
     selectElement,
     undo,
     redo,
@@ -91,7 +92,7 @@ export default function EnhancedBuilderPage() {
         setBlocks(checkout.pageData.blocks || [])
         migrateFromLegacyBlocks(checkout.pageData.blocks || [])
       }
-      
+
       const settings = checkout.pageData.settings || {}
       updateCanvasSettings({
         ...settings,
@@ -144,6 +145,64 @@ export default function EnhancedBuilderPage() {
     if (over && active.id !== over.id) {
       if (active.data.current?.type === 'section') {
         reorderSections(active.id as string, over.id as string)
+      } else if (active.data.current?.type === 'new-block') {
+        // Handle new block being dropped into a column
+        const columnId = over.id as string
+        const blockType = active.data.current.blockType as string
+        
+        // Get default block data based on type
+        const getDefaultBlockData = (type: string) => {
+          switch (type) {
+            case 'hero':
+              return {
+                headline: 'Welcome to Our Checkout',
+                subheadline: 'Complete your purchase in just a few steps',
+                backgroundType: 'gradient',
+                gradient: { type: 'aurora', animate: true },
+              }
+            case 'product':
+              return {
+                layout: 'side-by-side',
+                showImage: true,
+                showFeatures: true,
+                showPlans: false,
+              }
+            case 'payment':
+              return {
+                showExpressCheckout: true,
+                fields: ['email', 'card'],
+              }
+            case 'bump':
+              return {
+                style: 'highlighted',
+                animation: 'pulse',
+              }
+            case 'testimonial':
+              return {
+                layout: 'carousel',
+                autoplay: true,
+              }
+            case 'trust':
+              return {
+                badges: ['secure', 'guarantee', 'support'],
+              }
+            default:
+              return {}
+          }
+        }
+        
+        const newBlock = {
+          id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: blockType,
+          data: getDefaultBlockData(blockType),
+          styles: {
+            padding: '1rem',
+            className: '',
+          },
+          position: 0,
+        }
+        
+        addBlockToColumn(columnId, newBlock)
       }
       // Handle other drag types
     }
@@ -157,7 +216,7 @@ export default function EnhancedBuilderPage() {
         e.preventDefault()
         undo()
       }
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'z' && e.shiftKey || e.key === 'y')) {
+      if ((e.metaKey || e.ctrlKey) && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
         e.preventDefault()
         redo()
       }
@@ -276,10 +335,10 @@ export default function EnhancedBuilderPage() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setBreakpoint(bp.id)}
                   className={cn(
-                    'p-2 rounded-lg transition-all',
+                    'rounded-lg p-2 transition-all',
                     currentBreakpoint === bp.id
                       ? 'bg-primary text-white'
-                      : 'hover:bg-gray-100 text-gray-600'
+                      : 'text-gray-600 hover:bg-gray-100'
                   )}
                   title={`${bp.label} (${bp.width})`}
                 >
@@ -366,7 +425,7 @@ export default function EnhancedBuilderPage() {
                 className={cn(
                   'flex-1 px-4 py-2 text-sm font-medium transition-all',
                   activePanel === 'blocks'
-                    ? 'bg-white text-primary border-b-2 border-primary'
+                    ? 'text-primary border-primary border-b-2 bg-white'
                     : 'text-gray-600 hover:text-gray-900'
                 )}
               >
@@ -377,7 +436,7 @@ export default function EnhancedBuilderPage() {
                 className={cn(
                   'flex-1 px-4 py-2 text-sm font-medium transition-all',
                   activePanel === 'sections'
-                    ? 'bg-white text-primary border-b-2 border-primary'
+                    ? 'text-primary border-primary border-b-2 bg-white'
                     : 'text-gray-600 hover:text-gray-900'
                 )}
               >

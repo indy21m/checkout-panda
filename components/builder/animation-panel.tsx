@@ -38,11 +38,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
   }
 
   const updateAnimation = (id: string, updates: Partial<AnimationConfig>) => {
-    onChange(
-      animations.map((anim) =>
-        anim.id === id ? { ...anim, ...updates } : anim
-      )
-    )
+    onChange(animations.map((anim) => (anim.id === id ? { ...anim, ...updates } : anim)))
   }
 
   const deleteAnimation = (id: string) => {
@@ -62,7 +58,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
           Animations ({animations.length})
         </Label>
         <Button variant="primary" size="sm" onClick={addAnimation}>
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="mr-1 h-3 w-3" />
           Add Animation
         </Button>
       </div>
@@ -72,9 +68,9 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-8"
+            className="py-8 text-center"
           >
-            <Zap className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+            <Zap className="mx-auto mb-3 h-12 w-12 text-gray-300" />
             <p className="text-sm text-gray-500">
               No animations yet. Add one to bring your block to life!
             </p>
@@ -90,17 +86,15 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <GlassmorphicCard
-                  className="p-3 cursor-pointer"
+                  className="cursor-pointer p-3"
                   variant="light"
                   onClick={() =>
-                    setExpandedAnimation(
-                      expandedAnimation === animation.id ? null : animation.id
-                    )
+                    setExpandedAnimation(expandedAnimation === animation.id ? null : animation.id)
                   }
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 text-xs font-bold text-white">
                         {index + 1}
                       </div>
                       <div>
@@ -123,7 +117,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => deleteAnimation(animation.id)}
-                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -210,7 +204,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
                         )}
 
                         <div>
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="mb-1 flex items-center justify-between">
                             <Label className="text-xs">Duration</Label>
                             <span className="text-xs text-gray-500">{animation.duration}ms</span>
                           </div>
@@ -227,7 +221,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
                         </div>
 
                         <div>
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="mb-1 flex items-center justify-between">
                             <Label className="text-xs">Delay</Label>
                             <span className="text-xs text-gray-500">{animation.delay || 0}ms</span>
                           </div>
@@ -269,7 +263,7 @@ export function AnimationPanel({ animations, onChange }: AnimationPanelProps) {
 
                         {animation.trigger === 'onScroll' && (
                           <div>
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="mb-1 flex items-center justify-between">
                               <Label className="text-xs">Scroll Threshold</Label>
                               <span className="text-xs text-gray-500">
                                 {Math.round((animation.scrollThreshold || 0.5) * 100)}%

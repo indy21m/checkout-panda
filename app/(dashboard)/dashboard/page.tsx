@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     // Fetch user's checkouts and products
     const results = await Promise.all([
       api.checkout.list().catch(() => []),
-      api.product.list().catch(() => []),
+      api.product.list({ includeArchived: false }).catch(() => []),
     ])
     checkouts = results[0]
     products = results[1]

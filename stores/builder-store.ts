@@ -44,7 +44,7 @@ interface BuilderState {
   // Legacy state (for backward compatibility)
   blocks: Block[]
   selectedBlockId: string | null
-  
+
   // Enhanced state
   sections: Section[]
   selectedIds: string[]
@@ -52,20 +52,20 @@ interface BuilderState {
   isDragging: boolean
   canvasSettings: EnhancedCanvasSettings
   hasUnsavedChanges: boolean
-  
+
   // History for undo/redo
   history: {
     past: HistoryState[]
     future: HistoryState[]
   }
-  
+
   // Clipboard
   clipboard: ClipboardData | null
-  
+
   // UI state
   showGrid: boolean
   currentBreakpoint: 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
-  
+
   // Legacy actions (for backward compatibility)
   addBlock: (block: Block) => void
   updateBlock: (blockId: string, updates: Partial<Block>) => void
@@ -73,38 +73,38 @@ interface BuilderState {
   reorderBlocks: (activeId: string, overId: string) => void
   selectBlock: (blockId: string | null) => void
   setBlocks: (blocks: Block[]) => void
-  
+
   // Enhanced actions
   addSection: (section: Section, index?: number) => void
   updateSection: (sectionId: string, updates: Partial<Section>) => void
   deleteSection: (sectionId: string) => void
   reorderSections: (activeId: string, overId: string) => void
-  
+
   addColumn: (sectionId: string, column: Column, index?: number) => void
   updateColumn: (columnId: string, updates: Partial<Column>) => void
   deleteColumn: (columnId: string) => void
   reorderColumns: (sectionId: string, activeId: string, overId: string) => void
-  
+
   addBlockToColumn: (columnId: string, block: EnhancedBlock, index?: number) => void
   updateEnhancedBlock: (blockId: string, updates: Partial<EnhancedBlock>) => void
   deleteEnhancedBlock: (blockId: string) => void
   moveBlock: (blockId: string, targetColumnId: string, index: number) => void
-  
+
   // Selection actions
   selectElement: (id: string, type: 'section' | 'column' | 'block') => void
   selectMultiple: (ids: string[], type: 'section' | 'column' | 'block') => void
   clearSelection: () => void
-  
+
   // History actions
   undo: () => void
   redo: () => void
   saveToHistory: () => void
-  
+
   // Clipboard actions
   copy: () => void
   cut: () => void
   paste: (targetId?: string) => void
-  
+
   // UI actions
   setIsDragging: (isDragging: boolean) => void
   updateCanvasSettings: (settings: Partial<EnhancedCanvasSettings>) => void
@@ -112,7 +112,7 @@ interface BuilderState {
   toggleGrid: () => void
   setBreakpoint: (breakpoint: 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl') => void
   resetBuilder: () => void
-  
+
   // Migration helper
   migrateFromLegacyBlocks: (blocks: Block[]) => void
 }
@@ -365,7 +365,7 @@ export const useBuilderStore = create<BuilderState>()(
     moveBlock: (blockId, targetColumnId, index) =>
       set((state) => {
         let block: EnhancedBlock | undefined
-        
+
         // Find and remove block from current location
         for (const section of state.sections) {
           for (const column of section.columns) {
@@ -378,7 +378,7 @@ export const useBuilderStore = create<BuilderState>()(
           }
           if (block) break
         }
-        
+
         // Add block to new location
         if (block) {
           for (const section of state.sections) {
@@ -423,7 +423,7 @@ export const useBuilderStore = create<BuilderState>()(
           sections: JSON.parse(JSON.stringify(state.sections)),
           canvasSettings: JSON.parse(JSON.stringify(state.canvasSettings)),
         }
-        
+
         state.history.past.push(historyState)
         if (state.history.past.length > MAX_HISTORY_SIZE) {
           state.history.past.shift()
@@ -434,14 +434,14 @@ export const useBuilderStore = create<BuilderState>()(
     undo: () =>
       set((state) => {
         if (state.history.past.length === 0) return
-        
+
         const previousState = state.history.past.pop()
         if (previousState) {
           const currentState: HistoryState = {
             sections: JSON.parse(JSON.stringify(state.sections)),
             canvasSettings: JSON.parse(JSON.stringify(state.canvasSettings)),
           }
-          
+
           state.history.future.push(currentState)
           state.sections = previousState.sections
           state.canvasSettings = previousState.canvasSettings
@@ -452,14 +452,14 @@ export const useBuilderStore = create<BuilderState>()(
     redo: () =>
       set((state) => {
         if (state.history.future.length === 0) return
-        
+
         const nextState = state.history.future.pop()
         if (nextState) {
           const currentState: HistoryState = {
             sections: JSON.parse(JSON.stringify(state.sections)),
             canvasSettings: JSON.parse(JSON.stringify(state.canvasSettings)),
           }
-          
+
           state.history.past.push(currentState)
           state.sections = nextState.sections
           state.canvasSettings = nextState.canvasSettings
@@ -471,9 +471,9 @@ export const useBuilderStore = create<BuilderState>()(
     copy: () =>
       set((state) => {
         if (state.selectedIds.length === 0) return
-        
+
         const elements: BuilderElement[] = []
-        
+
         if (state.selectedType === 'section') {
           state.selectedIds.forEach((id) => {
             const section = state.sections.find((s) => s.id === id)
@@ -500,7 +500,7 @@ export const useBuilderStore = create<BuilderState>()(
             })
           })
         }
-        
+
         if (elements.length > 0) {
           state.clipboard = {
             type: elements.length === 1 ? state.selectedType! : 'multiple',
@@ -512,10 +512,10 @@ export const useBuilderStore = create<BuilderState>()(
     cut: () => {
       get().copy()
       const { selectedIds, selectedType } = get()
-      
+
       set((state) => {
         get().saveToHistory()
-        
+
         if (selectedType === 'section') {
           state.sections = state.sections.filter((s) => !selectedIds.includes(s.id))
         } else if (selectedType === 'column') {
@@ -529,7 +529,7 @@ export const useBuilderStore = create<BuilderState>()(
             })
           })
         }
-        
+
         state.selectedIds = []
         state.selectedType = null
         state.hasUnsavedChanges = true
@@ -539,16 +539,16 @@ export const useBuilderStore = create<BuilderState>()(
     paste: (_targetId) => {
       const { clipboard } = get()
       if (!clipboard) return
-      
+
       set((state) => {
         get().saveToHistory()
-        
+
         // Generate new IDs for pasted elements
         // const generateNewId = (type: string) => `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        
+
         // TODO: Implement paste logic based on clipboard type and target
         // This is a complex operation that needs careful handling
-        
+
         state.hasUnsavedChanges = true
       })
     },
@@ -627,7 +627,7 @@ export const useBuilderStore = create<BuilderState>()(
             },
           },
         }
-        
+
         state.sections = [section]
         state.hasUnsavedChanges = true
       }),

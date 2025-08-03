@@ -22,6 +22,14 @@ export const blockTypeEnum = pgEnum('block_type', [
   'trust',
   'custom',
 ])
+export const productTypeEnum = pgEnum('product_type', [
+  'digital',
+  'service',
+  'membership',
+  'bundle',
+])
+export const planTierEnum = pgEnum('plan_tier', ['basic', 'pro', 'enterprise', 'custom'])
+export const assetTypeEnum = pgEnum('asset_type', ['download', 'video', 'document', 'resource'])
 
 // Users (from Clerk)
 export const users = pgTable('users', {
@@ -89,7 +97,14 @@ export const products = pgTable('products', {
     .references(() => users.id),
   name: text('name').notNull(),
   description: text('description'),
-  price: integer('price').notNull(), // in cents
+  type: productTypeEnum('type').default('digital'),
+
+  // Visual
+  thumbnail: text('thumbnail'), // URL or gradient spec
+  color: text('color'), // For gradient backgrounds
+
+  // Pricing (deprecated in favor of plans)
+  price: integer('price').notNull(), // in cents - kept for backward compatibility
   stripeProductId: text('stripe_product_id'),
   stripePriceId: text('stripe_price_id'),
 
@@ -97,6 +112,91 @@ export const products = pgTable('products', {
   isRecurring: boolean('is_recurring').default(false),
   interval: text('interval'), // 'month', 'year', etc.
   intervalCount: integer('interval_count').default(1),
+
+  // Features
+  features: jsonb('features').$type<string[]>().default([]),
+
+  // Analytics
+  totalRevenue: integer('total_revenue').default(0), // in cents
+  totalSales: integer('total_sales').default(0),
+  conversionRate: integer('conversion_rate').default(0), // percentage * 100
+
+  // Status
+  isActive: boolean('is_active').default(true),
+  isArchived: boolean('is_archived').default(false),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+// Product Plans (Pricing Tiers)
+export const productPlans = pgTable('product_plans', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  productId: uuid('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+
+  // Plan details
+  name: text('name').notNull(),
+  description: text('description'),
+  tier: planTierEnum('tier').default('basic'),
+
+  // Pricing
+  price: integer('price').notNull(), // in cents
+  compareAtPrice: integer('compare_at_price'), // for showing discounts
+
+  // Billing
+  isRecurring: boolean('is_recurring').default(false),
+  billingInterval: text('billing_interval'), // 'month', 'year'
+  billingIntervalCount: integer('billing_interval_count').default(1),
+  trialDays: integer('trial_days').default(0),
+
+  // Features
+  features: jsonb('features').$type<string[]>().default([]),
+  limits: jsonb('limits').$type<Record<string, number>>().default({}),
+
+  // Stripe
+  stripePriceId: text('stripe_price_id'),
+
+  // Display
+  badge: text('badge'), // e.g., "Most Popular", "Best Value"
+  badgeColor: text('badge_color'),
+  isHighlighted: boolean('is_highlighted').default(false),
+  sortOrder: integer('sort_order').default(0),
+
+  // Status
+  isActive: boolean('is_active').default(true),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+// Product Assets (Digital Downloads)
+export const productAssets = pgTable('product_assets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  productId: uuid('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  planId: uuid('plan_id').references(() => productPlans.id, { onDelete: 'cascade' }), // Optional - asset can be plan-specific
+
+  // Asset details
+  name: text('name').notNull(),
+  description: text('description'),
+  type: assetTypeEnum('type').default('download'),
+
+  // File info
+  fileUrl: text('file_url').notNull(),
+  fileName: text('file_name').notNull(),
+  fileSize: integer('file_size'), // in bytes
+  mimeType: text('mime_type'),
+
+  // Access control
+  requiresPurchase: boolean('requires_purchase').default(true),
+  maxDownloads: integer('max_downloads'), // null = unlimited
+  expiresInDays: integer('expires_in_days'), // null = never expires
+
+  // Display
+  sortOrder: integer('sort_order').default(0),
 
   createdAt: timestamp('created_at').defaultNow(),
 })
@@ -249,6 +349,27 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [users.id],
   }),
   orderBumps: many(orderBumps),
+  plans: many(productPlans),
+  assets: many(productAssets),
+}))
+
+export const productPlansRelations = relations(productPlans, ({ one, many }) => ({
+  product: one(products, {
+    fields: [productPlans.productId],
+    references: [products.id],
+  }),
+  assets: many(productAssets),
+}))
+
+export const productAssetsRelations = relations(productAssets, ({ one }) => ({
+  product: one(products, {
+    fields: [productAssets.productId],
+    references: [products.id],
+  }),
+  plan: one(productPlans, {
+    fields: [productAssets.planId],
+    references: [productPlans.id],
+  }),
 }))
 
 export const orderBumpsRelations = relations(orderBumps, ({ one }) => ({

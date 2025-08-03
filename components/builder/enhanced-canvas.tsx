@@ -60,9 +60,9 @@ export function EnhancedCanvas() {
     if (!showGrid) return null
 
     return (
-      <div className="absolute inset-0 pointer-events-none z-10">
+      <div className="pointer-events-none absolute inset-0 z-10">
         <div
-          className="h-full mx-auto"
+          className="mx-auto h-full"
           style={{
             backgroundImage: `
               repeating-linear-gradient(
@@ -99,24 +99,18 @@ export function EnhancedCanvas() {
   return (
     <div className="relative h-full overflow-y-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Toolbar */}
-      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 py-2">
+      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 px-4 py-2 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button
-              variant={showGrid ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={toggleGrid}
-            >
-              <Grid3X3 className="h-4 w-4 mr-1" />
+            <Button variant={showGrid ? 'primary' : 'ghost'} size="sm" onClick={toggleGrid}>
+              <Grid3X3 className="mr-1 h-4 w-4" />
               Grid
             </Button>
             <div className="text-sm text-gray-600">
               Breakpoint: <span className="font-medium">{currentBreakpoint}</span>
             </div>
           </div>
-          <div className="text-sm text-gray-600">
-            {sections.length} sections
-          </div>
+          <div className="text-sm text-gray-600">{sections.length} sections</div>
         </div>
       </div>
 
@@ -146,13 +140,11 @@ export function EnhancedCanvas() {
                   transition={{ duration: 0.3 }}
                   className="mb-6"
                 >
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center">
-                    <Grid3X3 className="h-12 w-12 text-primary" />
+                  <div className="from-primary/20 to-secondary/20 mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br">
+                    <Grid3X3 className="text-primary h-12 w-12" />
                   </div>
                 </motion.div>
-                <h3 className="text-text mb-2 text-2xl font-semibold">
-                  Start Building Your Page
-                </h3>
+                <h3 className="text-text mb-2 text-2xl font-semibold">Start Building Your Page</h3>
                 <p className="text-text-secondary mx-auto mb-6 max-w-md">
                   Create stunning layouts with our advanced grid system and drag-and-drop blocks
                 </p>
@@ -161,7 +153,7 @@ export function EnhancedCanvas() {
                     onClick={handleAddFirstSection}
                     variant="primary"
                     size="lg"
-                    className="shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="shadow-lg transition-all duration-200 hover:shadow-xl"
                   >
                     <Plus className="mr-2 h-5 w-5" />
                     Add First Section
@@ -170,8 +162,8 @@ export function EnhancedCanvas() {
               </div>
             </div>
           ) : (
-            <SortableContext 
-              items={sections.map((s) => s.id)} 
+            <SortableContext
+              items={sections.map((s) => s.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-6">
@@ -219,7 +211,7 @@ export function EnhancedCanvas() {
                       }
                       addSection(newSection)
                     }}
-                    className="shadow-md hover:shadow-lg transition-all duration-200"
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Another Section

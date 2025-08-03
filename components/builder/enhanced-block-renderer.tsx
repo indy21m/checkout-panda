@@ -6,8 +6,10 @@ import { motion, useAnimation, useInView, type Easing } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useBuilderStore } from '@/stores/builder-store'
-import { GripVertical, Trash2, Eye, EyeOff, Copy, Zap, MousePointer } from 'lucide-react'
+import { GripVertical, Trash2, Eye, EyeOff, Copy, Zap, MousePointer, Edit2 } from 'lucide-react'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
+import { EnhancedProductBlock } from './blocks/enhanced-product-block'
+import { BlockEditorModal } from './block-editor-modal'
 import type { EnhancedBlock, AnimationConfig } from '@/types/builder'
 
 interface EnhancedBlockRendererProps {
@@ -17,18 +19,14 @@ interface EnhancedBlockRendererProps {
 }
 
 export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRendererProps) {
-  const { 
-    selectElement, 
-    deleteEnhancedBlock, 
-    copy,
-    paste 
-  } = useBuilderStore()
-  
+  const { selectElement, deleteEnhancedBlock, copy, paste, updateEnhancedBlock } = useBuilderStore()
+
   const [isVisible, setIsVisible] = useState(true)
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
   const controls = useAnimation()
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: false, margin: '-10%' })
-  
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
   })
@@ -127,12 +125,11 @@ export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRender
         )
       case 'product':
         return (
-          <div className="rounded-md bg-gradient-to-r from-blue-50 to-cyan-50 p-6">
-            <h3 className="text-text text-lg font-semibold">Product Showcase</h3>
-            <p className="text-text-secondary mt-2 text-sm">
-              Display your product with pricing and features
-            </p>
-          </div>
+          <EnhancedProductBlock
+            data={block.data}
+            onUpdate={(data) => updateEnhancedBlock(block.id, { data })}
+            isEditing={false}
+          />
         )
       case 'payment':
         return (
@@ -203,7 +200,7 @@ export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRender
       >
         {/* Animation Indicators */}
         {block.animations && block.animations.length > 0 && (
-          <div className="absolute top-2 left-12 flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-2 left-12 flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
             <Zap className="h-3 w-3" />
             {block.animations.length} animations
           </div>
@@ -211,7 +208,7 @@ export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRender
 
         {/* Interaction Indicators */}
         {block.interactions && block.interactions.length > 0 && (
-          <div className="absolute top-2 left-32 flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-2 left-32 flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
             <MousePointer className="h-3 w-3" />
             {block.interactions.length} interactions
           </div>
@@ -240,6 +237,18 @@ export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRender
 
         {/* Action Buttons */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsEditorOpen(true)
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/50 backdrop-blur-sm transition-colors hover:bg-white/70"
+            title="Edit block"
+          >
+            <Edit2 className="h-4 w-4 text-gray-600" />
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -282,6 +291,13 @@ export function EnhancedBlockRenderer({ block, isSelected }: EnhancedBlockRender
           </motion.button>
         </div>
       </GlassmorphicCard>
+
+      {/* Block Editor Modal */}
+      <BlockEditorModal
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
+        block={block}
+      />
     </motion.div>
   )
 }

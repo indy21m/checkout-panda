@@ -35,15 +35,8 @@ export function SectionManager({
   onAddSection,
 }: SectionManagerProps) {
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
-  const {
-    updateSection,
-    deleteSection,
-    reorderSections,
-    addColumn,
-    selectElement,
-    copy,
-    paste,
-  } = useBuilderStore()
+  const { updateSection, deleteSection, reorderSections, addColumn, selectElement, copy, paste } =
+    useBuilderStore()
 
   const toggleCollapse = (sectionId: string) => {
     const newCollapsed = new Set(collapsedSections)
@@ -93,14 +86,14 @@ export function SectionManager({
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
           <Layers className="h-4 w-4" />
           Sections ({sections.length})
         </h3>
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button variant="primary" size="sm" onClick={onAddSection}>
-            <Plus className="h-3 w-3 mr-1" />
+            <Plus className="mr-1 h-3 w-3" />
             Add Section
           </Button>
         </motion.div>
@@ -124,21 +117,21 @@ export function SectionManager({
               <GlassmorphicCard
                 className={cn(
                   'overflow-hidden transition-all duration-200',
-                  isSelected && 'ring-2 ring-primary ring-offset-2'
+                  isSelected && 'ring-primary ring-2 ring-offset-2'
                 )}
                 variant="light"
                 hover
                 onClick={() => onSelectSection(section.id)}
               >
                 {/* Section Header */}
-                <div className="flex items-center justify-between p-3 border-b border-gray-200">
-                  <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                  <div className="flex flex-1 items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         toggleCollapse(section.id)
                       }}
-                      className="hover:bg-gray-100 rounded p-1 transition-colors"
+                      className="rounded p-1 transition-colors hover:bg-gray-100"
                     >
                       {isCollapsed ? (
                         <ChevronDown className="h-4 w-4" />
@@ -146,14 +139,12 @@ export function SectionManager({
                         <ChevronUp className="h-4 w-4" />
                       )}
                     </button>
-                    
+
                     <Input
                       value={section.name || `Section ${index + 1}`}
-                      onChange={(e) =>
-                        updateSection(section.id, { name: e.target.value })
-                      }
+                      onChange={(e) => updateSection(section.id, { name: e.target.value })}
                       onClick={(e) => e.stopPropagation()}
-                      className="h-7 text-sm font-medium bg-transparent border-0 hover:bg-gray-50 focus:bg-white focus:border-gray-300 transition-all"
+                      className="h-7 border-0 bg-transparent text-sm font-medium transition-all hover:bg-gray-50 focus:border-gray-300 focus:bg-white"
                       placeholder="Section name"
                     />
                   </div>
@@ -168,7 +159,7 @@ export function SectionManager({
                           moveSection(section.id, 'up')
                         }}
                         disabled={index === 0}
-                        className="hover:bg-gray-100 rounded p-0.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         <ChevronUp className="h-3 w-3" />
                       </button>
@@ -178,7 +169,7 @@ export function SectionManager({
                           moveSection(section.id, 'down')
                         }}
                         disabled={index === sections.length - 1}
-                        className="hover:bg-gray-100 rounded p-0.5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         <ChevronDown className="h-3 w-3" />
                       </button>
@@ -200,7 +191,7 @@ export function SectionManager({
                           },
                         })
                       }}
-                      className="hover:bg-gray-100 rounded p-1 transition-colors"
+                      className="rounded p-1 transition-colors hover:bg-gray-100"
                     >
                       {section.visibility?.desktop === false ? (
                         <EyeOff className="h-4 w-4 text-gray-400" />
@@ -215,7 +206,7 @@ export function SectionManager({
                         e.stopPropagation()
                         handleDuplicateSection(section)
                       }}
-                      className="hover:bg-gray-100 rounded p-1 transition-colors"
+                      className="rounded p-1 transition-colors hover:bg-gray-100"
                     >
                       <Copy className="h-4 w-4" />
                     </button>
@@ -226,7 +217,7 @@ export function SectionManager({
                         e.stopPropagation()
                         deleteSection(section.id)
                       }}
-                      className="hover:bg-red-50 text-red-600 rounded p-1 transition-colors"
+                      className="rounded p-1 text-red-600 transition-colors hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -241,14 +232,12 @@ export function SectionManager({
                     exit={{ height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-3 space-y-2">
+                    <div className="space-y-2 p-3">
                       {/* Section Settings Summary */}
                       <div className="flex items-center gap-4 text-xs text-gray-600">
                         <div className="flex items-center gap-1">
                           <Grid3X3 className="h-3 w-3" />
-                          <span>
-                            {section.settings.grid.columns.base || 12} columns
-                          </span>
+                          <span>{section.settings.grid.columns.base || 12} columns</span>
                         </div>
                         {section.settings.fullWidth && (
                           <span className="text-primary">Full Width</span>
@@ -262,14 +251,14 @@ export function SectionManager({
                       </div>
 
                       {/* Columns Preview */}
-                      <div className="grid grid-cols-12 gap-1 h-16">
+                      <div className="grid h-16 grid-cols-12 gap-1">
                         {section.columns.map((column) => {
                           const span = column.span.base || 12
                           return (
                             <div
                               key={column.id}
                               className={cn(
-                                'bg-gradient-to-br from-gray-100 to-gray-200 rounded flex items-center justify-center text-xs text-gray-600',
+                                'flex items-center justify-center rounded bg-gradient-to-br from-gray-100 to-gray-200 text-xs text-gray-600',
                                 `col-span-${Math.min(span, 12)}`
                               )}
                               style={{
@@ -298,7 +287,7 @@ export function SectionManager({
                           })
                         }}
                       >
-                        <Plus className="h-3 w-3 mr-1" />
+                        <Plus className="mr-1 h-3 w-3" />
                         Add Column
                       </Button>
                     </div>
@@ -312,13 +301,11 @@ export function SectionManager({
 
       {/* Empty State */}
       {sections.length === 0 && (
-        <div className="text-center py-8 px-4">
-          <Layers className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500 text-sm mb-4">
-            No sections yet. Start building your layout!
-          </p>
+        <div className="px-4 py-8 text-center">
+          <Layers className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+          <p className="mb-4 text-sm text-gray-500">No sections yet. Start building your layout!</p>
           <Button variant="primary" onClick={onAddSection}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add First Section
           </Button>
         </div>

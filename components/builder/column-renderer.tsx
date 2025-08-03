@@ -16,18 +16,10 @@ interface ColumnRendererProps {
   isSelected: boolean
 }
 
-export function ColumnRenderer({ 
-  column, 
-  currentBreakpoint, 
-}: ColumnRendererProps) {
-  const { 
-    selectedIds, 
-    selectedType,
-    selectElement, 
-    deleteColumn,
-    addBlockToColumn,
-  } = useBuilderStore()
-  
+export function ColumnRenderer({ column, currentBreakpoint }: ColumnRendererProps) {
+  const { selectedIds, selectedType, selectElement, deleteColumn, addBlockToColumn } =
+    useBuilderStore()
+
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: {
@@ -37,10 +29,24 @@ export function ColumnRenderer({
   })
 
   // Get responsive values
-  const getResponsiveValue = <T,>(values: Record<string, T> | { base?: T; sm?: T; md?: T; lg?: T; xl?: T; '2xl'?: T } | undefined, defaultValue: T): T => {
+  const getResponsiveValue = <T,>(
+    values: Record<string, T> | { base?: T; sm?: T; md?: T; lg?: T; xl?: T; '2xl'?: T } | undefined,
+    defaultValue: T
+  ): T => {
     if (!values) return defaultValue
-    if ('base' in values || 'sm' in values || 'md' in values || 'lg' in values || 'xl' in values || '2xl' in values) {
-      return (values as Record<string, T>)[currentBreakpoint] || (values as { base?: T }).base || defaultValue
+    if (
+      'base' in values ||
+      'sm' in values ||
+      'md' in values ||
+      'lg' in values ||
+      'xl' in values ||
+      '2xl' in values
+    ) {
+      return (
+        (values as Record<string, T>)[currentBreakpoint] ||
+        (values as { base?: T }).base ||
+        defaultValue
+      )
     }
     return (values as Record<string, T>)[currentBreakpoint] || defaultValue
   }
@@ -71,7 +77,7 @@ export function ColumnRenderer({
       className={cn(
         'group relative min-h-[100px] transition-all duration-200',
         isOver && 'bg-primary/5 scale-[1.02]',
-        isColumnSelected && 'ring-2 ring-primary ring-offset-2'
+        isColumnSelected && 'ring-primary ring-2 ring-offset-2'
       )}
       style={{
         gridColumn: `span ${span} / span ${span}`,
@@ -88,14 +94,14 @@ export function ColumnRenderer({
       }}
     >
       {/* Column Controls (shown on hover) */}
-      <div className="absolute top-1 right-1 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-1 right-1 z-10 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         {/* Settings */}
         <button
           onClick={(e) => {
             e.stopPropagation()
             // Open column settings
           }}
-          className="p-1 bg-white/90 backdrop-blur-sm rounded shadow-sm hover:bg-white transition-colors"
+          className="rounded bg-white/90 p-1 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
         >
           <Settings className="h-3 w-3 text-gray-600" />
         </button>
@@ -106,7 +112,7 @@ export function ColumnRenderer({
             e.stopPropagation()
             deleteColumn(column.id)
           }}
-          className="p-1 bg-red-50/90 backdrop-blur-sm rounded shadow-sm hover:bg-red-100 transition-colors"
+          className="rounded bg-red-50/90 p-1 shadow-sm backdrop-blur-sm transition-colors hover:bg-red-100"
         >
           <Trash2 className="h-3 w-3 text-red-600" />
         </button>
@@ -114,7 +120,7 @@ export function ColumnRenderer({
 
       {/* Column Content */}
       {column.blocks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[100px] p-4">
+        <div className="flex min-h-[100px] flex-col items-center justify-center p-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -122,22 +128,24 @@ export function ColumnRenderer({
               e.stopPropagation()
               handleAddBlock()
             }}
-            className="flex flex-col items-center gap-2 p-4 w-full max-w-xs border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-primary/5 transition-all"
+            className="hover:border-primary hover:bg-primary/5 flex w-full max-w-xs flex-col items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-4 transition-all"
           >
             <Plus className="h-6 w-6 text-gray-400" />
             <span className="text-sm text-gray-500">Add Block</span>
           </motion.button>
         </div>
       ) : (
-        <SortableContext 
-          items={column.blocks.map((b) => b.id)} 
+        <SortableContext
+          items={column.blocks.map((b) => b.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className={cn(
-            'space-y-3',
-            column.settings.verticalAlign === 'middle' && 'flex flex-col justify-center',
-            column.settings.verticalAlign === 'bottom' && 'flex flex-col justify-end'
-          )}>
+          <div
+            className={cn(
+              'space-y-3',
+              column.settings.verticalAlign === 'middle' && 'flex flex-col justify-center',
+              column.settings.verticalAlign === 'bottom' && 'flex flex-col justify-end'
+            )}
+          >
             {column.blocks.map((block) => (
               <EnhancedBlockRenderer
                 key={block.id}
@@ -155,9 +163,9 @@ export function ColumnRenderer({
                 e.stopPropagation()
                 handleAddBlock()
               }}
-              className="w-full py-2 border border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-primary/5 transition-all opacity-0 group-hover:opacity-100"
+              className="hover:border-primary hover:bg-primary/5 w-full rounded-lg border border-dashed border-gray-300 py-2 opacity-0 transition-all group-hover:opacity-100"
             >
-              <Plus className="h-4 w-4 mx-auto text-gray-400" />
+              <Plus className="mx-auto h-4 w-4 text-gray-400" />
             </motion.button>
           </div>
         </SortableContext>

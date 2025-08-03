@@ -14,52 +14,46 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  X, 
-  Settings, 
-  Layout,
-  Columns,
-  Box
-} from 'lucide-react'
+import { X, Settings, Layout, Columns, Box } from 'lucide-react'
 import { useBuilderStore } from '@/stores/builder-store'
 import { AnimationPanel } from './animation-panel'
 import type { Section, Column, EnhancedBlock } from '@/types/builder'
 
 export function EnhancedPropertiesPanel() {
-  const { 
+  const {
     sections,
-    selectedIds, 
+    selectedIds,
     selectedType,
     currentBreakpoint,
     updateSection,
     updateColumn,
     updateEnhancedBlock,
-    clearSelection
+    clearSelection,
   } = useBuilderStore()
 
   // Get selected element
   const getSelectedElement = (): Section | Column | EnhancedBlock | null => {
     if (selectedIds.length === 0 || !selectedType) return null
-    
+
     const selectedId = selectedIds[0]
     if (!selectedId) return null
 
     if (selectedType === 'section') {
-      return sections.find(s => s.id === selectedId) || null
+      return sections.find((s) => s.id === selectedId) || null
     } else if (selectedType === 'column') {
       for (const section of sections) {
-        const column = section.columns.find(c => c.id === selectedId)
+        const column = section.columns.find((c) => c.id === selectedId)
         if (column) return column
       }
     } else if (selectedType === 'block') {
       for (const section of sections) {
         for (const column of section.columns) {
-          const block = column.blocks.find(b => b.id === selectedId)
+          const block = column.blocks.find((b) => b.id === selectedId)
           if (block) return block
         }
       }
     }
-    
+
     return null
   }
 
@@ -84,7 +78,7 @@ export function EnhancedPropertiesPanel() {
           <TabsTrigger value="style">Style</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="layout" className="space-y-4">
           <div>
             <Label htmlFor="section-name">Section Name</Label>
@@ -96,33 +90,37 @@ export function EnhancedPropertiesPanel() {
               placeholder="e.g., Hero Section"
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <Label htmlFor="full-width">Full Width</Label>
             <Switch
               id="full-width"
               checked={section.settings.fullWidth || false}
-              onCheckedChange={(checked) => 
-                updateSection(section.id, { 
-                  settings: { ...section.settings, fullWidth: checked }
+              onCheckedChange={(checked) =>
+                updateSection(section.id, {
+                  settings: { ...section.settings, fullWidth: checked },
                 })
               }
             />
           </div>
-          
+
           <div>
             <Label>Max Width ({currentBreakpoint})</Label>
             <Select
-              value={section.settings.maxWidth?.[currentBreakpoint] || section.settings.maxWidth?.base || '1280px'}
-              onValueChange={(value) => 
+              value={
+                section.settings.maxWidth?.[currentBreakpoint] ||
+                section.settings.maxWidth?.base ||
+                '1280px'
+              }
+              onValueChange={(value) =>
                 updateSection(section.id, {
                   settings: {
                     ...section.settings,
                     maxWidth: {
                       ...section.settings.maxWidth,
-                      [currentBreakpoint]: value
-                    }
-                  }
+                      [currentBreakpoint]: value,
+                    },
+                  },
                 })
               }
             >
@@ -138,16 +136,20 @@ export function EnhancedPropertiesPanel() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
             <Label>Columns ({currentBreakpoint})</Label>
             <div className="mt-2 grid grid-cols-6 gap-2">
               {[1, 2, 3, 4, 6, 12].map((cols) => (
                 <Button
                   key={cols}
-                  variant={section.settings.grid.columns[currentBreakpoint] === cols ? 'primary' : 'secondary'}
+                  variant={
+                    section.settings.grid.columns[currentBreakpoint] === cols
+                      ? 'primary'
+                      : 'secondary'
+                  }
                   size="sm"
-                  onClick={() => 
+                  onClick={() =>
                     updateSection(section.id, {
                       settings: {
                         ...section.settings,
@@ -155,10 +157,10 @@ export function EnhancedPropertiesPanel() {
                           ...section.settings.grid,
                           columns: {
                             ...section.settings.grid.columns,
-                            [currentBreakpoint]: cols
-                          }
-                        }
-                      }
+                            [currentBreakpoint]: cols,
+                          },
+                        },
+                      },
                     })
                   }
                 >
@@ -167,16 +169,18 @@ export function EnhancedPropertiesPanel() {
               ))}
             </div>
           </div>
-          
+
           <div>
             <Label>Gap ({currentBreakpoint})</Label>
             <div className="mt-2 grid grid-cols-5 gap-2">
               {['0', '0.5rem', '1rem', '1.5rem', '2rem'].map((gap) => (
                 <Button
                   key={gap}
-                  variant={section.settings.grid.gap[currentBreakpoint] === gap ? 'primary' : 'secondary'}
+                  variant={
+                    section.settings.grid.gap[currentBreakpoint] === gap ? 'primary' : 'secondary'
+                  }
                   size="sm"
-                  onClick={() => 
+                  onClick={() =>
                     updateSection(section.id, {
                       settings: {
                         ...section.settings,
@@ -184,10 +188,10 @@ export function EnhancedPropertiesPanel() {
                           ...section.settings.grid,
                           gap: {
                             ...section.settings.grid.gap,
-                            [currentBreakpoint]: gap
-                          }
-                        }
-                      }
+                            [currentBreakpoint]: gap,
+                          },
+                        },
+                      },
                     })
                   }
                 >
@@ -197,42 +201,46 @@ export function EnhancedPropertiesPanel() {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="style" className="space-y-4">
           <div>
             <Label>Padding ({currentBreakpoint})</Label>
             <Input
-              value={section.settings.padding?.[currentBreakpoint] || section.settings.padding?.base || '2rem'}
-              onChange={(e) => 
+              value={
+                section.settings.padding?.[currentBreakpoint] ||
+                section.settings.padding?.base ||
+                '2rem'
+              }
+              onChange={(e) =>
                 updateSection(section.id, {
                   settings: {
                     ...section.settings,
                     padding: {
                       ...section.settings.padding,
-                      [currentBreakpoint]: e.target.value
-                    }
-                  }
+                      [currentBreakpoint]: e.target.value,
+                    },
+                  },
                 })
               }
               className="mt-1"
               placeholder="e.g., 2rem, 32px"
             />
           </div>
-          
+
           <div>
             <Label>Background Type</Label>
             <Select
               value={section.settings.background?.type || 'color'}
-              onValueChange={(value) => 
+              onValueChange={(value) =>
                 updateSection(section.id, {
                   settings: {
                     ...section.settings,
                     background: {
                       ...section.settings.background,
                       type: value as 'color' | 'gradient' | 'image' | 'video',
-                      value: section.settings.background?.value || ''
-                    }
-                  }
+                      value: section.settings.background?.value || '',
+                    },
+                  },
                 })
               }
             >
@@ -246,66 +254,66 @@ export function EnhancedPropertiesPanel() {
               </SelectContent>
             </Select>
           </div>
-          
+
           {section.settings.background?.type && (
             <div>
               <Label>Background Value</Label>
               <Input
                 value={section.settings.background.value}
-                onChange={(e) => 
+                onChange={(e) =>
                   updateSection(section.id, {
                     settings: {
                       ...section.settings,
                       background: {
                         ...section.settings.background!,
-                        value: e.target.value
-                      }
-                    }
+                        value: e.target.value,
+                      },
+                    },
                   })
                 }
                 className="mt-1"
                 placeholder={
-                  section.settings.background.type === 'color' 
-                    ? '#FFFFFF or rgb(255,255,255)' 
+                  section.settings.background.type === 'color'
+                    ? '#FFFFFF or rgb(255,255,255)'
                     : section.settings.background.type === 'gradient'
-                    ? 'linear-gradient(to right, #667eea, #764ba2)'
-                    : 'https://example.com/image.jpg'
+                      ? 'linear-gradient(to right, #667eea, #764ba2)'
+                      : 'https://example.com/image.jpg'
                 }
               />
             </div>
           )}
         </TabsContent>
-        
+
         <TabsContent value="advanced" className="space-y-4">
           <div>
             <Label>Custom CSS Class</Label>
             <Input
               value={section.settings.className || ''}
-              onChange={(e) => 
+              onChange={(e) =>
                 updateSection(section.id, {
                   settings: {
                     ...section.settings,
-                    className: e.target.value
-                  }
+                    className: e.target.value,
+                  },
                 })
               }
               className="mt-1"
               placeholder="e.g., my-custom-section"
             />
           </div>
-          
+
           <div>
             <Label>Visibility</Label>
             <div className="mt-2 space-y-2">
               <label className="flex items-center gap-2">
                 <Switch
                   checked={section.visibility?.desktop !== false}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     updateSection(section.id, {
                       visibility: {
                         ...section.visibility,
-                        desktop: checked
-                      }
+                        desktop: checked,
+                      },
                     })
                   }
                 />
@@ -314,12 +322,12 @@ export function EnhancedPropertiesPanel() {
               <label className="flex items-center gap-2">
                 <Switch
                   checked={section.visibility?.tablet !== false}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     updateSection(section.id, {
                       visibility: {
                         ...section.visibility,
-                        tablet: checked
-                      }
+                        tablet: checked,
+                      },
                     })
                   }
                 />
@@ -328,12 +336,12 @@ export function EnhancedPropertiesPanel() {
               <label className="flex items-center gap-2">
                 <Switch
                   checked={section.visibility?.mobile !== false}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     updateSection(section.id, {
                       visibility: {
                         ...section.visibility,
-                        mobile: checked
-                      }
+                        mobile: checked,
+                      },
                     })
                   }
                 />
@@ -357,12 +365,12 @@ export function EnhancedPropertiesPanel() {
                 key={span}
                 variant={column.span[currentBreakpoint] === span ? 'primary' : 'secondary'}
                 size="sm"
-                onClick={() => 
+                onClick={() =>
                   updateColumn(column.id, {
                     span: {
                       ...column.span,
-                      [currentBreakpoint]: span
-                    }
+                      [currentBreakpoint]: span,
+                    },
                   })
                 }
               >
@@ -371,7 +379,7 @@ export function EnhancedPropertiesPanel() {
             ))}
           </div>
         </div>
-        
+
         <div>
           <Label>Offset ({currentBreakpoint})</Label>
           <div className="mt-2 grid grid-cols-6 gap-2">
@@ -380,12 +388,12 @@ export function EnhancedPropertiesPanel() {
                 key={offset}
                 variant={column.offset?.[currentBreakpoint] === offset ? 'primary' : 'secondary'}
                 size="sm"
-                onClick={() => 
+                onClick={() =>
                   updateColumn(column.id, {
                     offset: {
                       ...column.offset,
-                      [currentBreakpoint]: offset
-                    }
+                      [currentBreakpoint]: offset,
+                    },
                   })
                 }
               >
@@ -394,17 +402,17 @@ export function EnhancedPropertiesPanel() {
             ))}
           </div>
         </div>
-        
+
         <div>
           <Label>Vertical Alignment</Label>
           <Select
             value={column.settings.verticalAlign || 'top'}
-            onValueChange={(value) => 
+            onValueChange={(value) =>
               updateColumn(column.id, {
                 settings: {
                   ...column.settings,
-                  verticalAlign: value as 'top' | 'middle' | 'bottom'
-                }
+                  verticalAlign: value as 'top' | 'middle' | 'bottom',
+                },
               })
             }
           >
@@ -418,20 +426,24 @@ export function EnhancedPropertiesPanel() {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <Label>Padding ({currentBreakpoint})</Label>
           <Input
-            value={column.settings.padding?.[currentBreakpoint] || column.settings.padding?.base || '1rem'}
-            onChange={(e) => 
+            value={
+              column.settings.padding?.[currentBreakpoint] ||
+              column.settings.padding?.base ||
+              '1rem'
+            }
+            onChange={(e) =>
               updateColumn(column.id, {
                 settings: {
                   ...column.settings,
                   padding: {
                     ...column.settings.padding,
-                    [currentBreakpoint]: e.target.value
-                  }
-                }
+                    [currentBreakpoint]: e.target.value,
+                  },
+                },
               })
             }
             className="mt-1"
@@ -445,14 +457,14 @@ export function EnhancedPropertiesPanel() {
   const renderBlockProperties = (block: EnhancedBlock) => {
     // For backward compatibility with old block properties
     const handleDataChange = (key: string, value: unknown) => {
-      updateEnhancedBlock(block.id, { 
-        data: { ...block.data, [key]: value } 
+      updateEnhancedBlock(block.id, {
+        data: { ...block.data, [key]: value },
       })
     }
 
     const handleStyleChange = (key: string, value: unknown) => {
-      updateEnhancedBlock(block.id, { 
-        styles: { ...block.styles, [key]: value } 
+      updateEnhancedBlock(block.id, {
+        styles: { ...block.styles, [key]: value },
       })
     }
 
@@ -464,12 +476,12 @@ export function EnhancedPropertiesPanel() {
           <TabsTrigger value="animation">Animation</TabsTrigger>
           <TabsTrigger value="interaction">Interaction</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="content" className="space-y-4">
           {/* Reuse existing block property logic */}
           {renderBlockTypeProperties(block, handleDataChange)}
         </TabsContent>
-        
+
         <TabsContent value="style" className="space-y-4">
           <div>
             <Label htmlFor="padding">Padding</Label>
@@ -502,27 +514,26 @@ export function EnhancedPropertiesPanel() {
             />
           </div>
         </TabsContent>
-        
+
         <TabsContent value="animation" className="space-y-4">
           <AnimationPanel
             animations={block.animations || []}
-            onChange={(animations) => 
-              updateEnhancedBlock(block.id, { animations })
-            }
+            onChange={(animations) => updateEnhancedBlock(block.id, { animations })}
           />
         </TabsContent>
-        
+
         <TabsContent value="interaction" className="space-y-4">
-          <div className="text-sm text-gray-500">
-            Interaction settings coming soon...
-          </div>
+          <div className="text-sm text-gray-500">Interaction settings coming soon...</div>
         </TabsContent>
       </Tabs>
     )
   }
 
   // Helper function to render block type specific properties
-  const renderBlockTypeProperties = (block: EnhancedBlock, handleDataChange: (key: string, value: unknown) => void) => {
+  const renderBlockTypeProperties = (
+    block: EnhancedBlock,
+    handleDataChange: (key: string, value: unknown) => void
+  ) => {
     switch (block.type) {
       case 'hero':
         return (
@@ -589,7 +600,7 @@ export function EnhancedPropertiesPanel() {
   return (
     <div className="custom-scrollbar h-full overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
       <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white/90 p-4 backdrop-blur-sm">
-        <h3 className="text-text font-semibold capitalize flex items-center gap-2">
+        <h3 className="text-text flex items-center gap-2 font-semibold capitalize">
           {selectedType === 'section' && <Layout className="h-4 w-4" />}
           {selectedType === 'column' && <Columns className="h-4 w-4" />}
           {selectedType === 'block' && <Box className="h-4 w-4" />}
