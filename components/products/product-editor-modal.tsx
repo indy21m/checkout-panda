@@ -40,6 +40,7 @@ import { api } from '@/lib/trpc/client'
 import type { RouterOutputs } from '@/lib/trpc/api'
 import { PricingPlanBuilder } from './pricing-plan-builder'
 import { cn } from '@/lib/utils'
+import { SUPPORTED_CURRENCIES, getCurrencySymbol, type Currency } from '@/lib/currency'
 
 type Product = RouterOutputs['product']['list'][0]
 
@@ -51,6 +52,7 @@ const productSchema = z.object({
   color: z.string().optional(),
   features: z.array(z.string()).optional(),
   price: z.string().regex(/^\d+\.?\d{0,2}$/, 'Invalid price format'),
+  currency: z.enum(['USD', 'EUR', 'DKK']),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -109,6 +111,7 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
       type: 'digital',
       features: [],
       price: '',
+      currency: 'USD',
     },
   })
 
@@ -123,6 +126,7 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
         color: product.color || '',
         features: product.features || [],
         price: (product.price / 100).toFixed(2),
+        currency: product.currency || 'USD',
       })
       setFeatures(product.features || [])
 
@@ -227,10 +231,7 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
                   </TabsTrigger>
                 </TabsList>
 
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex flex-1 flex-col"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col">
                   <div className="flex-1 overflow-y-auto">
                     {/* Essentials Tab */}
                     <TabsContent value="essentials" className="m-0 space-y-6 p-6">
@@ -253,7 +254,12 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
                           <Label htmlFor="type">Product Type</Label>
                           <Select
                             value={form.watch('type')}
-                            onValueChange={(value) => form.setValue('type', value as 'digital' | 'service' | 'membership' | 'bundle')}
+                            onValueChange={(value) =>
+                              form.setValue(
+                                'type',
+                                value as 'digital' | 'service' | 'membership' | 'bundle'
+                              )
+                            }
                           >
                             <SelectTrigger id="type">
                               <SelectValue />
@@ -354,27 +360,48 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
                       </div>
 
                       {/* Legacy Price (for backward compatibility) */}
-                      <div className="space-y-2">
-                        <Label htmlFor="price">Base Price*</Label>
-                        <div className="relative">
-                          <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
-                            $
-                          </span>
-                          <Input
-                            id="price"
-                            {...form.register('price')}
-                            placeholder="99.00"
-                            className="pl-8"
-                          />
-                        </div>
-                        {form.formState.errors.price && (
-                          <p className="text-sm text-red-600">
-                            {form.formState.errors.price.message}
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="price">Base Price*</Label>
+                          <div className="relative">
+                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
+                              {getCurrencySymbol(form.watch('currency'))}
+                            </span>
+                            <Input
+                              id="price"
+                              {...form.register('price')}
+                              placeholder="99.00"
+                              className="pl-8"
+                            />
+                          </div>
+                          {form.formState.errors.price && (
+                            <p className="text-sm text-red-600">
+                              {form.formState.errors.price.message}
+                            </p>
+                          )}
+                          <p className="text-sm text-gray-500">
+                            This is the default price. Add pricing plans for more options.
                           </p>
-                        )}
-                        <p className="text-sm text-gray-500">
-                          This is the default price. Add pricing plans for more options.
-                        </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="currency">Currency</Label>
+                          <Select
+                            value={form.watch('currency')}
+                            onValueChange={(value) => form.setValue('currency', value as Currency)}
+                          >
+                            <SelectTrigger id="currency">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SUPPORTED_CURRENCIES.map((currency) => (
+                                <SelectItem key={currency} value={currency}>
+                                  {getCurrencySymbol(currency)} {currency}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </TabsContent>
 

@@ -30,6 +30,7 @@ export const productTypeEnum = pgEnum('product_type', [
 ])
 export const planTierEnum = pgEnum('plan_tier', ['basic', 'pro', 'enterprise', 'custom'])
 export const assetTypeEnum = pgEnum('asset_type', ['download', 'video', 'document', 'resource'])
+export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'DKK'])
 
 // Users (from Clerk)
 export const users = pgTable('users', {
@@ -77,6 +78,7 @@ export const checkouts = pgTable(
     views: integer('views').default(0),
     conversions: integer('conversions').default(0),
     revenue: integer('revenue').default(0), // in cents
+    currency: currencyEnum('currency').default('USD').notNull(),
 
     // Timestamps
     publishedAt: timestamp('published_at'),
@@ -105,6 +107,7 @@ export const products = pgTable('products', {
 
   // Pricing (deprecated in favor of plans)
   price: integer('price').notNull(), // in cents - kept for backward compatibility
+  currency: currencyEnum('currency').default('USD').notNull(),
   stripeProductId: text('stripe_product_id'),
   stripePriceId: text('stripe_price_id'),
 
@@ -143,6 +146,7 @@ export const productPlans = pgTable('product_plans', {
 
   // Pricing
   price: integer('price').notNull(), // in cents
+  currency: currencyEnum('currency').default('USD').notNull(),
   compareAtPrice: integer('compare_at_price'), // for showing discounts
 
   // Billing
@@ -270,6 +274,7 @@ export const checkoutSessions = pgTable('checkout_sessions', {
 
   // Session state
   currentStep: text('current_step').default('checkout'),
+  currency: currencyEnum('currency').default('USD').notNull(),
   sessionData: jsonb('session_data')
     .$type<{
       productsPurchased: string[]

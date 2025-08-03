@@ -46,13 +46,7 @@ export function BlockEditorModal({ isOpen, onClose, block }: BlockEditorModalPro
   const renderBlockEditor = () => {
     switch (block.type) {
       case 'product':
-        return (
-          <EnhancedProductBlock
-            data={blockData}
-            onUpdate={setBlockData}
-            isEditing={true}
-          />
-        )
+        return <EnhancedProductBlock data={blockData} onUpdate={setBlockData} isEditing={true} />
       // Add other block types here as needed
       default:
         return (
@@ -66,22 +60,13 @@ export function BlockEditorModal({ isOpen, onClose, block }: BlockEditorModalPro
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
-        <motion.div
-          variants={modalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-        >
+        <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit">
           <DialogHeader>
             <DialogTitle>Edit Block</DialogTitle>
-            <DialogDescription>
-              Configure the settings for this block
-            </DialogDescription>
+            <DialogDescription>Configure the settings for this block</DialogDescription>
           </DialogHeader>
 
-          <div className="mt-6">
-            {renderBlockEditor()}
-          </div>
+          <div className="mt-6">{renderBlockEditor()}</div>
 
           <div className="mt-6 flex justify-end gap-3 border-t pt-4">
             <Button variant="ghost" onClick={onClose}>

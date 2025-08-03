@@ -20,6 +20,7 @@ import { ProductSelectorModal } from '../product-selector-modal'
 import { api } from '@/lib/trpc/client'
 import { cn } from '@/lib/utils'
 import type { RouterOutputs } from '@/lib/trpc/api'
+import { getCurrencySymbol } from '@/lib/currency'
 
 type Product = RouterOutputs['product']['list'][0]
 
@@ -115,7 +116,8 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
   }
 
   const selectedPlan = selectedProduct?.plans?.find((p) => p.id === data.selectedPlanId)
-  const displayFeatures = data.customFeatures || selectedPlan?.features || selectedProduct?.features || []
+  const displayFeatures =
+    data.customFeatures || selectedPlan?.features || selectedProduct?.features || []
 
   if (isEditing) {
     return (
@@ -135,7 +137,8 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
                   <p className="font-medium">{selectedProduct.name}</p>
                   {selectedProduct.price && (
                     <p className="text-sm text-gray-600">
-                      ${(selectedProduct.price / 100).toFixed(2)}
+                      {getCurrencySymbol(selectedProduct.currency || 'USD')}
+                      {(selectedProduct.price / 100).toFixed(2)}
                     </p>
                   )}
                 </div>
@@ -170,7 +173,9 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
                 <SelectContent>
                   {selectedProduct.plans.map((plan) => (
                     <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - ${(plan.price / 100).toFixed(2)}
+                      {plan.name} -{' '}
+                      {getCurrencySymbol(plan.currency || selectedProduct.currency || 'USD')}
+                      {(plan.price / 100).toFixed(2)}
                       {plan.isRecurring && `/${plan.billingInterval}`}
                     </SelectItem>
                   ))}
@@ -197,7 +202,7 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
           {/* Custom Content */}
           <div className="space-y-4">
             <h4 className="font-medium">Custom Content (Optional)</h4>
-            
+
             <div className="space-y-2">
               <Label htmlFor="customName">Override Name</Label>
               <Input
@@ -236,11 +241,7 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
                   {customFeatures.map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input value={feature} readOnly className="flex-1" />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFeature(index)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => removeFeature(index)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -264,7 +265,7 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
           {/* Display Options */}
           <div className="space-y-3">
             <h4 className="font-medium">Display Options</h4>
-            
+
             <div className="flex items-center justify-between">
               <Label htmlFor="showImage">Show Product Image</Label>
               <Switch
@@ -338,10 +339,7 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
           transition={{ duration: 0.5 }}
           className={cn('relative', data.layout === 'side-by-side' ? 'md:w-1/2' : 'mb-8')}
         >
-          <div className={cn(
-            'aspect-video rounded-lg bg-gradient-to-br shadow-xl',
-            gradient
-          )}>
+          <div className={cn('aspect-video rounded-lg bg-gradient-to-br shadow-xl', gradient)}>
             <div className="flex h-full items-center justify-center">
               <Package className="h-24 w-24 text-white/80" />
             </div>
@@ -358,9 +356,7 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
       >
         <h2 className="mb-4 text-3xl font-bold">{displayName}</h2>
 
-        {displayDescription && (
-          <p className="mb-6 text-lg text-gray-600">{displayDescription}</p>
-        )}
+        {displayDescription && <p className="mb-6 text-lg text-gray-600">{displayDescription}</p>}
 
         {/* Price Display */}
         {data.showPlans && selectedProduct.plans && selectedProduct.plans.length > 0 ? (
@@ -369,16 +365,14 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
             {selectedProduct.plans.map((plan) => (
               <GlassmorphicCard
                 key={plan.id}
-                className={cn(
-                  'p-4',
-                  plan.isHighlighted && 'ring-2 ring-primary'
-                )}
+                className={cn('p-4', plan.isHighlighted && 'ring-primary ring-2')}
                 variant="light"
               >
                 <h3 className="mb-2 font-semibold">{plan.name}</h3>
                 <div className="mb-3">
                   <span className="text-2xl font-bold">
-                    ${(plan.price / 100).toFixed(2)}
+                    {getCurrencySymbol(plan.currency || selectedProduct.currency || 'USD')}
+                    {(plan.price / 100).toFixed(2)}
                   </span>
                   {plan.isRecurring && (
                     <span className="text-gray-600">/{plan.billingInterval}</span>
@@ -401,7 +395,8 @@ export function EnhancedProductBlock({ data, onUpdate, isEditing }: EnhancedProd
           // Show single price
           <div className="mb-6">
             <span className="text-4xl font-bold">
-              ${(displayPrice / 100).toFixed(2)}
+              {getCurrencySymbol(selectedPlan?.currency || selectedProduct.currency || 'USD')}
+              {(displayPrice / 100).toFixed(2)}
             </span>
             {selectedPlan?.isRecurring && (
               <span className="ml-2 text-gray-600">/{selectedPlan.billingInterval}</span>

@@ -149,7 +149,7 @@ export default function EnhancedBuilderPage() {
         // Handle new block being dropped into a column
         const columnId = over.id as string
         const blockType = active.data.current.blockType as string
-        
+
         // Get default block data based on type
         const getDefaultBlockData = (type: string) => {
           switch (type) {
@@ -190,7 +190,7 @@ export default function EnhancedBuilderPage() {
               return {}
           }
         }
-        
+
         const newBlock = {
           id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: blockType,
@@ -201,7 +201,7 @@ export default function EnhancedBuilderPage() {
           },
           position: 0,
         }
-        
+
         addBlockToColumn(columnId, newBlock)
       }
       // Handle other drag types

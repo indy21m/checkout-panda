@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { RouterOutputs } from '@/lib/trpc/api'
+import { getCurrencySymbol } from '@/lib/currency'
 
 type Product = RouterOutputs['product']['list'][0]
 
@@ -301,7 +302,9 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
             <motion.div key={product.id} variants={itemVariants}>
               <ProductCard
                 product={product}
-                gradientClass={gradientPresets[index % gradientPresets.length] || 'from-blue-500 to-purple-600'}
+                gradientClass={
+                  gradientPresets[index % gradientPresets.length] || 'from-blue-500 to-purple-600'
+                }
                 isSelected={selectedProducts.has(product.id)}
                 onSelect={() => {
                   const newSelected = new Set(selectedProducts)
@@ -441,7 +444,8 @@ function ProductCard({
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-primary text-2xl font-bold">
-              ${(lowestPrice / 100).toFixed(2)}
+              {getCurrencySymbol(product.currency || 'USD')}
+              {(lowestPrice / 100).toFixed(2)}
             </span>
             {product.isRecurring && product.interval && (
               <span className="text-sm text-gray-500">/{product.interval}</span>
@@ -456,7 +460,10 @@ function ProductCard({
         <div className="grid grid-cols-3 gap-4 border-t pt-4">
           <div>
             <p className="text-sm text-gray-600">Revenue</p>
-            <p className="font-semibold">${((product.totalRevenue || 0) / 100).toFixed(0)}</p>
+            <p className="font-semibold">
+              {getCurrencySymbol(product.currency || 'USD')}
+              {((product.totalRevenue || 0) / 100).toFixed(0)}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Sales</p>
@@ -569,11 +576,17 @@ function ProductListItem({
         <div className="flex gap-8">
           <div className="text-center">
             <p className="text-sm text-gray-600">Price</p>
-            <p className="text-primary font-semibold">${(lowestPrice / 100).toFixed(2)}</p>
+            <p className="text-primary font-semibold">
+              {getCurrencySymbol(product.currency || 'USD')}
+              {(lowestPrice / 100).toFixed(2)}
+            </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Revenue</p>
-            <p className="font-semibold">${((product.totalRevenue || 0) / 100).toFixed(0)}</p>
+            <p className="font-semibold">
+              {getCurrencySymbol(product.currency || 'USD')}
+              {((product.totalRevenue || 0) / 100).toFixed(0)}
+            </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Sales</p>

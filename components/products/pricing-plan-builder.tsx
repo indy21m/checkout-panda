@@ -30,6 +30,7 @@ import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { RouterOutputs } from '@/lib/trpc/api'
+import { getCurrencySymbol } from '@/lib/currency'
 
 type Plan = RouterOutputs['product']['getById']['plans'][0]
 
@@ -364,7 +365,8 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
                       <div className="mb-6">
                         <div className="flex items-baseline gap-1">
                           <span className="text-3xl font-bold">
-                            ${(plan.price / 100).toFixed(2)}
+                            {getCurrencySymbol(plan.currency || product?.currency || 'USD')}
+                            {(plan.price / 100).toFixed(2)}
                           </span>
                           {plan.isRecurring && (
                             <span className="text-gray-600">/{plan.billingInterval}</span>
@@ -372,7 +374,8 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
                         </div>
                         {plan.compareAtPrice && (
                           <p className="text-sm text-gray-500 line-through">
-                            ${(plan.compareAtPrice / 100).toFixed(2)}
+                            {getCurrencySymbol(plan.currency || product?.currency || 'USD')}
+                            {(plan.compareAtPrice / 100).toFixed(2)}
                           </p>
                         )}
                       </div>

@@ -15,6 +15,13 @@
       "when": 1754207003832,
       "tag": "0001_chilly_martin_li",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754241591591,
+      "tag": "0002_sudden_gorgon",
+      "breakpoints": true
     }
   ]
 }

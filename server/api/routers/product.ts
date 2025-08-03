@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
 import { products, productPlans, productAssets } from '@/server/db/schema'
 import { eq, and, desc, asc } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
+import { SUPPORTED_CURRENCIES } from '@/lib/currency'
 
 export const productRouter = createTRPCRouter({
   // Get all products for current user with enhanced data
@@ -77,6 +78,7 @@ export const productRouter = createTRPCRouter({
 
         // Legacy pricing (for backward compatibility)
         price: z.number().positive('Price must be positive').int('Price must be in cents'),
+        currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
         isRecurring: z.boolean().default(false),
         interval: z.enum(['month', 'year', 'week', 'day']).optional(),
         intervalCount: z.number().int().positive().default(1).optional(),
@@ -89,6 +91,7 @@ export const productRouter = createTRPCRouter({
               description: z.string().optional(),
               tier: z.enum(['basic', 'pro', 'enterprise', 'custom']).default('basic'),
               price: z.number().positive().int(),
+              currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
               compareAtPrice: z.number().positive().int().optional(),
               features: z.array(z.string()).default([]),
               badge: z.string().optional(),
@@ -165,6 +168,7 @@ export const productRouter = createTRPCRouter({
         color: z.string().optional(),
         features: z.array(z.string()).optional(),
         price: z.number().positive().int().optional(),
+        currency: z.enum(SUPPORTED_CURRENCIES).optional(),
         isRecurring: z.boolean().optional(),
         interval: z.enum(['month', 'year', 'week', 'day']).optional(),
         intervalCount: z.number().int().positive().optional(),
@@ -323,6 +327,7 @@ export const productRouter = createTRPCRouter({
           description: z.string().optional(),
           tier: z.enum(['basic', 'pro', 'enterprise', 'custom']).default('basic'),
           price: z.number().min(0).int(), // Allow 0 for initial setup
+          currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
           compareAtPrice: z.number().positive().int().optional(),
           isRecurring: z.boolean().default(false),
           billingInterval: z.enum(['month', 'year']).optional(),
@@ -361,6 +366,7 @@ export const productRouter = createTRPCRouter({
           name: z.string().optional(),
           description: z.string().optional(),
           price: z.number().positive().int().optional(),
+          currency: z.enum(SUPPORTED_CURRENCIES).optional(),
           compareAtPrice: z.number().positive().int().optional(),
           features: z.array(z.string()).optional(),
           limits: z.record(z.string(), z.number()).optional(),

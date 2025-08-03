@@ -82,12 +82,7 @@ export function ProductSelectorModal({
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={onClose}>
           <DialogContent className="max-w-3xl">
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit">
               <DialogHeader>
                 <DialogTitle>Select Product</DialogTitle>
                 <DialogDescription>
@@ -98,7 +93,7 @@ export function ProductSelectorModal({
               <div className="mt-6 space-y-4">
                 {/* Search Input */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     placeholder="Search products..."
                     value={searchQuery}
@@ -134,7 +129,7 @@ export function ProductSelectorModal({
                           <GlassmorphicCard
                             className={cn(
                               'cursor-pointer p-4 transition-all',
-                              isSelected && 'ring-2 ring-primary'
+                              isSelected && 'ring-primary ring-2'
                             )}
                             variant="light"
                             onClick={() => setSelectedProduct(product)}
@@ -165,7 +160,7 @@ export function ProductSelectorModal({
                                   </div>
                                   {isSelected && (
                                     <div className="flex-shrink-0">
-                                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                                      <div className="bg-primary flex h-6 w-6 items-center justify-center rounded-full">
                                         <Check className="h-4 w-4 text-white" />
                                       </div>
                                     </div>
@@ -175,17 +170,18 @@ export function ProductSelectorModal({
                                 {/* Product Details */}
                                 <div className="mt-2 flex items-center gap-4 text-sm">
                                   <span className="flex items-center gap-1 text-gray-500">
-                                    <DollarSign className="h-3 w-3" />
-                                    ${(product.price / 100).toFixed(2)}
+                                    <DollarSign className="h-3 w-3" />$
+                                    {(product.price / 100).toFixed(2)}
                                   </span>
                                   {product.type && (
-                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium capitalize text-gray-600">
+                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 capitalize">
                                       {product.type}
                                     </span>
                                   )}
                                   {product.plans && product.plans.length > 0 && (
                                     <span className="text-xs text-gray-500">
-                                      {product.plans.length} pricing plan{product.plans.length > 1 ? 's' : ''}
+                                      {product.plans.length} pricing plan
+                                      {product.plans.length > 1 ? 's' : ''}
                                     </span>
                                   )}
                                 </div>
