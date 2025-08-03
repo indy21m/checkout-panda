@@ -123,10 +123,12 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
         tier: template.tier,
         price: 0,
         features: template.features,
-        badge: template.badge || null,
+        ...(template.badge && { badge: template.badge }),
         isHighlighted: template.isHighlighted || false,
         isRecurring: false,
         sortOrder: plans.length,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
       setPlans([...plans, tempPlan as Plan])
     } else {
@@ -136,7 +138,7 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
         tier: template.tier,
         price: 0,
         features: template.features,
-        badge: template.badge,
+        ...(template.badge && { badge: template.badge }),
         isHighlighted: template.isHighlighted || false,
         sortOrder: plans.length,
       })
