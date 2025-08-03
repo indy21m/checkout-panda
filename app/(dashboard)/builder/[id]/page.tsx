@@ -56,7 +56,7 @@ export default function BuilderPage() {
       const settings = checkout.pageData.settings || {}
       updateCanvasSettings({
         ...settings,
-        theme: (settings.theme as 'light' | 'dark' | 'auto') || 'dark',
+        theme: (settings.theme as 'light' | 'dark' | 'auto') || 'light',
       })
       setHasUnsavedChanges(false)
     }

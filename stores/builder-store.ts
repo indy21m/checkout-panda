@@ -45,7 +45,7 @@ interface BuilderState {
 }
 
 const defaultCanvasSettings: CanvasSettings = {
-  theme: 'dark',
+  theme: 'light',
   customCss: '',
   seoMeta: {},
 }

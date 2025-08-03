@@ -83,8 +83,8 @@ export function ThankYouRenderer({ session }: ThankYouRendererProps) {
             transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
             className="mb-8 text-center"
           >
-            <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
+            <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="h-12 w-12 text-green-600" />
             </div>
           </motion.div>
 
@@ -95,12 +95,10 @@ export function ThankYouRenderer({ session }: ThankYouRendererProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mb-12 text-center"
           >
-            <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
+            <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
               Thank You for Your Purchase!
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              Your order has been successfully processed.
-            </p>
+            <p className="text-xl text-gray-600">Your order has been successfully processed.</p>
           </motion.div>
 
           {/* Order Summary Card */}

@@ -135,7 +135,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
     : offer.product.price
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* Sticky Header with Timer */}
       {timeLeft > 0 && (
         <div className="sticky top-0 z-50 bg-gradient-to-r from-orange-500 to-pink-500 py-3 text-center text-white shadow-lg">
@@ -159,14 +159,14 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, type: 'spring' }}
-              className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
+              className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100"
             >
-              <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <Check className="h-8 w-8 text-green-600" />
             </motion.div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl dark:text-white">
+            <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">
               Congratulations! Your Order is Confirmed
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600">
               But wait... We have a special one-time offer just for you!
             </p>
           </div>
@@ -182,15 +182,13 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
 
             <div className="p-8 md:p-12">
               {/* Headline */}
-              <h2 className="mb-4 text-center text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
+              <h2 className="mb-4 text-center text-3xl font-bold text-gray-900 md:text-4xl">
                 {offer.headline}
               </h2>
 
               {/* Subheadline */}
               {offer.subheadline && (
-                <p className="mb-8 text-center text-lg text-gray-600 dark:text-gray-400">
-                  {offer.subheadline}
-                </p>
+                <p className="mb-8 text-center text-lg text-gray-600">{offer.subheadline}</p>
               )}
 
               {/* Product Display */}
@@ -210,9 +208,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
                 {/* Product Info */}
                 <div className={offer.product.imageUrl ? '' : 'md:col-span-2'}>
                   <h3 className="mb-3 text-2xl font-semibold">{offer.product.name}</h3>
-                  <p className="mb-6 text-gray-600 dark:text-gray-400">
-                    {offer.product.description}
-                  </p>
+                  <p className="mb-6 text-gray-600">{offer.product.description}</p>
 
                   {/* Bullet Points */}
                   {offer.bulletPoints && offer.bulletPoints.length > 0 && (
@@ -220,7 +216,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
                       {offer.bulletPoints.map((point, index) => (
                         <li key={index} className="flex items-start gap-3">
                           <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-500" />
-                          <span className="text-gray-700 dark:text-gray-300">{point}</span>
+                          <span className="text-gray-700">{point}</span>
                         </li>
                       ))}
                     </ul>
@@ -236,7 +232,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
                         <span className="text-primary text-4xl font-bold">
                           ${(displayPrice / 100).toFixed(2)}
                         </span>
-                        <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
                           Save {offer.discountPercent}%
                         </span>
                       </div>
@@ -249,7 +245,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
 
                   {/* Scarcity Text */}
                   {offer.scarcityText && (
-                    <div className="mb-6 flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                    <div className="mb-6 flex items-center gap-2 text-orange-600">
                       <Zap className="h-5 w-5" />
                       <span className="font-medium">{offer.scarcityText}</span>
                     </div>
