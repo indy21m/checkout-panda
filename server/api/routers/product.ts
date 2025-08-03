@@ -322,7 +322,7 @@ export const productRouter = createTRPCRouter({
           name: z.string(),
           description: z.string().optional(),
           tier: z.enum(['basic', 'pro', 'enterprise', 'custom']).default('basic'),
-          price: z.number().positive().int(),
+          price: z.number().min(0).int(), // Allow 0 for initial setup
           compareAtPrice: z.number().positive().int().optional(),
           isRecurring: z.boolean().default(false),
           billingInterval: z.enum(['month', 'year']).optional(),

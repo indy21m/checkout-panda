@@ -44,6 +44,7 @@ const planTemplates = [
     icon: Zap,
     color: 'from-blue-500 to-blue-600',
     features: ['Core features', 'Email support', '10 GB storage'],
+    defaultPrice: 900, // $9.00
   },
   {
     name: 'Pro',
@@ -53,6 +54,7 @@ const planTemplates = [
     features: ['Everything in Basic', 'Priority support', '100 GB storage', 'Advanced analytics'],
     badge: 'Most Popular',
     isHighlighted: true,
+    defaultPrice: 2900, // $29.00
   },
   {
     name: 'Enterprise',
@@ -66,6 +68,7 @@ const planTemplates = [
       'Custom integrations',
       'SLA',
     ],
+    defaultPrice: 9900, // $99.00
   },
 ]
 
@@ -121,7 +124,7 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
         id: `temp-${Date.now()}`,
         name: template.name,
         tier: template.tier,
-        price: 0,
+        price: template.defaultPrice || 100,
         features: template.features,
         ...(template.badge && { badge: template.badge }),
         isHighlighted: template.isHighlighted || false,
@@ -136,7 +139,7 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
         productId,
         name: template.name,
         tier: template.tier,
-        price: 0,
+        price: template.defaultPrice || 100,
         features: template.features,
         ...(template.badge && { badge: template.badge }),
         isHighlighted: template.isHighlighted || false,
