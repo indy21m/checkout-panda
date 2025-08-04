@@ -10,7 +10,6 @@ import {
   Home,
   ShoppingCart,
   Package,
-  LayoutDashboard,
   TrendingUp,
   Settings,
   ChevronLeft,
