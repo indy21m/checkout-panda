@@ -91,6 +91,9 @@ export const checkouts = pgTable(
   })
 )
 
+// Product status enum
+export const productStatusEnum = pgEnum('product_status', ['active', 'inactive', 'draft'])
+
 // Products
 export const products = pgTable('products', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -98,8 +101,11 @@ export const products = pgTable('products', {
     .notNull()
     .references(() => users.id),
   name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
   description: text('description'),
+  featured_description: text('featured_description'),
   type: productTypeEnum('type').default('digital'),
+  status: productStatusEnum('status').default('draft'),
 
   // Visual
   thumbnail: text('thumbnail'), // URL or gradient spec
@@ -130,7 +136,10 @@ export const products = pgTable('products', {
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-})
+}, (table) => ({
+  slugIndex: index('products_slug_idx').on(table.slug),
+  userIdIndex: index('products_user_id_idx').on(table.userId),
+}))
 
 // Product Plans (Pricing Tiers)
 export const productPlans = pgTable('product_plans', {

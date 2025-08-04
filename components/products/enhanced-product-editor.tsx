@@ -56,7 +56,7 @@ const productSchema = z.object({
   slug: z.string().min(1, 'URL slug is required'),
   description: z.string().optional(),
   featured_description: z.string().optional(),
-  type: z.enum(['digital', 'physical', 'service', 'subscription']),
+  type: z.enum(['digital', 'service', 'membership', 'bundle']),
   status: z.enum(['active', 'inactive', 'draft']),
 })
 
@@ -232,11 +232,11 @@ export function EnhancedProductEditor({
     if (product) {
       form.reset({
         name: product.name,
-        slug: product.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: (product as any).slug || product.name.toLowerCase().replace(/\s+/g, '-'),
         description: product.description || '',
-        featured_description: '',
-        type: (product.type || 'digital') as 'digital' | 'physical' | 'service' | 'subscription',
-        status: 'active' as const,
+        featured_description: (product as any).featured_description || '',
+        type: (product.type || 'digital') as 'digital' | 'service' | 'membership' | 'bundle',
+        status: ((product as any).status || 'active') as 'active' | 'inactive' | 'draft',
       })
       setFeatures(
         product.features
@@ -254,8 +254,11 @@ export function EnhancedProductEditor({
   const onSubmit = (data: ProductFormData) => {
     const productData = {
       name: data.name,
+      slug: data.slug,
       description: data.description,
+      featured_description: data.featured_description,
       type: data.type as 'digital' | 'service' | 'membership' | 'bundle',
+      status: data.status,
       features: features.map(f => f.text).filter(Boolean),
       thumbnail: mediaUrl || undefined,
       price: 0, // Price is managed separately in plans
@@ -440,9 +443,9 @@ export function EnhancedProductEditor({
                             className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2"
                           >
                             <option value="digital">Digital Product</option>
-                            <option value="physical">Physical Product</option>
                             <option value="service">Service</option>
-                            <option value="subscription">Subscription</option>
+                            <option value="membership">Membership</option>
+                            <option value="bundle">Bundle</option>
                           </select>
                         </div>
                         <div>
