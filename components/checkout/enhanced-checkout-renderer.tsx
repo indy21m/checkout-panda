@@ -85,21 +85,31 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
     
     case 'slide':
       const slideDistance = config.distance || 50
-      const slideValues = {
-        up: { y: slideDistance },
-        down: { y: -slideDistance },
-        left: { x: slideDistance },
-        right: { x: -slideDistance },
-      }
-      
       const direction = config.direction || 'up'
-      const slideOffset = slideValues[direction]
+      
+      let xOffset = 0
+      let yOffset = 0
+      
+      switch (direction) {
+        case 'up':
+          yOffset = slideDistance
+          break
+        case 'down':
+          yOffset = -slideDistance
+          break
+        case 'left':
+          xOffset = slideDistance
+          break
+        case 'right':
+          xOffset = -slideDistance
+          break
+      }
       
       return {
         hidden: {
           opacity: config.opacity?.from ?? 0,
-          x: slideOffset.x || 0,
-          y: slideOffset.y || 0,
+          x: xOffset,
+          y: yOffset,
         },
         visible: {
           opacity: config.opacity?.to ?? 1,
