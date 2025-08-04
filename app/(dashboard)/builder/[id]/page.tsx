@@ -17,6 +17,7 @@ import {
   Tablet,
   Monitor,
   Grid3X3,
+  LayoutGrid,
   Command,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -481,9 +482,9 @@ export default function EnhancedBuilderPage() {
               variant="ghost"
               size="icon"
               onClick={() => setShowGridEditor(true)}
-              title="Grid Layout"
+              title="Grid Layout Editor"
             >
-              <Grid3X3 className="h-4 w-4" />
+              <LayoutGrid className="h-4 w-4" />
             </Button>
 
             {/* Toggle Grid */}

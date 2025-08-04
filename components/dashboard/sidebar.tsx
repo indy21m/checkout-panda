@@ -50,12 +50,6 @@ const navItems: NavItem[] = [
     color: 'from-purple-400 to-purple-600',
   },
   {
-    title: 'Builder',
-    href: '/builder',
-    icon: LayoutDashboard,
-    color: 'from-amber-400 to-amber-600',
-  },
-  {
     title: 'Analytics',
     href: '/analytics',
     icon: TrendingUp,

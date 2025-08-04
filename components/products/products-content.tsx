@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ModernProductDashboard } from './modern-product-dashboard'
-import { ProductEditorModal } from './product-editor-modal'
+import { EnhancedProductEditor } from './enhanced-product-editor'
 import type { RouterOutputs } from '@/lib/trpc/api'
 
 type Product = RouterOutputs['product']['list'][0]
@@ -33,7 +33,7 @@ export default function ProductsContent() {
         onEditProduct={handleEditProduct}
       />
 
-      <ProductEditorModal
+      <EnhancedProductEditor
         isOpen={isEditorOpen}
         onClose={handleCloseEditor}
         product={editingProduct}
