@@ -3,23 +3,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useBuilderStore } from '@/stores/builder-store'
-import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Plus,
-  Trash2,
-  Copy,
-  Eye,
-  EyeOff,
-  ChevronUp,
-  ChevronDown,
   Layers,
-  Grid3X3,
-  Palette,
 } from 'lucide-react'
 import type { Section } from '@/types/builder'
-import { cn } from '@/lib/utils'
+import { SectionCard } from './section-card'
 
 interface SectionManagerProps {
   sections: Section[]
@@ -106,195 +96,42 @@ export function SectionManager({
           const isCollapsed = collapsedSections.has(section.id)
 
           return (
-            <motion.div
+            <SectionCard
               key={section.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <GlassmorphicCard
-                className={cn(
-                  'overflow-hidden transition-all duration-200',
-                  isSelected && 'ring-primary ring-2 ring-offset-2'
-                )}
-                variant="light"
-                hover
-                onClick={() => onSelectSection(section.id)}
-              >
-                {/* Section Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                  <div className="flex flex-1 items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleCollapse(section.id)
-                      }}
-                      className="rounded p-1 transition-colors hover:bg-gray-100"
-                    >
-                      {isCollapsed ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronUp className="h-4 w-4" />
-                      )}
-                    </button>
-
-                    <Input
-                      value={section.name || `Section ${index + 1}`}
-                      onChange={(e) => updateSection(section.id, { name: e.target.value })}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-7 border-0 bg-transparent text-sm font-medium transition-all hover:bg-gray-50 focus:border-gray-300 focus:bg-white"
-                      placeholder="Section name"
-                    />
-                  </div>
-
-                  {/* Section Actions */}
-                  <div className="flex items-center gap-1">
-                    {/* Move Up/Down */}
-                    <div className="flex flex-col">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          moveSection(section.id, 'up')
-                        }}
-                        disabled={index === 0}
-                        className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          moveSection(section.id, 'down')
-                        }}
-                        disabled={index === sections.length - 1}
-                        className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    {/* Visibility Toggle */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const visibility = section.visibility || {
-                          desktop: true,
-                          tablet: true,
-                          mobile: true,
-                        }
-                        updateSection(section.id, {
-                          visibility: {
-                            ...visibility,
-                            desktop: !visibility.desktop,
-                          },
-                        })
-                      }}
-                      className="rounded p-1 transition-colors hover:bg-gray-100"
-                    >
-                      {section.visibility?.desktop === false ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-
-                    {/* Duplicate */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDuplicateSection(section)
-                      }}
-                      className="rounded p-1 transition-colors hover:bg-gray-100"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-
-                    {/* Delete */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteSection(section.id)
-                      }}
-                      className="rounded p-1 text-red-600 transition-colors hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Section Preview (when not collapsed) */}
-                {!isCollapsed && (
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: 'auto' }}
-                    exit={{ height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 p-3">
-                      {/* Section Settings Summary */}
-                      <div className="flex items-center gap-4 text-xs text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Grid3X3 className="h-3 w-3" />
-                          <span>{section.settings.grid.columns.base || 12} columns</span>
-                        </div>
-                        {section.settings.fullWidth && (
-                          <span className="text-primary">Full Width</span>
-                        )}
-                        {section.settings.background && (
-                          <div className="flex items-center gap-1">
-                            <Palette className="h-3 w-3" />
-                            <span>Custom Background</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Columns Preview */}
-                      <div className="grid h-16 grid-cols-12 gap-1">
-                        {section.columns.map((column) => {
-                          const span = column.span.base || 12
-                          return (
-                            <div
-                              key={column.id}
-                              className={cn(
-                                'flex items-center justify-center rounded bg-gradient-to-br from-gray-100 to-gray-200 text-xs text-gray-600',
-                                `col-span-${Math.min(span, 12)}`
-                              )}
-                              style={{
-                                gridColumn: `span ${Math.min(span, 12)} / span ${Math.min(span, 12)}`,
-                              }}
-                            >
-                              {column.blocks.length} blocks
-                            </div>
-                          )
-                        })}
-                      </div>
-
-                      {/* Add Column Button */}
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="w-full"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          addColumn(section.id, {
-                            id: `column-${Date.now()}`,
-                            type: 'column',
-                            span: { base: 12 },
-                            blocks: [],
-                            settings: {},
-                          })
-                        }}
-                      >
-                        <Plus className="mr-1 h-3 w-3" />
-                        Add Column
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </GlassmorphicCard>
-            </motion.div>
+              section={section}
+              index={index}
+              totalSections={sections.length}
+              isSelected={isSelected}
+              isCollapsed={isCollapsed}
+              onSelect={() => onSelectSection(section.id)}
+              onToggleCollapse={() => toggleCollapse(section.id)}
+              onUpdateName={(name) => updateSection(section.id, { name })}
+              onMove={(direction) => moveSection(section.id, direction)}
+              onToggleVisibility={() => {
+                const visibility = section.visibility || {
+                  desktop: true,
+                  tablet: true,
+                  mobile: true,
+                }
+                updateSection(section.id, {
+                  visibility: {
+                    ...visibility,
+                    desktop: !visibility.desktop,
+                  },
+                })
+              }}
+              onDuplicate={() => handleDuplicateSection(section)}
+              onDelete={() => deleteSection(section.id)}
+              onAddColumn={() => {
+                addColumn(section.id, {
+                  id: `column-${Date.now()}`,
+                  type: 'column',
+                  span: { base: 12 },
+                  blocks: [],
+                  settings: {},
+                })
+              }}
+            />
           )
         })}
       </AnimatePresence>

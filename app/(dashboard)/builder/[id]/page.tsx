@@ -25,18 +25,25 @@ import { EnhancedPropertiesPanel } from '@/components/builder/enhanced-propertie
 import { SectionManager } from '@/components/builder/section-manager'
 import { GridEditor } from '@/components/builder/grid-editor'
 import { useBuilderStore } from '@/stores/builder-store'
-import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DndContext, closestCenter, DragOverlay as DndDragOverlay } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
+import { DragOverlay } from '@/components/builder/drag-overlay'
 import debounce from 'lodash.debounce'
 import { cn } from '@/lib/utils'
 import type { Section } from '@/types/builder'
 import { motion, AnimatePresence } from 'framer-motion'
+
+import { SaveIndicator, type SaveStatus } from '@/components/ui/save-indicator'
+import { SuccessCelebration } from '@/components/ui/success-celebration'
 
 export default function EnhancedBuilderPage() {
   const params = useParams()
   const checkoutId = params?.id as string
   const [showGridEditor, setShowGridEditor] = useState(false)
   const [activePanel, setActivePanel] = useState<'blocks' | 'sections'>('blocks')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [showSuccessCelebration, setShowSuccessCelebration] = useState(false)
 
   // Zustand store - using all enhanced features
   const {
@@ -67,15 +74,23 @@ export default function EnhancedBuilderPage() {
 
   // Save mutation
   const saveCheckout = api.checkout.savePageData.useMutation({
+    onMutate: () => {
+      setSaveStatus('saving')
+    },
     onSuccess: (data) => {
       setHasUnsavedChanges(false)
+      setSaveStatus('saved')
+      setLastSaved(new Date())
+
       if (data?.status === 'published') {
+        setShowSuccessCelebration(true)
         toast.success('Checkout published successfully!')
       } else {
         toast.success('Checkout saved!')
       }
     },
     onError: (error) => {
+      setSaveStatus('error')
       toast.error(error.message)
     },
   })
@@ -138,6 +153,15 @@ export default function EnhancedBuilderPage() {
       debouncedSave.cancel()
     }
   }, [hasUnsavedChanges, debouncedSave])
+
+  // Reset save status to idle after showing saved
+  useEffect(() => {
+    if (saveStatus === 'saved') {
+      const timer = setTimeout(() => setSaveStatus('idle'), 3000)
+      return () => clearTimeout(timer)
+    }
+    return undefined
+  }, [saveStatus])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -302,6 +326,9 @@ export default function EnhancedBuilderPage() {
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndDragOverlay>
+        <DragOverlay />
+      </DndDragOverlay>
       <div className="flex h-screen flex-col bg-gray-50">
         {/* Enhanced Header */}
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
@@ -313,8 +340,8 @@ export default function EnhancedBuilderPage() {
             </Link>
             <div>
               <h1 className="text-text text-xl font-semibold">{checkout.name}</h1>
-              <div className="flex items-center gap-2 text-sm">
-                {hasUnsavedChanges && <span className="text-text-tertiary">Unsaved changes</span>}
+              <div className="flex items-center gap-3 text-sm">
+                <SaveIndicator status={saveStatus} lastSaved={lastSaved} />
                 {history.past.length > 0 && (
                   <span className="text-text-tertiary">
                     • {history.past.length} action{history.past.length > 1 ? 's' : ''} to undo
@@ -488,6 +515,13 @@ export default function EnhancedBuilderPage() {
             />
           )}
         </AnimatePresence>
+
+        {/* Success Celebration */}
+        <SuccessCelebration
+          show={showSuccessCelebration}
+          message="Checkout Published! 🎉"
+          onComplete={() => setShowSuccessCelebration(false)}
+        />
       </div>
     </DndContext>
   )
