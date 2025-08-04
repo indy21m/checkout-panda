@@ -31,4 +31,4 @@ CREATE INDEX "products_user_id_idx" ON "products" USING btree ("user_id");
 -- Update status for existing active products
 UPDATE "products" 
 SET "status" = 'active'
-WHERE "isActive" = true AND "status" = 'draft';
+WHERE "is_active" = true AND "status" = 'draft';
