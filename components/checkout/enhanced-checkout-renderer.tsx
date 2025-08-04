@@ -76,6 +76,8 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           transition: {
             duration,
             delay,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ease: ease as any, // Framer Motion accepts string easing
           },
         },
@@ -106,6 +108,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           transition: {
             duration,
             delay,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ease: ease as any,
           },
         },
@@ -123,6 +126,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           transition: {
             duration,
             delay,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ease: ease as any,
           },
         },
@@ -140,6 +144,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           transition: {
             duration,
             delay,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ease: ease as any,
           },
         },
