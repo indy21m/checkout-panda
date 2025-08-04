@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { HeroBlock } from '@/components/checkout/blocks/hero-block'
 import { ProductBlock } from '@/components/checkout/blocks/product-block'
@@ -55,13 +55,17 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
 }
 
 // Animation variant generators
-const getAnimationVariants = (config?: AnimationConfig) => {
-  const baseVariants = {
+const getAnimationVariants = (config?: AnimationConfig): Variants => {
+  const baseVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
   }
 
   if (!config) return baseVariants
+
+  const duration = config.duration / 1000
+  const delay = (config.delay || 0) / 1000
+  const ease = config.easing || 'easeOut'
 
   switch (config.type) {
     case 'fade':
@@ -70,38 +74,42 @@ const getAnimationVariants = (config?: AnimationConfig) => {
         visible: { 
           opacity: config.opacity?.to ?? 1,
           transition: {
-            duration: config.duration / 1000,
-            delay: (config.delay || 0) / 1000,
-            ease: config.easing || 'easeOut',
+            duration,
+            delay,
+            ease: ease as any, // Framer Motion accepts string easing
           },
         },
-      }
+      } as Variants
     
     case 'slide':
       const slideDistance = config.distance || 50
-      const slideDirections = {
+      const slideValues = {
         up: { y: slideDistance },
         down: { y: -slideDistance },
         left: { x: slideDistance },
         right: { x: -slideDistance },
       }
       
+      const direction = config.direction || 'up'
+      const slideOffset = slideValues[direction]
+      
       return {
         hidden: {
           opacity: config.opacity?.from ?? 0,
-          ...(config.direction ? slideDirections[config.direction] : {}),
+          x: slideOffset.x || 0,
+          y: slideOffset.y || 0,
         },
         visible: {
           opacity: config.opacity?.to ?? 1,
           x: 0,
           y: 0,
           transition: {
-            duration: config.duration / 1000,
-            delay: (config.delay || 0) / 1000,
-            ease: config.easing || 'easeOut',
+            duration,
+            delay,
+            ease: ease as any,
           },
         },
-      }
+      } as Variants
     
     case 'scale':
       return {
@@ -113,12 +121,12 @@ const getAnimationVariants = (config?: AnimationConfig) => {
           opacity: config.opacity?.to ?? 1,
           scale: 1,
           transition: {
-            duration: config.duration / 1000,
-            delay: (config.delay || 0) / 1000,
-            ease: config.easing || 'easeOut',
+            duration,
+            delay,
+            ease: ease as any,
           },
         },
-      }
+      } as Variants
     
     case 'rotate':
       return {
@@ -130,12 +138,12 @@ const getAnimationVariants = (config?: AnimationConfig) => {
           opacity: config.opacity?.to ?? 1,
           rotate: 0,
           transition: {
-            duration: config.duration / 1000,
-            delay: (config.delay || 0) / 1000,
-            ease: config.easing || 'easeOut',
+            duration,
+            delay,
+            ease: ease as any,
           },
         },
-      }
+      } as Variants
     
     default:
       return baseVariants
