@@ -16,9 +16,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { X, Settings, Layout, Columns, Box } from 'lucide-react'
 import { useBuilderStore } from '@/stores/builder-store'
-import { AnimationPanel } from './animation-panel'
 import { LayoutControls } from './layout-controls'
 import { HistoryTimeline } from './history-timeline'
+import { AnimationControls } from './animation-controls'
 import type { Section, Column, EnhancedBlock } from '@/types/builder'
 
 export function EnhancedPropertiesPanel() {
@@ -415,9 +415,18 @@ export function EnhancedPropertiesPanel() {
         </TabsContent>
 
         <TabsContent value="animation" className="space-y-4">
-          <AnimationPanel
-            animations={block.animations || []}
-            onChange={(animations) => updateEnhancedBlock(block.id, { animations })}
+          <AnimationControls
+            block={block}
+            onChange={(animations) => {
+              // For now, we'll store the animation state in a custom property
+              // In a real implementation, we'd convert between AnimationState and AnimationConfig[]
+              updateEnhancedBlock(block.id, { 
+                styles: { 
+                  ...block.styles, 
+                  animationState: animations 
+                } 
+              })
+            }}
           />
         </TabsContent>
 

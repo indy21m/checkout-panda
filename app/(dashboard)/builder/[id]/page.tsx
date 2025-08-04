@@ -40,6 +40,9 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useSmartGuides } from '@/hooks/use-smart-guides'
 import { SmartGuides } from '@/components/builder/smart-guides'
 import { KeyboardShortcutsDialog } from '@/components/builder/keyboard-shortcuts-dialog'
+import { LivePreview } from '@/components/builder/live-preview'
+import { PerformanceMonitor } from '@/components/builder/performance-monitor'
+import { SmartTemplates } from '@/components/builder/smart-templates'
 
 export default function EnhancedBuilderPage() {
   const params = useParams()
@@ -50,6 +53,7 @@ export default function EnhancedBuilderPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showSuccessCelebration, setShowSuccessCelebration] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [showLivePreview, setShowLivePreview] = useState(false)
 
   // Zustand store - using all enhanced features
   const {
@@ -463,6 +467,15 @@ export default function EnhancedBuilderPage() {
               </Button>
             </div>
 
+            {/* Smart Templates */}
+            <SmartTemplates 
+              onApplyTemplate={(newSections) => {
+                // Replace all sections with template sections
+                newSections.forEach(section => addSection(section))
+              }}
+              productType="digital"
+            />
+
             {/* Grid Editor */}
             <Button
               variant="ghost"
@@ -506,12 +519,13 @@ export default function EnhancedBuilderPage() {
               )}
               Save
             </Button>
-            <a href={`/c/${checkout.slug}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="secondary">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
-            </a>
+            <Button 
+              variant="secondary"
+              onClick={() => setShowLivePreview(!showLivePreview)}
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Live Preview
+            </Button>
             <Button
               variant="primary"
               onClick={() => handleSave(true)}
@@ -530,7 +544,8 @@ export default function EnhancedBuilderPage() {
         {/* Enhanced Builder Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Panel - Block Library / Section Manager */}
-          <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-white/60 backdrop-blur-sm">
+          {!showLivePreview && (
+            <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-white/60 backdrop-blur-sm">
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setActivePanel('blocks')}
@@ -569,10 +584,16 @@ export default function EnhancedBuilderPage() {
                 </div>
               )}
             </div>
-          </div>
+            </div>
+          )}
 
-          {/* Canvas */}
-          <div className="relative flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
+          {/* Canvas or Live Preview */}
+          {showLivePreview ? (
+            <div className="flex-1">
+              <LivePreview checkoutSlug={checkout.slug} />
+            </div>
+          ) : (
+            <div className="relative flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
             <EnhancedCanvas />
             {/* Smart Guides Overlay */}
             {isDragging && guides.length > 0 && <SmartGuides guides={guides} />}
@@ -586,11 +607,14 @@ export default function EnhancedBuilderPage() {
               </div>
             )}
           </div>
+          )}
 
           {/* Properties Panel */}
-          <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-white/60 backdrop-blur-sm">
-            <EnhancedPropertiesPanel />
-          </div>
+          {!showLivePreview && (
+            <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-white/60 backdrop-blur-sm">
+              <EnhancedPropertiesPanel />
+            </div>
+          )}
         </div>
 
         {/* Grid Editor Modal */}
@@ -621,6 +645,9 @@ export default function EnhancedBuilderPage() {
 
         {/* Keyboard Shortcuts Dialog */}
         <KeyboardShortcutsDialog open={showHelp} onOpenChange={setShowHelp} shortcuts={shortcuts} />
+        
+        {/* Performance Monitor */}
+        <PerformanceMonitor />
       </div>
     </DndContext>
   )
