@@ -152,7 +152,7 @@ function getResponsiveValue<T>(value: T | { base?: T; sm?: T; md?: T; lg?: T; xl
 }
 
 // Block renderer component
-function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; additionalProps?: any }) {
+function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; additionalProps?: Record<string, unknown> }) {
   const BlockComponent = blockComponents[block.type]
   const [isVisible, setIsVisible] = useState(true)
   const [hasTriggered, setHasTriggered] = useState(false)
@@ -226,7 +226,7 @@ function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; addit
 }
 
 // Column renderer component
-function ColumnRenderer({ column, additionalProps }: { column: Column; additionalProps?: any }) {
+function ColumnRenderer({ column, additionalProps }: { column: Column; additionalProps?: Record<string, unknown> }) {
   const sortedBlocks = [...column.blocks].sort((a, b) => a.position - b.position)
 
   return (
@@ -261,7 +261,7 @@ function ColumnRenderer({ column, additionalProps }: { column: Column; additiona
 }
 
 // Section renderer component
-function SectionRenderer({ section, additionalProps }: { section: Section; additionalProps?: any }) {
+function SectionRenderer({ section, additionalProps }: { section: Section; additionalProps?: Record<string, unknown> }) {
   const isVisible = section.visibility?.desktop !== false // Default to visible
 
   if (!isVisible) return null
@@ -334,7 +334,7 @@ function SectionRenderer({ section, additionalProps }: { section: Section; addit
 
 export function EnhancedCheckoutRenderer({ checkout, productId, amount }: CheckoutRendererProps) {
   const { sections, blocks, settings } = checkout.pageData
-  const [currentBreakpoint, setCurrentBreakpoint] = useState('base')
+  const [, setCurrentBreakpoint] = useState('base')
 
   // Handle responsive breakpoints
   useEffect(() => {

@@ -39,8 +39,8 @@ interface CheckoutRendererProps {
         customCss?: string
         seoMeta?: SeoMeta
         globalAnimations?: {
-          pageTransition?: any
-          blockTransition?: any
+          pageTransition?: unknown
+          blockTransition?: unknown
           scrollSmoothing?: boolean
         }
       }
