@@ -34,9 +34,11 @@ export default function ProductsContent() {
       />
 
       <EnhancedProductEditor
-        isOpen={isEditorOpen}
-        onClose={handleCloseEditor}
-        product={editingProduct}
+        open={isEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseEditor()
+        }}
+        productId={editingProduct?.id}
       />
     </div>
   )
