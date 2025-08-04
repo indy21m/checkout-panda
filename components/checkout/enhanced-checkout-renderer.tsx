@@ -56,12 +56,12 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
 
 // Animation variant generators
 const getAnimationVariants = (config?: AnimationConfig) => {
-  if (!config) return {}
-
   const baseVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
   }
+
+  if (!config) return baseVariants
 
   switch (config.type) {
     case 'fade':
