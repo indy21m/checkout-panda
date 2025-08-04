@@ -52,6 +52,10 @@ export interface GridConfig {
   gap: ResponsiveValue<string> // e.g., '1rem', '16px'
   alignItems?: ResponsiveValue<'start' | 'center' | 'end' | 'stretch'>
   justifyItems?: ResponsiveValue<'start' | 'center' | 'end' | 'stretch'>
+  customTemplate?: {
+    columns: string
+    rows: string
+  }
 }
 
 // Section type - top-level container

@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { X, Settings, Layout, Columns, Box } from 'lucide-react'
 import { useBuilderStore } from '@/stores/builder-store'
 import { AnimationPanel } from './animation-panel'
+import { LayoutControls } from './layout-controls'
+import { HistoryTimeline } from './history-timeline'
 import type { Section, Column, EnhancedBlock } from '@/types/builder'
 
 export function EnhancedPropertiesPanel() {
@@ -91,115 +93,12 @@ export function EnhancedPropertiesPanel() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="full-width">Full Width</Label>
-            <Switch
-              id="full-width"
-              checked={section.settings.fullWidth || false}
-              onCheckedChange={(checked) =>
-                updateSection(section.id, {
-                  settings: { ...section.settings, fullWidth: checked },
-                })
-              }
-            />
-          </div>
-
-          <div>
-            <Label>Max Width ({currentBreakpoint})</Label>
-            <Select
-              value={
-                section.settings.maxWidth?.[currentBreakpoint] ||
-                section.settings.maxWidth?.base ||
-                '1280px'
-              }
-              onValueChange={(value) =>
-                updateSection(section.id, {
-                  settings: {
-                    ...section.settings,
-                    maxWidth: {
-                      ...section.settings.maxWidth,
-                      [currentBreakpoint]: value,
-                    },
-                  },
-                })
-              }
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="768px">Small (768px)</SelectItem>
-                <SelectItem value="1024px">Medium (1024px)</SelectItem>
-                <SelectItem value="1280px">Large (1280px)</SelectItem>
-                <SelectItem value="1536px">Extra Large (1536px)</SelectItem>
-                <SelectItem value="100%">Full (100%)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Columns ({currentBreakpoint})</Label>
-            <div className="mt-2 grid grid-cols-6 gap-2">
-              {[1, 2, 3, 4, 6, 12].map((cols) => (
-                <Button
-                  key={cols}
-                  variant={
-                    section.settings.grid.columns[currentBreakpoint] === cols
-                      ? 'primary'
-                      : 'secondary'
-                  }
-                  size="sm"
-                  onClick={() =>
-                    updateSection(section.id, {
-                      settings: {
-                        ...section.settings,
-                        grid: {
-                          ...section.settings.grid,
-                          columns: {
-                            ...section.settings.grid.columns,
-                            [currentBreakpoint]: cols,
-                          },
-                        },
-                      },
-                    })
-                  }
-                >
-                  {cols}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>Gap ({currentBreakpoint})</Label>
-            <div className="mt-2 grid grid-cols-5 gap-2">
-              {['0', '0.5rem', '1rem', '1.5rem', '2rem'].map((gap) => (
-                <Button
-                  key={gap}
-                  variant={
-                    section.settings.grid.gap[currentBreakpoint] === gap ? 'primary' : 'secondary'
-                  }
-                  size="sm"
-                  onClick={() =>
-                    updateSection(section.id, {
-                      settings: {
-                        ...section.settings,
-                        grid: {
-                          ...section.settings.grid,
-                          gap: {
-                            ...section.settings.grid.gap,
-                            [currentBreakpoint]: gap,
-                          },
-                        },
-                      },
-                    })
-                  }
-                >
-                  {gap === '0' ? 'None' : gap}
-                </Button>
-              ))}
-            </div>
-          </div>
+          {/* Integrated Layout Controls */}
+          <LayoutControls
+            section={section}
+            onChange={(updates) => updateSection(section.id, updates)}
+            currentBreakpoint={currentBreakpoint}
+          />
         </TabsContent>
 
         <TabsContent value="style" className="space-y-4">
@@ -616,12 +515,15 @@ export function EnhancedPropertiesPanel() {
         </Button>
       </div>
 
-      <div className="p-6">
+      <div className="space-y-4 p-6">
         <GlassmorphicCard className="p-4" variant="light">
           {selectedType === 'section' && renderSectionProperties(selectedElement as Section)}
           {selectedType === 'column' && renderColumnProperties(selectedElement as Column)}
           {selectedType === 'block' && renderBlockProperties(selectedElement as EnhancedBlock)}
         </GlassmorphicCard>
+
+        {/* History Timeline */}
+        <HistoryTimeline maxItems={8} />
       </div>
     </div>
   )

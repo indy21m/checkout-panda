@@ -35,9 +35,12 @@ export interface CanvasSettings {
 }
 
 // History state for undo/redo
-interface HistoryState {
+export interface HistoryState {
   sections: Section[]
   canvasSettings: EnhancedCanvasSettings
+  timestamp?: number
+  description?: string
+  type?: string
 }
 
 interface BuilderState {
@@ -56,6 +59,7 @@ interface BuilderState {
   // History for undo/redo
   history: {
     past: HistoryState[]
+    present?: HistoryState
     future: HistoryState[]
   }
 
@@ -99,6 +103,7 @@ interface BuilderState {
   undo: () => void
   redo: () => void
   saveToHistory: () => void
+  jumpToHistory: (index: number) => void
 
   // Clipboard actions
   copy: () => void
@@ -147,6 +152,7 @@ export const useBuilderStore = create<BuilderState>()(
     hasUnsavedChanges: false,
     history: {
       past: [],
+      present: undefined,
       future: [],
     },
     clipboard: null,
@@ -429,6 +435,7 @@ export const useBuilderStore = create<BuilderState>()(
           state.history.past.shift()
         }
         state.history.future = []
+        state.history.present = historyState
       }),
 
     undo: () =>
@@ -465,6 +472,34 @@ export const useBuilderStore = create<BuilderState>()(
           state.canvasSettings = nextState.canvasSettings
           state.hasUnsavedChanges = true
         }
+      }),
+
+    jumpToHistory: (index) =>
+      set((state) => {
+        const allHistory = [
+          ...state.history.past,
+          state.history.present,
+          ...state.history.future,
+        ].filter(Boolean)
+        if (index < 0 || index >= allHistory.length) return
+
+        const targetState = allHistory[index]
+        if (!targetState) return
+
+        // Update present state
+        state.history.present = {
+          sections: JSON.parse(JSON.stringify(targetState.sections)),
+          canvasSettings: JSON.parse(JSON.stringify(targetState.canvasSettings)),
+        }
+
+        // Update current state
+        state.sections = targetState.sections
+        state.canvasSettings = targetState.canvasSettings
+        state.hasUnsavedChanges = true
+
+        // Rebuild past and future
+        state.history.past = allHistory.slice(0, index).filter(Boolean) as HistoryState[]
+        state.history.future = allHistory.slice(index + 1).filter(Boolean) as HistoryState[]
       }),
 
     // Clipboard actions

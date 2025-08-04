@@ -17,6 +17,7 @@ import {
   Tablet,
   Monitor,
   Grid3X3,
+  Command,
 } from 'lucide-react'
 import Link from 'next/link'
 import { EnhancedCanvas } from '@/components/builder/enhanced-canvas'
@@ -26,7 +27,7 @@ import { SectionManager } from '@/components/builder/section-manager'
 import { GridEditor } from '@/components/builder/grid-editor'
 import { useBuilderStore } from '@/stores/builder-store'
 import { DndContext, closestCenter, DragOverlay as DndDragOverlay } from '@dnd-kit/core'
-import type { DragEndEvent } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent, DragMoveEvent } from '@dnd-kit/core'
 import { DragOverlay } from '@/components/builder/drag-overlay'
 import debounce from 'lodash.debounce'
 import { cn } from '@/lib/utils'
@@ -35,6 +36,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import { SaveIndicator, type SaveStatus } from '@/components/ui/save-indicator'
 import { SuccessCelebration } from '@/components/ui/success-celebration'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useSmartGuides } from '@/hooks/use-smart-guides'
+import { SmartGuides } from '@/components/builder/smart-guides'
+import { KeyboardShortcutsDialog } from '@/components/builder/keyboard-shortcuts-dialog'
 
 export default function EnhancedBuilderPage() {
   const params = useParams()
@@ -44,6 +49,7 @@ export default function EnhancedBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showSuccessCelebration, setShowSuccessCelebration] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Zustand store - using all enhanced features
   const {
@@ -67,7 +73,15 @@ export default function EnhancedBuilderPage() {
     redo,
     setBreakpoint,
     updateCanvasSettings,
+    toggleGrid,
+    showGrid,
   } = useBuilderStore()
+
+  // Enhanced keyboard shortcuts
+  const { shortcuts, showHelp, setShowHelp, isPanning } = useKeyboardShortcuts()
+
+  // Smart guides for alignment
+  const { guides, onDragStart, onDragMove, onDragEnd } = useSmartGuides()
 
   // Fetch checkout data
   const { data: checkout, isLoading } = api.checkout.getById.useQuery({ id: checkoutId })
@@ -163,7 +177,39 @@ export default function EnhancedBuilderPage() {
     return undefined
   }, [saveStatus])
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setIsDragging(true)
+    // Start smart guides tracking if dragging a section
+    if (event.active.data.current?.type === 'section') {
+      const element = document.getElementById(String(event.active.id))
+      if (element) {
+        onDragStart(String(event.active.id), element.getBoundingClientRect())
+      }
+    }
+  }
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    // Update smart guides during drag
+    if (event.active.data.current?.type === 'section' && event.delta) {
+      const element = document.getElementById(String(event.active.id))
+      if (element) {
+        const rect = element.getBoundingClientRect()
+        const newBounds = new DOMRect(
+          rect.x + event.delta.x,
+          rect.y + event.delta.y,
+          rect.width,
+          rect.height
+        )
+        onDragMove(newBounds)
+        // TODO: Apply snap points if available
+      }
+    }
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setIsDragging(false)
+    onDragEnd()
+
     const { active, over } = event
 
     if (over && active.id !== over.id) {
@@ -232,33 +278,47 @@ export default function EnhancedBuilderPage() {
     }
   }
 
-  // Keyboard shortcuts
+  // Listen for custom events from keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Undo/Redo
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault()
-        undo()
-      }
-      if ((e.metaKey || e.ctrlKey) && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
-        e.preventDefault()
-        redo()
-      }
-      // Save
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault()
-        handleSave(false)
-      }
-      // Command palette (future implementation)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        // Open command palette
-      }
+    const handleSaveEvent = () => handleSave(false)
+    const handlePublishEvent = () => handleSave(true)
+    const handlePreview = () => window.open(`/c/${checkout?.slug}`, '_blank')
+    const handleToggleSidebar = () => {
+      // TODO: Implement sidebar toggle
+    }
+    const handleQuickSearch = () => {
+      // TODO: Implement quick search
+    }
+    const handleZoomIn = () => {
+      // TODO: Implement zoom in
+    }
+    const handleZoomOut = () => {
+      // TODO: Implement zoom out
+    }
+    const handleZoomReset = () => {
+      // TODO: Implement zoom reset
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [undo, redo, handleSave])
+    window.addEventListener('builder:save', handleSaveEvent)
+    window.addEventListener('builder:publish', handlePublishEvent)
+    window.addEventListener('builder:preview', handlePreview)
+    window.addEventListener('builder:toggleSidebar', handleToggleSidebar)
+    window.addEventListener('builder:quickSearch', handleQuickSearch)
+    window.addEventListener('builder:zoomIn', handleZoomIn)
+    window.addEventListener('builder:zoomOut', handleZoomOut)
+    window.addEventListener('builder:zoomReset', handleZoomReset)
+
+    return () => {
+      window.removeEventListener('builder:save', handleSaveEvent)
+      window.removeEventListener('builder:publish', handlePublishEvent)
+      window.removeEventListener('builder:preview', handlePreview)
+      window.removeEventListener('builder:toggleSidebar', handleToggleSidebar)
+      window.removeEventListener('builder:quickSearch', handleQuickSearch)
+      window.removeEventListener('builder:zoomIn', handleZoomIn)
+      window.removeEventListener('builder:zoomOut', handleZoomOut)
+      window.removeEventListener('builder:zoomReset', handleZoomReset)
+    }
+  }, [handleSave, checkout])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -325,7 +385,12 @@ export default function EnhancedBuilderPage() {
   }
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
+      onDragEnd={handleDragEnd}
+    >
       <DndDragOverlay>
         <DragOverlay />
       </DndDragOverlay>
@@ -408,6 +473,26 @@ export default function EnhancedBuilderPage() {
               <Grid3X3 className="h-4 w-4" />
             </Button>
 
+            {/* Toggle Grid */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => toggleGrid()}
+              title="Toggle Grid (⌘G)"
+            >
+              <Grid3X3 className={cn('h-4 w-4', showGrid && 'text-primary')} />
+            </Button>
+
+            {/* Keyboard Shortcuts */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHelp(true)}
+              title="Keyboard Shortcuts (⌘/)"
+            >
+              <Command className="h-4 w-4" />
+            </Button>
+
             {/* Save/Preview/Publish */}
             <Button
               variant="ghost"
@@ -487,8 +572,19 @@ export default function EnhancedBuilderPage() {
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
+          <div className="relative flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
             <EnhancedCanvas />
+            {/* Smart Guides Overlay */}
+            {isDragging && guides.length > 0 && <SmartGuides guides={guides} />}
+            {/* Panning Overlay */}
+            {isPanning && (
+              <div className="pointer-events-none absolute inset-0 z-50 cursor-move">
+                <div className="absolute inset-0 bg-purple-500/5" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-900/90 px-3 py-1.5 text-sm font-medium text-white">
+                  Panning Mode
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Properties Panel */}
@@ -522,6 +618,9 @@ export default function EnhancedBuilderPage() {
           message="Checkout Published! 🎉"
           onComplete={() => setShowSuccessCelebration(false)}
         />
+
+        {/* Keyboard Shortcuts Dialog */}
+        <KeyboardShortcutsDialog open={showHelp} onOpenChange={setShowHelp} shortcuts={shortcuts} />
       </div>
     </DndContext>
   )

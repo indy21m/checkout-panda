@@ -4,10 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { useBuilderStore } from '@/stores/builder-store'
 import { Button } from '@/components/ui/button'
-import {
-  Plus,
-  Layers,
-} from 'lucide-react'
+import { Plus, Layers } from 'lucide-react'
 import type { Section } from '@/types/builder'
 import { SectionCard } from './section-card'
 
