@@ -232,10 +232,13 @@ export function EnhancedProductEditor({
     if (product) {
       form.reset({
         name: product.name,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         slug: (product as any).slug || product.name.toLowerCase().replace(/\s+/g, '-'),
         description: product.description || '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         featured_description: (product as any).featured_description || '',
         type: (product.type || 'digital') as 'digital' | 'service' | 'membership' | 'bundle',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: ((product as any).status || 'active') as 'active' | 'inactive' | 'draft',
       })
       setFeatures(
