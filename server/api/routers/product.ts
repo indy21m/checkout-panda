@@ -70,8 +70,11 @@ export const productRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string().min(1, 'Product name is required'),
+        slug: z.string().optional(), // Will be auto-generated if not provided
         description: z.string().optional(),
+        featured_description: z.string().optional(),
         type: z.enum(['digital', 'service', 'membership', 'bundle']).default('digital'),
+        status: z.enum(['active', 'inactive', 'draft']).optional().default('active'),
         thumbnail: z.string().optional(),
         color: z.string().optional(),
         features: z.array(z.string()).optional().default([]),
@@ -114,12 +117,21 @@ export const productRouter = createTRPCRouter({
 
       const { plans: planData, ...productData } = input
 
+      // Generate slug if not provided
+      const slug =
+        input.slug ||
+        input.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+
       // Create product
       const insertResult = await ctx.db
         .insert(products)
         .values({
           userId: ctx.userId,
           ...productData,
+          slug,
           interval: input.isRecurring ? input.interval : null,
           intervalCount: input.isRecurring ? input.intervalCount : null,
         })
@@ -162,8 +174,11 @@ export const productRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         name: z.string().min(1).optional(),
+        slug: z.string().optional(),
         description: z.string().optional(),
+        featured_description: z.string().optional(),
         type: z.enum(['digital', 'service', 'membership', 'bundle']).optional(),
+        status: z.enum(['active', 'inactive', 'draft']).optional(),
         thumbnail: z.string().optional(),
         color: z.string().optional(),
         features: z.array(z.string()).optional(),
@@ -277,13 +292,20 @@ export const productRouter = createTRPCRouter({
         })
       }
 
-      // Create new product
+      // Create new product with unique slug
+      const duplicatedName = `${existingProduct.name} (Copy)`
+      const duplicatedSlug = duplicatedName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+
       const insertResult = await ctx.db
         .insert(products)
         .values({
           ...existingProduct,
           id: undefined,
-          name: `${existingProduct.name} (Copy)`,
+          name: duplicatedName,
+          slug: duplicatedSlug,
           totalRevenue: 0,
           totalSales: 0,
           conversionRate: 0,

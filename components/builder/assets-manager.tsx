@@ -11,12 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Image as ImageIcon,
   Video,
@@ -131,7 +126,7 @@ function AssetCard({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const AssetIcon = ASSET_TYPES.find(t => t.value === asset.type)?.icon || FileText
+  const AssetIcon = ASSET_TYPES.find((t) => t.value === asset.type)?.icon || FileText
 
   if (viewMode === 'list') {
     return (
@@ -139,8 +134,8 @@ function AssetCard({
         layout
         whileHover={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
         className={cn(
-          "flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-all",
-          selected ? "border-purple-500 bg-purple-50" : "border-transparent hover:border-gray-200"
+          'flex cursor-pointer items-center gap-4 rounded-lg border p-3 transition-all',
+          selected ? 'border-purple-500 bg-purple-50' : 'border-transparent hover:border-gray-200'
         )}
         onClick={onSelect}
       >
@@ -152,19 +147,19 @@ function AssetCard({
               className="h-10 w-10 rounded object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
               <AssetIcon className="h-5 w-5 text-gray-500" />
             </div>
           )}
           {selected && (
-            <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-purple-500 flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500">
               <Check className="h-3 w-3 text-white" />
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <p className="font-medium truncate">{asset.name}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{asset.name}</p>
           <p className="text-sm text-gray-500">
             {formatFileSize(asset.size)} • {new Date(asset.uploadedAt).toLocaleDateString()}
           </p>
@@ -178,20 +173,20 @@ function AssetCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setShowPreview(true)}>
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="mr-2 h-4 w-4" />
               Preview
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyUrl}>
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="mr-2 h-4 w-4" />
               Copy URL
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Download
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600">
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -205,36 +200,34 @@ function AssetCard({
       layout
       whileHover={{ y: -4 }}
       className={cn(
-        "group relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all",
-        selected ? "border-purple-500 shadow-lg" : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+        'group relative cursor-pointer overflow-hidden rounded-lg border-2 transition-all',
+        selected
+          ? 'border-purple-500 shadow-lg'
+          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
       )}
       onClick={onSelect}
     >
       {/* Thumbnail */}
-      <div className="aspect-square bg-gray-100 relative overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-gray-100">
         {asset.type === 'image' && asset.thumbnailUrl ? (
-          <img
-            src={asset.thumbnailUrl}
-            alt={asset.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={asset.thumbnailUrl} alt={asset.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="flex h-full w-full items-center justify-center">
             <AssetIcon className="h-16 w-16 text-gray-400" />
           </div>
         )}
 
         {/* Selection indicator */}
         {selected && (
-          <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-            <div className="h-10 w-10 rounded-full bg-purple-500 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-purple-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500">
               <Check className="h-6 w-6 text-white" />
             </div>
           </div>
         )}
 
         {/* Quick actions */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
           <div className="flex items-center gap-1">
             <Button
               size="icon"
@@ -264,11 +257,12 @@ function AssetCard({
 
       {/* Info */}
       <div className="p-3">
-        <p className="font-medium truncate mb-1">{asset.name}</p>
+        <p className="mb-1 truncate font-medium">{asset.name}</p>
         <p className="text-xs text-gray-500">
           {formatFileSize(asset.size)}
           {asset.dimensions && ` • ${asset.dimensions.width}×${asset.dimensions.height}`}
-          {asset.duration && ` • ${Math.floor(asset.duration / 60)}:${(asset.duration % 60).toString().padStart(2, '0')}`}
+          {asset.duration &&
+            ` • ${Math.floor(asset.duration / 60)}:${(asset.duration % 60).toString().padStart(2, '0')}`}
         </p>
       </div>
 
@@ -282,19 +276,11 @@ function AssetCard({
               </DialogHeader>
               <div className="space-y-4">
                 {asset.type === 'image' ? (
-                  <img
-                    src={asset.url}
-                    alt={asset.name}
-                    className="w-full rounded-lg"
-                  />
+                  <img src={asset.url} alt={asset.name} className="w-full rounded-lg" />
                 ) : asset.type === 'video' ? (
-                  <video
-                    src={asset.url}
-                    controls
-                    className="w-full rounded-lg"
-                  />
+                  <video src={asset.url} controls className="w-full rounded-lg" />
                 ) : (
-                  <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="flex h-64 items-center justify-center rounded-lg bg-gray-100">
                     <AssetIcon className="h-24 w-24 text-gray-400" />
                   </div>
                 )}
@@ -328,11 +314,11 @@ function AssetCard({
 
                 <div className="flex justify-end gap-2">
                   <Button variant="secondary" onClick={handleCopyUrl}>
-                    <Copy className="h-4 w-4 mr-2" />
+                    <Copy className="mr-2 h-4 w-4" />
                     Copy URL
                   </Button>
                   <Button>
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="mr-2 h-4 w-4" />
                     Download
                   </Button>
                 </div>
@@ -361,9 +347,10 @@ export function AssetsManager({
   const [uploadUrl, setUploadUrl] = useState('')
   const [isUploading, setIsUploading] = useState(false)
 
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         asset.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredAssets = assets.filter((asset) => {
+    const matchesSearch =
+      asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      asset.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesType = activeType === 'all' || asset.type === activeType
     return matchesSearch && matchesType && acceptedTypes.includes(asset.type)
   })
@@ -371,16 +358,14 @@ export function AssetsManager({
   const handleSelectAsset = (assetId: string) => {
     if (selectionMode === 'single') {
       setSelectedAssets([assetId])
-      const asset = assets.find(a => a.id === assetId)
+      const asset = assets.find((a) => a.id === assetId)
       if (asset && onSelectAsset) {
         onSelectAsset(asset)
         onOpenChange(false)
       }
     } else {
-      setSelectedAssets(prev =>
-        prev.includes(assetId)
-          ? prev.filter(id => id !== assetId)
-          : [...prev, assetId]
+      setSelectedAssets((prev) =>
+        prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId]
       )
     }
   }
@@ -388,7 +373,7 @@ export function AssetsManager({
   const handleUpload = async () => {
     setIsUploading(true)
     // Simulate upload
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsUploading(false)
     setUploadUrl('')
     // In real implementation, add the uploaded asset to the list
@@ -396,21 +381,19 @@ export function AssetsManager({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[85vh] p-0 overflow-hidden">
+      <DialogContent className="max-h-[85vh] max-w-6xl overflow-hidden p-0">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-56 border-r bg-gray-50 p-4">
             <DialogHeader className="mb-6">
               <DialogTitle>Assets Library</DialogTitle>
-              <DialogDescription>
-                Manage and select media files
-              </DialogDescription>
+              <DialogDescription>Manage and select media files</DialogDescription>
             </DialogHeader>
 
             {/* Upload Section */}
             <div className="mb-6">
               <Button className="w-full" onClick={() => setUploadMode('url')}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Asset
               </Button>
             </div>
@@ -422,10 +405,10 @@ export function AssetsManager({
                   key={value}
                   onClick={() => setActiveType(value)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     activeType === value
-                      ? "bg-purple-100 text-purple-700"
-                      : "hover:bg-gray-100 text-gray-700"
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-700 hover:bg-gray-100'
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -435,14 +418,14 @@ export function AssetsManager({
             </div>
 
             {/* Storage Info */}
-            <div className="mt-auto pt-6 border-t">
+            <div className="mt-auto border-t pt-6">
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Storage Used</span>
                   <span className="font-medium">2.4 GB</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: '24%' }} />
+                <div className="h-2 w-full rounded-full bg-gray-200">
+                  <div className="h-2 rounded-full bg-purple-500" style={{ width: '24%' }} />
                 </div>
                 <p className="text-xs text-gray-500">2.4 GB of 10 GB used</p>
               </div>
@@ -450,12 +433,12 @@ export function AssetsManager({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-1 flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <div className="flex items-center justify-between border-b p-4">
+              <div className="flex flex-1 items-center gap-4">
+                <div className="relative max-w-md flex-1">
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     placeholder="Search assets..."
                     value={searchQuery}
@@ -487,9 +470,13 @@ export function AssetsManager({
 
             {/* Upload Area */}
             {uploadMode && (
-              <div className="p-4 bg-purple-50 border-b">
+              <div className="border-b bg-purple-50 p-4">
                 <div className="flex items-center gap-4">
-                  <Tabs value={uploadMode} onValueChange={(v) => setUploadMode(v as 'url' | 'file')} className="flex-1">
+                  <Tabs
+                    value={uploadMode}
+                    onValueChange={(v) => setUploadMode(v as 'url' | 'file')}
+                    className="flex-1"
+                  >
                     <TabsList>
                       <TabsTrigger value="url">From URL</TabsTrigger>
                       <TabsTrigger value="file">Upload File</TabsTrigger>
@@ -503,27 +490,19 @@ export function AssetsManager({
                           className="flex-1"
                         />
                         <Button onClick={handleUpload} disabled={!uploadUrl || isUploading}>
-                          {isUploading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            'Add'
-                          )}
+                          {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
                         </Button>
                       </div>
                     </TabsContent>
                     <TabsContent value="file" className="mt-4">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                        <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                        <p className="text-gray-600 mb-2">Drag and drop files here</p>
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+                        <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                        <p className="mb-2 text-gray-600">Drag and drop files here</p>
                         <Button variant="secondary">Browse Files</Button>
                       </div>
                     </TabsContent>
                   </Tabs>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setUploadMode('url')}
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => setUploadMode('url')}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -533,19 +512,13 @@ export function AssetsManager({
             {/* Assets Grid/List */}
             <div className="flex-1 overflow-auto p-4">
               {filteredAssets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <FileText className="h-12 w-12 text-gray-300 mb-4" />
-                  <p className="text-gray-500 mb-2">No assets found</p>
-                  <p className="text-sm text-gray-400">
-                    Try adjusting your search or filters
-                  </p>
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                  <FileText className="mb-4 h-12 w-12 text-gray-300" />
+                  <p className="mb-2 text-gray-500">No assets found</p>
+                  <p className="text-sm text-gray-400">Try adjusting your search or filters</p>
                 </div>
               ) : (
-                <div className={cn(
-                  viewMode === 'grid'
-                    ? "grid grid-cols-4 gap-4"
-                    : "space-y-2"
-                )}>
+                <div className={cn(viewMode === 'grid' ? 'grid grid-cols-4 gap-4' : 'space-y-2')}>
                   {filteredAssets.map((asset) => (
                     <AssetCard
                       key={asset.id}
@@ -561,7 +534,7 @@ export function AssetsManager({
 
             {/* Footer */}
             {selectionMode === 'multiple' && selectedAssets.length > 0 && (
-              <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
+              <div className="flex items-center justify-between border-t bg-gray-50 p-4">
                 <p className="text-sm text-gray-600">
                   {selectedAssets.length} asset{selectedAssets.length > 1 ? 's' : ''} selected
                 </p>
@@ -571,8 +544,10 @@ export function AssetsManager({
                   </Button>
                   <Button
                     onClick={() => {
-                      const selectedAssetObjects = assets.filter(a => selectedAssets.includes(a.id))
-                      selectedAssetObjects.forEach(asset => onSelectAsset?.(asset))
+                      const selectedAssetObjects = assets.filter((a) =>
+                        selectedAssets.includes(a.id)
+                      )
+                      selectedAssetObjects.forEach((asset) => onSelectAsset?.(asset))
                       onOpenChange(false)
                     }}
                   >

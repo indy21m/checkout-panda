@@ -420,11 +420,11 @@ export function EnhancedPropertiesPanel() {
             onChange={(animations) => {
               // For now, we'll store the animation state in a custom property
               // In a real implementation, we'd convert between AnimationState and AnimationConfig[]
-              updateEnhancedBlock(block.id, { 
-                styles: { 
-                  ...block.styles, 
-                  animationState: animations 
-                } 
+              updateEnhancedBlock(block.id, {
+                styles: {
+                  ...block.styles,
+                  animationState: animations,
+                },
               })
             }}
           />

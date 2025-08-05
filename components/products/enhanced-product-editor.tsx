@@ -43,11 +43,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 // Schema for product form
@@ -70,23 +66,18 @@ interface ProductEditorProps {
 }
 
 // Feature item component with drag and drop
-function FeatureItem({ 
-  feature, 
-  onUpdate, 
-  onRemove 
-}: { 
+function FeatureItem({
+  feature,
+  onUpdate,
+  onRemove,
+}: {
   feature: { id: string; text: string; icon?: string }
   onUpdate: (text: string) => void
   onRemove: () => void
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: feature.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: feature.id,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -102,7 +93,7 @@ function FeatureItem({
     { value: 'trending', icon: TrendingUp, label: 'Trending' },
   ]
 
-  const selectedIcon = icons.find(i => i.value === feature.icon)
+  const selectedIcon = icons.find((i) => i.value === feature.icon)
   const Icon = selectedIcon?.icon || Check
 
   return (
@@ -110,37 +101,37 @@ function FeatureItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-3 p-3 bg-white rounded-lg border transition-all",
-        isDragging ? "opacity-50 shadow-lg" : "hover:shadow-sm"
+        'flex items-center gap-3 rounded-lg border bg-white p-3 transition-all',
+        isDragging ? 'opacity-50 shadow-lg' : 'hover:shadow-sm'
       )}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
       <button
         type="button"
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="h-4 w-4" />
       </button>
-      
-      <div className="flex items-center gap-2 flex-1">
-        <div className="relative group">
-          <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+
+      <div className="flex flex-1 items-center gap-2">
+        <div className="group relative">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
             <Icon className="h-4 w-4" />
           </div>
-          
+
           {/* Icon picker dropdown */}
-          <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-lg shadow-lg border hidden group-hover:grid grid-cols-3 gap-1 z-10">
+          <div className="absolute top-full left-0 z-10 mt-1 hidden grid-cols-3 gap-1 rounded-lg border bg-white p-2 shadow-lg group-hover:grid">
             {icons.map(({ value, icon: IconComponent, label }) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => onUpdate(feature.text)}
                 className={cn(
-                  "h-8 w-8 rounded flex items-center justify-center hover:bg-gray-100 transition-colors",
-                  feature.icon === value && "bg-purple-100 text-purple-600"
+                  'flex h-8 w-8 items-center justify-center rounded transition-colors hover:bg-gray-100',
+                  feature.icon === value && 'bg-purple-100 text-purple-600'
                 )}
                 title={label}
               >
@@ -149,15 +140,15 @@ function FeatureItem({
             ))}
           </div>
         </div>
-        
+
         <Input
           value={feature.text}
           onChange={(e) => onUpdate(e.target.value)}
           placeholder="Feature description..."
-          className="flex-1 border-0 focus:ring-0 px-2"
+          className="flex-1 border-0 px-2 focus:ring-0"
         />
       </div>
-      
+
       <Button
         type="button"
         variant="ghost"
@@ -243,10 +234,10 @@ export function EnhancedProductEditor({
       })
       setFeatures(
         product.features
-          ? product.features.map((f, i) => ({ 
-              id: `feature-${i}`, 
-              text: f, 
-              icon: 'check' 
+          ? product.features.map((f, i) => ({
+              id: `feature-${i}`,
+              text: f,
+              icon: 'check',
             }))
           : []
       )
@@ -262,7 +253,7 @@ export function EnhancedProductEditor({
       featured_description: data.featured_description,
       type: data.type as 'digital' | 'service' | 'membership' | 'bundle',
       status: data.status,
-      features: features.map(f => f.text).filter(Boolean),
+      features: features.map((f) => f.text).filter(Boolean),
       thumbnail: mediaUrl || undefined,
       price: 0, // Price is managed separately in plans
     }
@@ -279,30 +270,27 @@ export function EnhancedProductEditor({
     if (over && active.id !== over.id) {
       const oldIndex = features.findIndex((f) => f.id === active.id)
       const newIndex = features.findIndex((f) => f.id === over.id)
-      
+
       const newFeatures = [...features]
       const [movedFeature] = newFeatures.splice(oldIndex, 1)
       if (movedFeature) {
         newFeatures.splice(newIndex, 0, movedFeature)
       }
-      
+
       setFeatures(newFeatures)
     }
   }
 
   const addFeature = () => {
-    setFeatures([
-      ...features,
-      { id: `feature-${Date.now()}`, text: '', icon: 'check' }
-    ])
+    setFeatures([...features, { id: `feature-${Date.now()}`, text: '', icon: 'check' }])
   }
 
   const updateFeature = (id: string, text: string) => {
-    setFeatures(features.map(f => f.id === id ? { ...f, text } : f))
+    setFeatures(features.map((f) => (f.id === id ? { ...f, text } : f)))
   }
 
   const removeFeature = (id: string) => {
-    setFeatures(features.filter(f => f.id !== id))
+    setFeatures(features.filter((f) => f.id !== id))
   }
 
   // Generate slug from name
@@ -317,7 +305,7 @@ export function EnhancedProductEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden p-0">
         <div className="flex h-full">
           {/* Editor Section */}
           <div className="flex-1 overflow-y-auto">
@@ -331,11 +319,7 @@ export function EnhancedProductEditor({
                     Design a compelling product that converts visitors into customers
                   </DialogDescription>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setPreviewMode(!previewMode)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => setPreviewMode(!previewMode)}>
                   {previewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
@@ -343,7 +327,7 @@ export function EnhancedProductEditor({
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-5 mb-6">
+                <TabsList className="mb-6 grid w-full grid-cols-5">
                   <TabsTrigger value="details" className="flex items-center gap-2">
                     <Package className="h-4 w-4" />
                     Details
@@ -374,7 +358,7 @@ export function EnhancedProductEditor({
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <TabsContent value="details" className="space-y-6 mt-0">
+                    <TabsContent value="details" className="mt-0 space-y-6">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="name">Product Name</Label>
@@ -385,29 +369,25 @@ export function EnhancedProductEditor({
                             className="mt-1"
                           />
                           {form.formState.errors.name && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-500">
                               {form.formState.errors.name.message}
                             </p>
                           )}
                         </div>
                         <div>
                           <Label htmlFor="slug">URL Slug</Label>
-                          <div className="flex gap-2 mt-1">
+                          <div className="mt-1 flex gap-2">
                             <Input
                               id="slug"
                               {...form.register('slug')}
                               placeholder="premium-course-bundle"
                             />
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={generateSlug}
-                            >
+                            <Button type="button" variant="secondary" onClick={generateSlug}>
                               Generate
                             </Button>
                           </div>
                           {form.formState.errors.slug && (
-                            <p className="text-red-500 text-sm mt-1">
+                            <p className="mt-1 text-sm text-red-500">
                               {form.formState.errors.slug.message}
                             </p>
                           )}
@@ -432,7 +412,7 @@ export function EnhancedProductEditor({
                           placeholder="A compelling description for the checkout page..."
                           className="mt-1 min-h-[80px]"
                         />
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="mt-1 text-sm text-gray-500">
                           This appears prominently on the checkout page
                         </p>
                       </div>
@@ -443,7 +423,7 @@ export function EnhancedProductEditor({
                           <select
                             id="type"
                             {...form.register('type')}
-                            className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2"
+                            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
                           >
                             <option value="digital">Digital Product</option>
                             <option value="service">Service</option>
@@ -456,7 +436,7 @@ export function EnhancedProductEditor({
                           <select
                             id="status"
                             {...form.register('status')}
-                            className="w-full mt-1 rounded-md border border-gray-300 px-3 py-2"
+                            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
                           >
                             <option value="draft">Draft</option>
                             <option value="active">Active</option>
@@ -467,8 +447,8 @@ export function EnhancedProductEditor({
                     </TabsContent>
 
                     <TabsContent value="pricing" className="mt-0">
-                      <div className="text-center py-8 text-gray-500">
-                        <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <div className="py-8 text-center text-gray-500">
+                        <DollarSign className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                         <p>Pricing is managed in the Pricing Plans section</p>
                         <Button variant="link" className="mt-2">
                           Go to Pricing Plans →
@@ -476,43 +456,31 @@ export function EnhancedProductEditor({
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="features" className="space-y-4 mt-0">
-                      <div className="flex items-center justify-between mb-4">
+                    <TabsContent value="features" className="mt-0 space-y-4">
+                      <div className="mb-4 flex items-center justify-between">
                         <div>
                           <h3 className="font-semibold">Product Features</h3>
                           <p className="text-sm text-gray-500">
                             Highlight what makes your product special
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={addFeature}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
+                        <Button type="button" variant="secondary" size="sm" onClick={addFeature}>
+                          <Plus className="mr-1 h-4 w-4" />
                           Add Feature
                         </Button>
                       </div>
 
-                      <DndContext
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                      >
+                      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext
-                          items={features.map(f => f.id)}
+                          items={features.map((f) => f.id)}
                           strategy={verticalListSortingStrategy}
                         >
                           <div className="space-y-2">
                             {features.length === 0 ? (
-                              <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                                <Sparkles className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                <p className="text-gray-500 mb-4">No features added yet</p>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  onClick={addFeature}
-                                >
+                              <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
+                                <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                                <p className="mb-4 text-gray-500">No features added yet</p>
+                                <Button type="button" variant="secondary" onClick={addFeature}>
                                   Add Your First Feature
                                 </Button>
                               </div>
@@ -531,39 +499,39 @@ export function EnhancedProductEditor({
                       </DndContext>
                     </TabsContent>
 
-                    <TabsContent value="media" className="space-y-6 mt-0">
+                    <TabsContent value="media" className="mt-0 space-y-6">
                       <div>
                         <Label>Product Image</Label>
                         <div className="mt-2">
                           {mediaUrl ? (
-                            <div className="relative group">
+                            <div className="group relative">
                               <img
                                 src={mediaUrl}
                                 alt="Product"
-                                className="w-full h-48 object-cover rounded-lg"
+                                className="h-48 w-full rounded-lg object-cover"
                               />
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                                 <Button
                                   type="button"
                                   variant="secondary"
                                   size="sm"
                                   onClick={() => setMediaUrl('')}
                                 >
-                                  <X className="h-4 w-4 mr-1" />
+                                  <X className="mr-1 h-4 w-4" />
                                   Remove
                                 </Button>
                               </div>
                             </div>
                           ) : (
-                            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
-                              <Upload className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                              <p className="text-gray-500 mb-4">Upload product image</p>
+                            <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center">
+                              <Upload className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                              <p className="mb-4 text-gray-500">Upload product image</p>
                               <Input
                                 type="url"
                                 placeholder="Or paste image URL..."
                                 value={mediaUrl}
                                 onChange={(e) => setMediaUrl(e.target.value)}
-                                className="max-w-sm mx-auto"
+                                className="mx-auto max-w-sm"
                               />
                             </div>
                           )}
@@ -571,9 +539,9 @@ export function EnhancedProductEditor({
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="settings" className="space-y-6 mt-0">
+                    <TabsContent value="settings" className="mt-0 space-y-6">
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center justify-between rounded-lg border p-4">
                           <div>
                             <h4 className="font-medium">Feature on Homepage</h4>
                             <p className="text-sm text-gray-500">
@@ -583,7 +551,7 @@ export function EnhancedProductEditor({
                           <Switch />
                         </div>
 
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center justify-between rounded-lg border p-4">
                           <div>
                             <h4 className="font-medium">Enable Reviews</h4>
                             <p className="text-sm text-gray-500">
@@ -593,7 +561,7 @@ export function EnhancedProductEditor({
                           <Switch />
                         </div>
 
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center justify-between rounded-lg border p-4">
                           <div>
                             <h4 className="font-medium">Stock Tracking</h4>
                             <p className="text-sm text-gray-500">
@@ -609,7 +577,7 @@ export function EnhancedProductEditor({
               </Tabs>
 
               {/* Form Actions */}
-              <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
+              <div className="mt-8 flex justify-end gap-3 border-t pt-6">
                 <Button
                   type="button"
                   variant="ghost"
@@ -618,16 +586,13 @@ export function EnhancedProductEditor({
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={createProduct.isPending || updateProduct.isPending}
-                >
+                <Button type="submit" disabled={createProduct.isPending || updateProduct.isPending}>
                   {createProduct.isPending || updateProduct.isPending ? (
                     <>
                       <motion.div
-                        className="h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                        className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent"
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       />
                       Saving...
                     </>
@@ -649,47 +614,49 @@ export function EnhancedProductEditor({
                 animate={{ width: 400, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="border-l bg-gray-50 overflow-hidden"
+                className="overflow-hidden border-l bg-gray-50"
               >
                 <div className="p-6">
-                  <h3 className="font-semibold mb-4">Preview</h3>
-                  <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="mb-4 font-semibold">Preview</h3>
+                  <div className="rounded-lg bg-white p-6 shadow-sm">
                     {mediaUrl && (
                       <img
                         src={mediaUrl}
                         alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg mb-4"
+                        className="mb-4 h-48 w-full rounded-lg object-cover"
                       />
                     )}
-                    <h4 className="text-xl font-bold mb-2">
+                    <h4 className="mb-2 text-xl font-bold">
                       {form.watch('name') || 'Product Name'}
                     </h4>
-                    <p className="text-gray-600 mb-4">
+                    <p className="mb-4 text-gray-600">
                       {form.watch('description') || 'Product description will appear here...'}
                     </p>
-                    
+
                     {features.length > 0 && (
                       <div className="space-y-2">
-                        {features.filter(f => f.text).map((feature) => {
-                          const icons = {
-                            check: Check,
-                            star: Star,
-                            zap: Zap,
-                            shield: Shield,
-                            gift: Gift,
-                            trending: TrendingUp,
-                          }
-                          const Icon = icons[feature.icon as keyof typeof icons] || Check
-                          
-                          return (
-                            <div key={feature.id} className="flex items-center gap-2 text-sm">
-                              <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
-                                <Icon className="h-3 w-3 text-green-600" />
+                        {features
+                          .filter((f) => f.text)
+                          .map((feature) => {
+                            const icons = {
+                              check: Check,
+                              star: Star,
+                              zap: Zap,
+                              shield: Shield,
+                              gift: Gift,
+                              trending: TrendingUp,
+                            }
+                            const Icon = icons[feature.icon as keyof typeof icons] || Check
+
+                            return (
+                              <div key={feature.id} className="flex items-center gap-2 text-sm">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+                                  <Icon className="h-3 w-3 text-green-600" />
+                                </div>
+                                <span>{feature.text}</span>
                               </div>
-                              <span>{feature.text}</span>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
                       </div>
                     )}
                   </div>

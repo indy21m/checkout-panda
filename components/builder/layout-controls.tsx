@@ -89,7 +89,9 @@ export function LayoutControls({ section, onChange, currentBreakpoint }: LayoutC
   const [customColumns, setCustomColumns] = useState('1fr 1fr')
   const [customRows, setCustomRows] = useState('auto')
 
-  const currentGap = section.settings.grid?.gap?.[currentBreakpoint as keyof typeof section.settings.grid.gap] || '1rem'
+  const currentGap =
+    section.settings.grid?.gap?.[currentBreakpoint as keyof typeof section.settings.grid.gap] ||
+    '1rem'
 
   const handlePresetSelect = (preset: (typeof LAYOUT_PRESETS)[0]) => {
     if (preset.id === 'custom') {

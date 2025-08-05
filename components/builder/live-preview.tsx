@@ -59,7 +59,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
   const [rotation, setRotation] = useState(0)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  
+
   const { sections, hasUnsavedChanges } = useBuilderStore()
 
   // Generate preview URL based on mode
@@ -69,16 +69,16 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
   useEffect(() => {
     if (hasUnsavedChanges && iframeRef.current && previewMode === 'live') {
       setIsSyncing(true)
-      
+
       // Send updated data to iframe
       const message = {
         type: 'updatePreview',
         sections,
         timestamp: Date.now(),
       }
-      
+
       iframeRef.current.contentWindow?.postMessage(message, '*')
-      
+
       // Simulate sync delay
       setTimeout(() => setIsSyncing(false), 500)
     }
@@ -117,19 +117,19 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
   const isRotated = rotation === 90 || rotation === 270
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={cn(
-        "flex flex-col h-full bg-gradient-to-br from-gray-50 to-white",
-        isFullscreen && "fixed inset-0 z-50",
+        'flex h-full flex-col bg-gradient-to-br from-gray-50 to-white',
+        isFullscreen && 'fixed inset-0 z-50',
         className
       )}
     >
       {/* Header Controls */}
-      <div className="flex items-center justify-between gap-4 p-4 border-b bg-white/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-4 border-b bg-white/80 p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           {/* Device Selector */}
-          <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
+          <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1">
             {DEVICE_PRESETS.map((preset) => {
               const Icon = preset.icon
               return (
@@ -171,7 +171,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
+                className="flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1.5 text-sm text-purple-700"
               >
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Syncing...
@@ -182,7 +182,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-full text-sm"
+                className="flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1.5 text-sm text-yellow-700"
               >
                 <AlertCircle className="h-3 w-3" />
                 Unsaved changes
@@ -203,7 +203,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
               step={10}
               className="w-24"
             />
-            <span className="text-sm text-gray-500 w-10">{scale}%</span>
+            <span className="w-10 text-sm text-gray-500">{scale}%</span>
           </div>
 
           {/* Action Buttons */}
@@ -219,24 +219,16 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
             <RefreshCw className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => window.open(previewUrl, '_blank')}
-          >
+          <Button variant="ghost" size="icon" onClick={() => window.open(previewUrl, '_blank')}>
             <ExternalLink className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Preview Settings Bar */}
-      <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 border-b">
+      <div className="flex items-center gap-4 border-b bg-gray-50 px-4 py-2">
         <div className="flex items-center gap-2">
           <Switch
             id="show-interactions"
@@ -254,7 +246,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
       </div>
 
       {/* Preview Container */}
-      <div className="flex-1 relative overflow-hidden bg-gray-100">
+      <div className="relative flex-1 overflow-hidden bg-gray-100">
         <div className="absolute inset-0 flex items-center justify-center p-8">
           {/* Device Frame */}
           <motion.div
@@ -264,24 +256,22 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
             }}
             transition={{ type: 'spring', damping: 20 }}
             className={cn(
-              "relative bg-white rounded-lg shadow-2xl overflow-hidden transition-all",
-              device !== 'desktop' && "ring-8 ring-gray-800",
-              isRotated && device !== 'desktop' && "aspect-[16/9]"
+              'relative overflow-hidden rounded-lg bg-white shadow-2xl transition-all',
+              device !== 'desktop' && 'ring-8 ring-gray-800',
+              isRotated && device !== 'desktop' && 'aspect-[16/9]'
             )}
             style={{
-              width: isRotated && device !== 'desktop' 
-                ? selectedDevice.height 
-                : selectedDevice.width,
-              height: isRotated && device !== 'desktop'
-                ? selectedDevice.width
-                : selectedDevice.height,
+              width:
+                isRotated && device !== 'desktop' ? selectedDevice.height : selectedDevice.width,
+              height:
+                isRotated && device !== 'desktop' ? selectedDevice.width : selectedDevice.height,
               maxWidth: '100%',
               maxHeight: '100%',
             }}
           >
             {/* Device Notch (for mobile) */}
             {device === 'mobile' && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10" />
+              <div className="absolute top-0 left-1/2 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-gray-800" />
             )}
 
             {/* Loading State */}
@@ -291,10 +281,10 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-white z-20 flex items-center justify-center"
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-white"
                 >
                   <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-purple-600" />
                     <p className="text-gray-600">Loading preview...</p>
                   </div>
                 </motion.div>
@@ -306,16 +296,16 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
               ref={iframeRef}
               src={previewUrl}
               onLoad={handleIframeLoad}
-              className="w-full h-full border-0"
+              className="h-full w-full border-0"
               title="Checkout Preview"
               sandbox="allow-scripts allow-forms allow-same-origin"
             />
 
             {/* Interaction Overlay */}
             {showInteractions && !isLoading && (
-              <div className="absolute inset-0 pointer-events-none">
+              <div className="pointer-events-none absolute inset-0">
                 <motion.div
-                  className="absolute top-20 left-20 w-6 h-6 bg-purple-500 rounded-full opacity-50"
+                  className="absolute top-20 left-20 h-6 w-6 rounded-full bg-purple-500 opacity-50"
                   animate={{
                     scale: [1, 1.5, 1],
                     opacity: [0.5, 0.2, 0.5],
@@ -326,7 +316,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
                   }}
                 />
                 <motion.div
-                  className="absolute bottom-32 right-20 w-8 h-8 bg-blue-500 rounded-full opacity-50"
+                  className="absolute right-20 bottom-32 h-8 w-8 rounded-full bg-blue-500 opacity-50"
                   animate={{
                     scale: [1, 1.3, 1],
                     opacity: [0.5, 0.3, 0.5],
@@ -346,7 +336,7 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-4 left-4 bg-gray-900/80 text-white px-3 py-1.5 rounded-full text-xs backdrop-blur-sm"
+              className="absolute bottom-4 left-4 rounded-full bg-gray-900/80 px-3 py-1.5 text-xs text-white backdrop-blur-sm"
             >
               {isRotated
                 ? `${selectedDevice.height} × ${selectedDevice.width}`
@@ -357,10 +347,10 @@ export function LivePreview({ checkoutSlug, className }: LivePreviewProps) {
       </div>
 
       {/* Quick Actions Footer */}
-      <div className="flex items-center justify-between p-3 bg-white border-t">
+      <div className="flex items-center justify-between border-t bg-white p-3">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Eye className="h-4 w-4" />
-          Preview URL: <code className="px-2 py-0.5 bg-gray-100 rounded">{previewUrl}</code>
+          Preview URL: <code className="rounded bg-gray-100 px-2 py-0.5">{previewUrl}</code>
         </div>
         <Button size="sm" variant="ghost" className="gap-2">
           <Settings className="h-4 w-4" />

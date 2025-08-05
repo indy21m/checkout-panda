@@ -14,12 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Play,
   Pause,
@@ -203,7 +198,13 @@ const EASING_FUNCTIONS = [
   { value: 'anticipate', label: 'Anticipate' },
 ]
 
-function AnimationTimeline({ animations, duration }: { animations: AnimationValue; duration: number }) {
+function AnimationTimeline({
+  animations,
+  duration,
+}: {
+  animations: AnimationValue
+  duration: number
+}) {
   const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
 
@@ -229,18 +230,10 @@ function AnimationTimeline({ animations, duration }: { animations: AnimationValu
     <div className="space-y-4">
       {/* Playback controls */}
       <div className="flex items-center gap-2">
-        <Button
-          size="icon"
-          variant="secondary"
-          onClick={handlePlay}
-        >
+        <Button size="icon" variant="secondary" onClick={handlePlay}>
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={() => setCurrentTime(0)}
-        >
+        <Button size="icon" variant="ghost" onClick={() => setCurrentTime(0)}>
           <RotateCcw className="h-4 w-4" />
         </Button>
         <div className="flex-1">
@@ -252,7 +245,7 @@ function AnimationTimeline({ animations, duration }: { animations: AnimationValu
             className="w-full"
           />
         </div>
-        <span className="text-sm text-gray-500 font-mono">
+        <span className="font-mono text-sm text-gray-500">
           {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
         </span>
       </div>
@@ -261,17 +254,18 @@ function AnimationTimeline({ animations, duration }: { animations: AnimationValu
       <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
         {Object.entries(animations).map(([property, keyframes]) => (
           <div key={property} className="flex items-center gap-3">
-            <span className="text-xs font-medium text-gray-600 w-16">{property}</span>
-            <div className="flex-1 relative h-6 bg-white rounded border border-gray-200">
+            <span className="w-16 text-xs font-medium text-gray-600">{property}</span>
+            <div className="relative h-6 flex-1 rounded border border-gray-200 bg-white">
               {/* Keyframe markers */}
               <div className="absolute inset-0 flex items-center">
-                {Array.isArray(keyframes) && keyframes.map((_, index) => (
-                  <div
-                    key={index}
-                    className="absolute w-2 h-2 bg-purple-500 rounded-full"
-                    style={{ left: `${(index / (keyframes.length - 1)) * 100}%` }}
-                  />
-                ))}
+                {Array.isArray(keyframes) &&
+                  keyframes.map((_, index) => (
+                    <div
+                      key={index}
+                      className="absolute h-2 w-2 rounded-full bg-purple-500"
+                      style={{ left: `${(index / (keyframes.length - 1)) * 100}%` }}
+                    />
+                  ))}
               </div>
               {/* Current time indicator */}
               <div
@@ -324,14 +318,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
   }
 
   const toggleCategory = (category: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+    setExpandedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     )
   }
 
-  const categories = [...new Set(ANIMATION_PRESETS.map(p => p.category))]
+  const categories = [...new Set(ANIMATION_PRESETS.map((p) => p.category))]
 
   return (
     <div className="space-y-6">
@@ -339,15 +331,9 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Animation Controls</h3>
-          <p className="text-sm text-gray-500">
-            Add motion and interactivity to your elements
-          </p>
+          <p className="text-sm text-gray-500">Add motion and interactivity to your elements</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowPreview(!showPreview)}
-        >
+        <Button variant="ghost" size="icon" onClick={() => setShowPreview(!showPreview)}>
           {showPreview ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
         </Button>
       </div>
@@ -372,8 +358,8 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                   whileHover={customAnimation.whileHover}
                   whileTap={customAnimation.whileTap}
                 >
-                  <div className="h-24 w-48 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg flex items-center justify-center">
-                    <span className="text-white font-semibold">Preview Element</span>
+                  <div className="flex h-24 w-48 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
+                    <span className="font-semibold text-white">Preview Element</span>
                   </div>
                 </motion.div>
               </div>
@@ -384,18 +370,18 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
 
       {/* Animation Controls */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="presets">Presets</TabsTrigger>
           <TabsTrigger value="custom">Custom</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
         <TabsContent value="presets" className="mt-6 space-y-4">
-          {categories.map(category => (
+          {categories.map((category) => (
             <div key={category} className="space-y-2">
               <button
                 onClick={() => toggleCategory(category)}
-                className="flex items-center gap-2 text-sm font-medium capitalize hover:text-purple-600 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium capitalize transition-colors hover:text-purple-600"
               >
                 {expandedCategories.includes(category) ? (
                   <ChevronDown className="h-4 w-4" />
@@ -413,7 +399,7 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                     exit={{ height: 0, opacity: 0 }}
                     className="grid grid-cols-2 gap-3"
                   >
-                    {ANIMATION_PRESETS.filter(p => p.category === category).map(preset => {
+                    {ANIMATION_PRESETS.filter((p) => p.category === category).map((preset) => {
                       const Icon = preset.icon
                       const isSelected = selectedPreset === preset.id
 
@@ -424,20 +410,22 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => handlePresetSelect(preset)}
                           className={cn(
-                            "flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left",
+                            'flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all',
                             isSelected
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-200 hover:border-gray-300"
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-gray-300'
                           )}
                         >
-                          <div className={cn(
-                            "h-10 w-10 rounded-lg flex items-center justify-center",
-                            isSelected ? "bg-purple-500 text-white" : "bg-gray-100 text-gray-600"
-                          )}>
+                          <div
+                            className={cn(
+                              'flex h-10 w-10 items-center justify-center rounded-lg',
+                              isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
+                            )}
+                          >
                             <Icon className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{preset.name}</p>
+                            <p className="text-sm font-medium">{preset.name}</p>
                             <p className="text-xs text-gray-500">Click to apply</p>
                           </div>
                         </motion.button>
@@ -453,7 +441,7 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
         <TabsContent value="custom" className="mt-6 space-y-6">
           {/* Initial State */}
           <div className="space-y-4">
-            <h4 className="font-medium flex items-center gap-2">
+            <h4 className="flex items-center gap-2 font-medium">
               <Layers className="h-4 w-4" />
               Initial State
             </h4>
@@ -462,10 +450,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Label>Opacity</Label>
                 <Slider
                   value={[customAnimation.initial?.opacity || 1]}
-                  onValueChange={([value]) => updateCustomProperty('initial', {
-                    ...customAnimation.initial,
-                    opacity: value,
-                  })}
+                  onValueChange={([value]) =>
+                    updateCustomProperty('initial', {
+                      ...customAnimation.initial,
+                      opacity: value,
+                    })
+                  }
                   min={0}
                   max={1}
                   step={0.1}
@@ -476,10 +466,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Label>Scale</Label>
                 <Slider
                   value={[customAnimation.initial?.scale || 1]}
-                  onValueChange={([value]) => updateCustomProperty('initial', {
-                    ...customAnimation.initial,
-                    scale: value,
-                  })}
+                  onValueChange={([value]) =>
+                    updateCustomProperty('initial', {
+                      ...customAnimation.initial,
+                      scale: value,
+                    })
+                  }
                   min={0}
                   max={2}
                   step={0.1}
@@ -491,10 +483,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Input
                   type="number"
                   value={customAnimation.initial?.x || 0}
-                  onChange={(e) => updateCustomProperty('initial', {
-                    ...customAnimation.initial,
-                    x: parseInt(e.target.value),
-                  })}
+                  onChange={(e) =>
+                    updateCustomProperty('initial', {
+                      ...customAnimation.initial,
+                      x: parseInt(e.target.value),
+                    })
+                  }
                   className="mt-1"
                 />
               </div>
@@ -503,10 +497,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Input
                   type="number"
                   value={customAnimation.initial?.y || 0}
-                  onChange={(e) => updateCustomProperty('initial', {
-                    ...customAnimation.initial,
-                    y: parseInt(e.target.value),
-                  })}
+                  onChange={(e) =>
+                    updateCustomProperty('initial', {
+                      ...customAnimation.initial,
+                      y: parseInt(e.target.value),
+                    })
+                  }
                   className="mt-1"
                 />
               </div>
@@ -515,7 +511,7 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
 
           {/* Transition Settings */}
           <div className="space-y-4">
-            <h4 className="font-medium flex items-center gap-2">
+            <h4 className="flex items-center gap-2 font-medium">
               <Clock className="h-4 w-4" />
               Transition
             </h4>
@@ -525,10 +521,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Input
                   type="number"
                   value={customAnimation.transition?.duration || 0.5}
-                  onChange={(e) => updateCustomProperty('transition', {
-                    ...customAnimation.transition,
-                    duration: parseFloat(e.target.value),
-                  })}
+                  onChange={(e) =>
+                    updateCustomProperty('transition', {
+                      ...customAnimation.transition,
+                      duration: parseFloat(e.target.value),
+                    })
+                  }
                   step={0.1}
                   min={0}
                   className="mt-1"
@@ -539,10 +537,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Input
                   type="number"
                   value={customAnimation.transition?.delay || 0}
-                  onChange={(e) => updateCustomProperty('transition', {
-                    ...customAnimation.transition,
-                    delay: parseFloat(e.target.value),
-                  })}
+                  onChange={(e) =>
+                    updateCustomProperty('transition', {
+                      ...customAnimation.transition,
+                      delay: parseFloat(e.target.value),
+                    })
+                  }
                   step={0.1}
                   min={0}
                   className="mt-1"
@@ -552,10 +552,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Label>Easing</Label>
                 <Select
                   value={customAnimation.transition?.ease || 'easeOut'}
-                  onValueChange={(value) => updateCustomProperty('transition', {
-                    ...customAnimation.transition,
-                    ease: value,
-                  })}
+                  onValueChange={(value) =>
+                    updateCustomProperty('transition', {
+                      ...customAnimation.transition,
+                      ease: value,
+                    })
+                  }
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -574,7 +576,7 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
 
           {/* Loop Settings */}
           <div className="space-y-4">
-            <h4 className="font-medium flex items-center gap-2">
+            <h4 className="flex items-center gap-2 font-medium">
               <RotateCcw className="h-4 w-4" />
               Loop Settings
             </h4>
@@ -582,10 +584,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
               <Label>Enable Loop</Label>
               <Switch
                 checked={customAnimation.transition?.repeat === Infinity}
-                onCheckedChange={(checked) => updateCustomProperty('transition', {
-                  ...customAnimation.transition,
-                  repeat: checked ? Infinity : 0,
-                })}
+                onCheckedChange={(checked) =>
+                  updateCustomProperty('transition', {
+                    ...customAnimation.transition,
+                    repeat: checked ? Infinity : 0,
+                  })
+                }
               />
             </div>
             {customAnimation.transition?.repeat === Infinity && (
@@ -594,10 +598,12 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
                 <Input
                   type="number"
                   value={customAnimation.transition?.repeatDelay || 0}
-                  onChange={(e) => updateCustomProperty('transition', {
-                    ...customAnimation.transition,
-                    repeatDelay: parseFloat(e.target.value),
-                  })}
+                  onChange={(e) =>
+                    updateCustomProperty('transition', {
+                      ...customAnimation.transition,
+                      repeatDelay: parseFloat(e.target.value),
+                    })
+                  }
                   step={0.1}
                   min={0}
                   className="mt-1"
@@ -616,7 +622,7 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
       </Tabs>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between border-t pt-4">
         <Button
           variant="ghost"
           onClick={() => {
@@ -629,12 +635,10 @@ export function AnimationControls({ block, onChange }: AnimationControlsProps) {
         </Button>
         <div className="flex items-center gap-2">
           <Button variant="secondary">
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="mr-2 h-4 w-4" />
             Copy Animation
           </Button>
-          <Button>
-            Apply to Similar
-          </Button>
+          <Button>Apply to Similar</Button>
         </div>
       </div>
     </div>

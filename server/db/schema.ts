@@ -95,51 +95,55 @@ export const checkouts = pgTable(
 export const productStatusEnum = pgEnum('product_status', ['active', 'inactive', 'draft'])
 
 // Products
-export const products = pgTable('products', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-  description: text('description'),
-  featured_description: text('featured_description'),
-  type: productTypeEnum('type').default('digital'),
-  status: productStatusEnum('status').default('draft'),
+export const products = pgTable(
+  'products',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    description: text('description'),
+    featured_description: text('featured_description'),
+    type: productTypeEnum('type').default('digital'),
+    status: productStatusEnum('status').default('draft'),
 
-  // Visual
-  thumbnail: text('thumbnail'), // URL or gradient spec
-  color: text('color'), // For gradient backgrounds
+    // Visual
+    thumbnail: text('thumbnail'), // URL or gradient spec
+    color: text('color'), // For gradient backgrounds
 
-  // Pricing (deprecated in favor of plans)
-  price: integer('price').notNull(), // in cents - kept for backward compatibility
-  currency: currencyEnum('currency').default('USD').notNull(),
-  stripeProductId: text('stripe_product_id'),
-  stripePriceId: text('stripe_price_id'),
+    // Pricing (deprecated in favor of plans)
+    price: integer('price').notNull(), // in cents - kept for backward compatibility
+    currency: currencyEnum('currency').default('USD').notNull(),
+    stripeProductId: text('stripe_product_id'),
+    stripePriceId: text('stripe_price_id'),
 
-  // For subscriptions
-  isRecurring: boolean('is_recurring').default(false),
-  interval: text('interval'), // 'month', 'year', etc.
-  intervalCount: integer('interval_count').default(1),
+    // For subscriptions
+    isRecurring: boolean('is_recurring').default(false),
+    interval: text('interval'), // 'month', 'year', etc.
+    intervalCount: integer('interval_count').default(1),
 
-  // Features
-  features: jsonb('features').$type<string[]>().default([]),
+    // Features
+    features: jsonb('features').$type<string[]>().default([]),
 
-  // Analytics
-  totalRevenue: integer('total_revenue').default(0), // in cents
-  totalSales: integer('total_sales').default(0),
-  conversionRate: integer('conversion_rate').default(0), // percentage * 100
+    // Analytics
+    totalRevenue: integer('total_revenue').default(0), // in cents
+    totalSales: integer('total_sales').default(0),
+    conversionRate: integer('conversion_rate').default(0), // percentage * 100
 
-  // Status
-  isActive: boolean('is_active').default(true),
-  isArchived: boolean('is_archived').default(false),
+    // Status
+    isActive: boolean('is_active').default(true),
+    isArchived: boolean('is_archived').default(false),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-}, (table) => ({
-  slugIndex: index('products_slug_idx').on(table.slug),
-  userIdIndex: index('products_user_id_idx').on(table.userId),
-}))
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    slugIndex: index('products_slug_idx').on(table.slug),
+    userIdIndex: index('products_user_id_idx').on(table.userId),
+  })
+)
 
 // Product Plans (Pricing Tiers)
 export const productPlans = pgTable('product_plans', {

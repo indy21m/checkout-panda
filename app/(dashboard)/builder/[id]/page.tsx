@@ -469,10 +469,10 @@ export default function EnhancedBuilderPage() {
             </div>
 
             {/* Smart Templates */}
-            <SmartTemplates 
+            <SmartTemplates
               onApplyTemplate={(newSections) => {
                 // Replace all sections with template sections
-                newSections.forEach(section => addSection(section))
+                newSections.forEach((section) => addSection(section))
               }}
               productType="digital"
             />
@@ -520,10 +520,7 @@ export default function EnhancedBuilderPage() {
               )}
               Save
             </Button>
-            <Button 
-              variant="secondary"
-              onClick={() => setShowLivePreview(!showLivePreview)}
-            >
+            <Button variant="secondary" onClick={() => setShowLivePreview(!showLivePreview)}>
               <Eye className="mr-2 h-4 w-4" />
               Live Preview
             </Button>
@@ -547,44 +544,44 @@ export default function EnhancedBuilderPage() {
           {/* Left Panel - Block Library / Section Manager */}
           {!showLivePreview && (
             <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-white/60 backdrop-blur-sm">
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setActivePanel('blocks')}
-                className={cn(
-                  'flex-1 px-4 py-2 text-sm font-medium transition-all',
-                  activePanel === 'blocks'
-                    ? 'text-primary border-primary border-b-2 bg-white'
-                    : 'text-gray-600 hover:text-gray-900'
+              <div className="flex border-b border-gray-200">
+                <button
+                  onClick={() => setActivePanel('blocks')}
+                  className={cn(
+                    'flex-1 px-4 py-2 text-sm font-medium transition-all',
+                    activePanel === 'blocks'
+                      ? 'text-primary border-primary border-b-2 bg-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  )}
+                >
+                  Blocks
+                </button>
+                <button
+                  onClick={() => setActivePanel('sections')}
+                  className={cn(
+                    'flex-1 px-4 py-2 text-sm font-medium transition-all',
+                    activePanel === 'sections'
+                      ? 'text-primary border-primary border-b-2 bg-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  )}
+                >
+                  Sections
+                </button>
+              </div>
+              <div className="h-[calc(100%-48px)] overflow-y-auto">
+                {activePanel === 'blocks' ? (
+                  <EnhancedBlockLibrary />
+                ) : (
+                  <div className="p-4">
+                    <SectionManager
+                      sections={sections}
+                      selectedIds={selectedIds}
+                      onSelectSection={(id) => selectElement(id, 'section')}
+                      onAddSection={handleAddSection}
+                    />
+                  </div>
                 )}
-              >
-                Blocks
-              </button>
-              <button
-                onClick={() => setActivePanel('sections')}
-                className={cn(
-                  'flex-1 px-4 py-2 text-sm font-medium transition-all',
-                  activePanel === 'sections'
-                    ? 'text-primary border-primary border-b-2 bg-white'
-                    : 'text-gray-600 hover:text-gray-900'
-                )}
-              >
-                Sections
-              </button>
-            </div>
-            <div className="h-[calc(100%-48px)] overflow-y-auto">
-              {activePanel === 'blocks' ? (
-                <EnhancedBlockLibrary />
-              ) : (
-                <div className="p-4">
-                  <SectionManager
-                    sections={sections}
-                    selectedIds={selectedIds}
-                    onSelectSection={(id) => selectElement(id, 'section')}
-                    onAddSection={handleAddSection}
-                  />
-                </div>
-              )}
-            </div>
+              </div>
             </div>
           )}
 
@@ -595,19 +592,19 @@ export default function EnhancedBuilderPage() {
             </div>
           ) : (
             <div className="relative flex-1 overflow-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
-            <EnhancedCanvas />
-            {/* Smart Guides Overlay */}
-            {isDragging && guides.length > 0 && <SmartGuides guides={guides} />}
-            {/* Panning Overlay */}
-            {isPanning && (
-              <div className="pointer-events-none absolute inset-0 z-50 cursor-move">
-                <div className="absolute inset-0 bg-purple-500/5" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-900/90 px-3 py-1.5 text-sm font-medium text-white">
-                  Panning Mode
+              <EnhancedCanvas />
+              {/* Smart Guides Overlay */}
+              {isDragging && guides.length > 0 && <SmartGuides guides={guides} />}
+              {/* Panning Overlay */}
+              {isPanning && (
+                <div className="pointer-events-none absolute inset-0 z-50 cursor-move">
+                  <div className="absolute inset-0 bg-purple-500/5" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-900/90 px-3 py-1.5 text-sm font-medium text-white">
+                    Panning Mode
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
           )}
 
           {/* Properties Panel */}
@@ -646,7 +643,7 @@ export default function EnhancedBuilderPage() {
 
         {/* Keyboard Shortcuts Dialog */}
         <KeyboardShortcutsDialog open={showHelp} onOpenChange={setShowHelp} shortcuts={shortcuts} />
-        
+
         {/* Performance Monitor */}
         <PerformanceMonitor />
       </div>

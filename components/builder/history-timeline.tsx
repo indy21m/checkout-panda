@@ -115,7 +115,9 @@ export function HistoryTimeline({ maxItems = 10 }: HistoryTimelineProps) {
               const globalIndex = allHistory.indexOf(item)
               const isActive = globalIndex === currentIndex
               const isFuture = globalIndex > currentIndex
-              const { Icon, colorClass } = item ? getActionDetails(item) : { Icon: Edit3, colorClass: ACTION_COLORS.default }
+              const { Icon, colorClass } = item
+                ? getActionDetails(item)
+                : { Icon: Edit3, colorClass: ACTION_COLORS.default }
 
               return (
                 <motion.div

@@ -71,7 +71,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
     case 'fade':
       return {
         hidden: { opacity: config.opacity?.from ?? 0 },
-        visible: { 
+        visible: {
           opacity: config.opacity?.to ?? 1,
           transition: {
             duration,
@@ -82,14 +82,14 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           },
         },
       } as Variants
-    
+
     case 'slide':
       const slideDistance = config.distance || 50
       const direction = config.direction || 'up'
-      
+
       let xOffset = 0
       let yOffset = 0
-      
+
       switch (direction) {
         case 'up':
           yOffset = slideDistance
@@ -104,7 +104,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           xOffset = -slideDistance
           break
       }
-      
+
       return {
         hidden: {
           opacity: config.opacity?.from ?? 0,
@@ -123,7 +123,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           },
         },
       } as Variants
-    
+
     case 'scale':
       return {
         hidden: {
@@ -141,7 +141,7 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           },
         },
       } as Variants
-    
+
     case 'rotate':
       return {
         hidden: {
@@ -159,14 +159,17 @@ const getAnimationVariants = (config?: AnimationConfig): Variants => {
           },
         },
       } as Variants
-    
+
     default:
       return baseVariants
   }
 }
 
 // Responsive value getter
-function getResponsiveValue<T>(value: T | { base?: T; sm?: T; md?: T; lg?: T; xl?: T; '2xl'?: T }, breakpoint = 'base'): T | undefined {
+function getResponsiveValue<T>(
+  value: T | { base?: T; sm?: T; md?: T; lg?: T; xl?: T; '2xl'?: T },
+  breakpoint = 'base'
+): T | undefined {
   if (typeof value === 'object' && value !== null && 'base' in value) {
     const responsiveValue = value as { base?: T; sm?: T; md?: T; lg?: T; xl?: T; '2xl'?: T }
     return responsiveValue[breakpoint as keyof typeof responsiveValue] ?? responsiveValue.base
@@ -175,7 +178,13 @@ function getResponsiveValue<T>(value: T | { base?: T; sm?: T; md?: T; lg?: T; xl
 }
 
 // Block renderer component
-function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; additionalProps?: Record<string, unknown> }) {
+function BlockRenderer({
+  block,
+  additionalProps,
+}: {
+  block: EnhancedBlock
+  additionalProps?: Record<string, unknown>
+}) {
   const BlockComponent = blockComponents[block.type]
   const [isVisible, setIsVisible] = useState(true)
   const [hasTriggered, setHasTriggered] = useState(false)
@@ -195,7 +204,7 @@ function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; addit
 
   useEffect(() => {
     // Handle scroll-triggered animations
-    const scrollAnimations = block.animations?.filter(a => a.trigger === 'onScroll')
+    const scrollAnimations = block.animations?.filter((a) => a.trigger === 'onScroll')
     if (!scrollAnimations?.length || hasTriggered) return
 
     const handleScroll = () => {
@@ -226,15 +235,16 @@ function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; addit
 
   // Get the first animation for the block
   const primaryAnimation = block.animations?.[0]
-  const shouldAnimate = !primaryAnimation || 
-    primaryAnimation.trigger === 'onLoad' || 
+  const shouldAnimate =
+    !primaryAnimation ||
+    primaryAnimation.trigger === 'onLoad' ||
     (primaryAnimation.trigger === 'onScroll' && hasTriggered)
 
   return (
     <motion.div
       id={block.id}
       initial="hidden"
-      animate={shouldAnimate ? "visible" : "hidden"}
+      animate={shouldAnimate ? 'visible' : 'hidden'}
       variants={getAnimationVariants(primaryAnimation)}
       className={block.styles.className}
       style={{
@@ -249,7 +259,13 @@ function BlockRenderer({ block, additionalProps }: { block: EnhancedBlock; addit
 }
 
 // Column renderer component
-function ColumnRenderer({ column, additionalProps }: { column: Column; additionalProps?: Record<string, unknown> }) {
+function ColumnRenderer({
+  column,
+  additionalProps,
+}: {
+  column: Column
+  additionalProps?: Record<string, unknown>
+}) {
   const sortedBlocks = [...column.blocks].sort((a, b) => a.position - b.position)
 
   return (
@@ -284,7 +300,13 @@ function ColumnRenderer({ column, additionalProps }: { column: Column; additiona
 }
 
 // Section renderer component
-function SectionRenderer({ section, additionalProps }: { section: Section; additionalProps?: Record<string, unknown> }) {
+function SectionRenderer({
+  section,
+  additionalProps,
+}: {
+  section: Section
+  additionalProps?: Record<string, unknown>
+}) {
   const isVisible = section.visibility?.desktop !== false // Default to visible
 
   if (!isVisible) return null
@@ -301,7 +323,9 @@ function SectionRenderer({ section, additionalProps }: { section: Section; addit
         section.settings.className
       )}
       style={{
-        maxWidth: !section.settings.fullWidth ? getResponsiveValue(section.settings.maxWidth) : undefined,
+        maxWidth: !section.settings.fullWidth
+          ? getResponsiveValue(section.settings.maxWidth)
+          : undefined,
         padding: getResponsiveValue(section.settings.padding),
         margin: getResponsiveValue(section.settings.margin),
       }}
@@ -311,19 +335,24 @@ function SectionRenderer({ section, additionalProps }: { section: Section; addit
         <div
           className="absolute inset-0 -z-10"
           style={{
-            background: section.settings.background.type === 'color' || section.settings.background.type === 'gradient'
-              ? section.settings.background.value
-              : undefined,
-            backgroundImage: section.settings.background.type === 'image'
-              ? `url(${section.settings.background.value})`
-              : undefined,
+            background:
+              section.settings.background.type === 'color' ||
+              section.settings.background.type === 'gradient'
+                ? section.settings.background.value
+                : undefined,
+            backgroundImage:
+              section.settings.background.type === 'image'
+                ? `url(${section.settings.background.value})`
+                : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: section.settings.background.blur ? `blur(${section.settings.background.blur}px)` : undefined,
+            filter: section.settings.background.blur
+              ? `blur(${section.settings.background.blur}px)`
+              : undefined,
           }}
         >
           {section.settings.background.overlay && (
-            <div 
+            <div
               className="absolute inset-0"
               style={{ backgroundColor: section.settings.background.overlay }}
             />
@@ -335,7 +364,8 @@ function SectionRenderer({ section, additionalProps }: { section: Section; addit
       <div
         className="grid w-full"
         style={{
-          gridTemplateColumns: section.settings.grid.customTemplate?.columns || 
+          gridTemplateColumns:
+            section.settings.grid.customTemplate?.columns ||
             `repeat(${getResponsiveValue(section.settings.grid.columns) || 12}, 1fr)`,
           gap: getResponsiveValue(section.settings.grid.gap),
           alignItems: getResponsiveValue(section.settings.grid.alignItems),
@@ -380,34 +410,39 @@ export function EnhancedCheckoutRenderer({ checkout, productId, amount }: Checko
   const themeClass = settings.theme ? `theme-${settings.theme}` : ''
 
   // Additional props for payment blocks
-  const additionalProps = productId && amount
-    ? { checkoutId: checkout.id, productId, amount }
-    : {}
+  const additionalProps = productId && amount ? { checkoutId: checkout.id, productId, amount } : {}
 
   // Handle legacy blocks (convert to sections)
   const hasSections = sections && sections.length > 0
-  const legacySections: Section[] = !hasSections && blocks ? [{
-    id: 'legacy-section',
-    type: 'section',
-    name: 'Legacy Content',
-    columns: [{
-      id: 'legacy-column',
-      type: 'column',
-      span: { base: 12 },
-      blocks: blocks.map(block => ({
-        ...block,
-        animations: [],
-        interactions: [],
-      })),
-      settings: {},
-    }],
-    settings: {
-      grid: {
-        columns: { base: 12 },
-        gap: { base: '0' },
-      },
-    },
-  }] : []
+  const legacySections: Section[] =
+    !hasSections && blocks
+      ? [
+          {
+            id: 'legacy-section',
+            type: 'section',
+            name: 'Legacy Content',
+            columns: [
+              {
+                id: 'legacy-column',
+                type: 'column',
+                span: { base: 12 },
+                blocks: blocks.map((block) => ({
+                  ...block,
+                  animations: [],
+                  interactions: [],
+                })),
+                settings: {},
+              },
+            ],
+            settings: {
+              grid: {
+                columns: { base: 12 },
+                gap: { base: '0' },
+              },
+            },
+          },
+        ]
+      : []
 
   const renderSections = hasSections ? sections : legacySections
 

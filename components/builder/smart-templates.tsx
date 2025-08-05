@@ -133,22 +133,23 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
 
   const filteredTemplates = SMART_TEMPLATES.filter((template) => {
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    const matchesSearch =
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     return matchesCategory && matchesSearch
   }).sort((a, b) => b.popularity - a.popularity)
 
   const handleApplyTemplate = async (template: Template) => {
     setIsGenerating(true)
-    
+
     // Simulate AI generation delay
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     // In a real implementation, this would generate sections based on the template
     // and potentially use AI to customize content
     onApplyTemplate(template.sections)
-    
+
     setIsGenerating(false)
     setIsOpen(false)
     setSelectedTemplate(null)
@@ -156,15 +157,15 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
 
   const handleAiGenerate = async () => {
     setIsGenerating(true)
-    
+
     // Simulate AI analysis and generation
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+
     // In a real implementation, this would analyze the product type
     // and generate a custom template using AI
     const aiGeneratedSections: Section[] = []
     onApplyTemplate(aiGeneratedSections)
-    
+
     setIsGenerating(false)
     setIsOpen(false)
   }
@@ -172,18 +173,14 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
   return (
     <>
       {/* Trigger Button */}
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="gap-2"
-        variant="secondary"
-      >
+      <Button onClick={() => setIsOpen(true)} className="gap-2" variant="secondary">
         <Sparkles className="h-4 w-4" />
         Smart Templates
       </Button>
 
       {/* Templates Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-6xl max-h-[85vh] p-0 overflow-hidden">
+        <DialogContent className="max-h-[85vh] max-w-6xl overflow-hidden p-0">
           <div className="flex h-full">
             {/* Sidebar */}
             <div className="w-64 border-r bg-gray-50 p-6">
@@ -192,22 +189,20 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                   <Sparkles className="h-5 w-5 text-purple-600" />
                   Smart Templates
                 </DialogTitle>
-                <DialogDescription>
-                  AI-powered templates optimized for conversion
-                </DialogDescription>
+                <DialogDescription>AI-powered templates optimized for conversion</DialogDescription>
               </DialogHeader>
 
               {/* AI Generate Section */}
-              <div className="mt-6 p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="mt-6 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 p-4">
+                <div className="mb-2 flex items-center gap-2">
                   <Wand2 className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium text-sm">AI Template Generator</span>
+                  <span className="text-sm font-medium">AI Template Generator</span>
                 </div>
-                <p className="text-xs text-gray-600 mb-3">
+                <p className="mb-3 text-xs text-gray-600">
                   Let AI create a custom template based on your product
                 </p>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="w-full gap-2"
                   onClick={handleAiGenerate}
                   disabled={isGenerating}
@@ -228,22 +223,23 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
 
               {/* Categories */}
               <div className="mt-6 space-y-1">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Categories</h3>
+                <h3 className="mb-2 text-sm font-medium text-gray-700">Categories</h3>
                 {TEMPLATE_CATEGORIES.map((category) => {
                   const Icon = category.icon
-                  const count = category.id === 'all' 
-                    ? SMART_TEMPLATES.length 
-                    : SMART_TEMPLATES.filter(t => t.category === category.id).length
-                  
+                  const count =
+                    category.id === 'all'
+                      ? SMART_TEMPLATES.length
+                      : SMART_TEMPLATES.filter((t) => t.category === category.id).length
+
                   return (
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
                       className={cn(
-                        "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+                        'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
                         selectedCategory === category.id
-                          ? "bg-purple-100 text-purple-700"
-                          : "hover:bg-gray-100 text-gray-700"
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'text-gray-700 hover:bg-gray-100'
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -257,7 +253,7 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
               </div>
 
               {/* Stats */}
-              <div className="mt-auto pt-6 border-t">
+              <div className="mt-auto border-t pt-6">
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500">Templates Used</span>
@@ -272,11 +268,11 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col">
               {/* Search Header */}
-              <div className="p-6 border-b">
+              <div className="border-b p-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input
                     placeholder="Search templates..."
                     value={searchQuery}
@@ -291,7 +287,7 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                 <div className="grid grid-cols-2 gap-6">
                   {filteredTemplates.map((template) => {
                     const Icon = template.icon
-                    
+
                     return (
                       <motion.div
                         key={template.id}
@@ -300,21 +296,21 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                         whileHover={{ y: -4 }}
                         onHoverStart={() => setHoveredTemplate(template.id)}
                         onHoverEnd={() => setHoveredTemplate(null)}
-                        className="relative group cursor-pointer"
+                        className="group relative cursor-pointer"
                         onClick={() => setSelectedTemplate(template)}
                       >
                         <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition-all hover:border-purple-500 hover:shadow-xl">
                           {/* Preview Header */}
-                          <div className={cn(
-                            "h-32 bg-gradient-to-br p-6",
-                            template.color
-                          )}>
+                          <div className={cn('h-32 bg-gradient-to-br p-6', template.color)}>
                             <div className="flex items-start justify-between">
-                              <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
                                 <Icon className="h-6 w-6 text-white" />
                               </div>
                               {template.conversionRate && (
-                                <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                                <Badge
+                                  variant="secondary"
+                                  className="border-0 bg-white/20 text-white"
+                                >
                                   +{template.conversionRate}% CVR
                                 </Badge>
                               )}
@@ -323,15 +319,15 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
 
                           {/* Content */}
                           <div className="p-6">
-                            <h3 className="font-semibold text-lg mb-2">{template.name}</h3>
-                            <p className="text-sm text-gray-600 mb-4">{template.description}</p>
-                            
+                            <h3 className="mb-2 text-lg font-semibold">{template.name}</h3>
+                            <p className="mb-4 text-sm text-gray-600">{template.description}</p>
+
                             {/* Tags */}
-                            <div className="flex flex-wrap gap-2 mb-4">
+                            <div className="mb-4 flex flex-wrap gap-2">
                               {template.tags.map((tag) => (
                                 <span
                                   key={tag}
-                                  className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+                                  className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
                                 >
                                   {tag}
                                 </span>
@@ -346,9 +342,9 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                                   <span>{template.popularity}% popular</span>
                                 </div>
                               </div>
-                              
+
                               <Button size="sm" variant="ghost">
-                                Preview <ChevronRight className="h-4 w-4 ml-1" />
+                                Preview <ChevronRight className="ml-1 h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -360,7 +356,7 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/80 flex items-center justify-center gap-3"
+                                className="absolute inset-0 flex items-center justify-center gap-3 bg-black/80"
                               >
                                 <Button
                                   size="sm"
@@ -370,7 +366,7 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                                     // Preview logic
                                   }}
                                 >
-                                  <Eye className="h-4 w-4 mr-2" />
+                                  <Eye className="mr-2 h-4 w-4" />
                                   Preview
                                 </Button>
                                 <Button
@@ -380,7 +376,7 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                                     handleApplyTemplate(template)
                                   }}
                                 >
-                                  <Check className="h-4 w-4 mr-2" />
+                                  <Check className="mr-2 h-4 w-4" />
                                   Use Template
                                 </Button>
                               </motion.div>
@@ -393,10 +389,12 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                 </div>
 
                 {filteredTemplates.length === 0 && (
-                  <div className="text-center py-12">
-                    <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <div className="py-12 text-center">
+                    <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                     <p className="text-gray-500">No templates found</p>
-                    <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filters</p>
+                    <p className="mt-1 text-sm text-gray-400">
+                      Try adjusting your search or filters
+                    </p>
                   </div>
                 )}
               </div>
@@ -409,16 +407,12 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 400, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
-                  className="border-l bg-gray-50 overflow-hidden"
+                  className="overflow-hidden border-l bg-gray-50"
                 >
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="mb-6 flex items-center justify-between">
                       <h3 className="font-semibold">Template Preview</h3>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedTemplate(null)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => setSelectedTemplate(null)}>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -426,20 +420,27 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                     {/* Template Details */}
                     <div className="space-y-6">
                       <div>
-                        <h4 className="font-medium mb-2">{selectedTemplate.name}</h4>
+                        <h4 className="mb-2 font-medium">{selectedTemplate.name}</h4>
                         <p className="text-sm text-gray-600">{selectedTemplate.description}</p>
                       </div>
 
                       {/* Sections Preview */}
                       <div>
-                        <h5 className="text-sm font-medium mb-3">Included Sections</h5>
+                        <h5 className="mb-3 text-sm font-medium">Included Sections</h5>
                         <div className="space-y-2">
-                          {['Hero', 'Product Details', 'Pricing', 'Testimonials', 'FAQ', 'Guarantee'].map((section) => (
+                          {[
+                            'Hero',
+                            'Product Details',
+                            'Pricing',
+                            'Testimonials',
+                            'FAQ',
+                            'Guarantee',
+                          ].map((section) => (
                             <div
                               key={section}
-                              className="flex items-center gap-2 p-3 bg-white rounded-lg"
+                              className="flex items-center gap-2 rounded-lg bg-white p-3"
                             >
-                              <div className="h-8 w-8 bg-gray-100 rounded flex items-center justify-center">
+                              <div className="flex h-8 w-8 items-center justify-center rounded bg-gray-100">
                                 <Layout className="h-4 w-4 text-gray-600" />
                               </div>
                               <span className="text-sm">{section}</span>
@@ -457,12 +458,12 @@ export function SmartTemplates({ onApplyTemplate }: SmartTemplatesProps) {
                       >
                         {isGenerating ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Applying Template...
                           </>
                         ) : (
                           <>
-                            <Check className="h-4 w-4 mr-2" />
+                            <Check className="mr-2 h-4 w-4" />
                             Use This Template
                           </>
                         )}
