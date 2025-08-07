@@ -139,7 +139,7 @@ export function HeroSection() {
 
           {/* Description */}
           <motion.p 
-            className="text-lg md:text-xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed text-left md:text-center px-6 md:px-0"
             variants={itemVariants}
           >
             Checkout Panda is the elite checkout platform that turns your payment pages into 
