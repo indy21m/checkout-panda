@@ -99,13 +99,13 @@ export function HeroSection() {
 
       <div className="relative container mx-auto px-6">
         <motion.div 
-          className="text-center max-w-5xl mx-auto"
+          className="max-w-5xl mx-auto"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {/* Badge */}
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="flex justify-center">
             <Badge 
               variant="outline" 
               className="mb-6 px-4 py-2 text-sm border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/50 backdrop-blur-sm"
@@ -117,7 +117,7 @@ export function HeroSection() {
 
           {/* Main heading */}
           <motion.h1 
-            className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
+            className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-center"
             variants={itemVariants}
           >
             Transform payments into{' '}
@@ -128,7 +128,7 @@ export function HeroSection() {
 
           {/* Animated subtitle */}
           <motion.div 
-            className="text-xl md:text-2xl text-text-secondary mb-8 h-8"
+            className="text-xl md:text-2xl text-text-secondary mb-8 h-8 text-center"
             variants={itemVariants}
           >
             <span>Everything you need for </span>
@@ -138,14 +138,16 @@ export function HeroSection() {
           </motion.div>
 
           {/* Description */}
-          <motion.p 
-            className="text-lg md:text-xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed text-left px-6 md:px-4"
+          <motion.div 
+            className="mb-12 max-w-3xl mx-auto"
             variants={itemVariants}
           >
-            Checkout Panda is the elite checkout platform that turns your payment pages into 
-            high-converting sales machines. Beautiful design meets powerful conversion tools 
-            to maximize your revenue on every transaction.
-          </motion.p>
+            <p className="text-lg md:text-xl text-text-secondary leading-relaxed">
+              Checkout Panda is the elite checkout platform that turns your payment pages into 
+              high-converting sales machines. Beautiful design meets powerful conversion tools 
+              to maximize your revenue on every transaction.
+            </p>
+          </motion.div>
 
           {/* CTAs */}
           <motion.div 
