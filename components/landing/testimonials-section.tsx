@@ -143,7 +143,7 @@ export function TestimonialsSection() {
                     
                     {/* Stars */}
                     <div className="flex gap-1 mb-6">
-                      {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
+                      {[...Array(testimonials[currentIndex]?.rating ?? 0)].map((_, i) => (
                         <Star 
                           key={i} 
                           className="w-5 h-5 fill-yellow-500 text-yellow-500" 
@@ -153,7 +153,7 @@ export function TestimonialsSection() {
 
                     {/* Content */}
                     <p className="text-lg md:text-xl mb-8 leading-relaxed">
-                      "{testimonials[currentIndex].content}"
+                      &ldquo;{testimonials[currentIndex]?.content}&rdquo;
                     </p>
 
                     {/* Author */}
@@ -163,12 +163,12 @@ export function TestimonialsSection() {
                           "w-12 h-12 rounded-full flex items-center justify-center",
                           "bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-semibold"
                         )}>
-                          {testimonials[currentIndex].avatar}
+                          {testimonials[currentIndex]?.avatar}
                         </div>
                         <div>
-                          <p className="font-semibold">{testimonials[currentIndex].name}</p>
+                          <p className="font-semibold">{testimonials[currentIndex]?.name}</p>
                           <p className="text-sm text-text-secondary">
-                            {testimonials[currentIndex].role}
+                            {testimonials[currentIndex]?.role}
                           </p>
                         </div>
                       </div>
@@ -176,10 +176,10 @@ export function TestimonialsSection() {
                       {/* Metric */}
                       <div className="text-right">
                         <p className="text-2xl font-bold gradient-text-emerald">
-                          {testimonials[currentIndex].metric}
+                          {testimonials[currentIndex]?.metric}
                         </p>
                         <p className="text-sm text-text-secondary">
-                          {testimonials[currentIndex].metricLabel}
+                          {testimonials[currentIndex]?.metricLabel}
                         </p>
                       </div>
                     </div>

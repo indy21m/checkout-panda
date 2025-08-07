@@ -242,7 +242,7 @@ export function PricingSection() {
                     {/* CTA Button */}
                     <Link href={plan.customPrice ? "/contact" : "/sign-up"}>
                       <Button 
-                        variant={plan.highlighted ? "default" : "outline"}
+                        variant={plan.highlighted ? "primary" : "outline"}
                         className={cn(
                           "w-full group",
                           plan.highlighted && "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"

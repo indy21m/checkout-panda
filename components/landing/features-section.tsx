@@ -7,7 +7,6 @@ import {
   BarChart3, 
   Globe,
   Lock,
-  Layers,
   Sparkles,
   CreditCard,
   TrendingUp,

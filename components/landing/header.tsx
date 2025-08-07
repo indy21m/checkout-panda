@@ -9,10 +9,7 @@ import {
   Menu, 
   X, 
   ArrowRight,
-  Sparkles,
-  Shield,
-  Zap,
-  BarChart3
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
