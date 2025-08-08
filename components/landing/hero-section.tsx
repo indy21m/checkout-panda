@@ -142,7 +142,7 @@ export function HeroSection() {
             className="mb-12 max-w-3xl mx-auto"
             variants={itemVariants}
           >
-            <p className="text-lg md:text-xl text-text-secondary leading-relaxed">
+            <p className="text-lg md:text-xl text-text-secondary leading-relaxed text-center">
               Checkout Panda is the elite checkout platform that turns your payment pages into 
               high-converting sales machines. Beautiful design meets powerful conversion tools 
               to maximize your revenue on every transaction.
