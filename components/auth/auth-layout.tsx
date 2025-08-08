@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
+import { Sparkles } from 'lucide-react'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 
 interface AuthLayoutProps {
@@ -53,13 +53,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           className="mb-8 text-center"
         >
           <Link href="/" className="inline-flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="Checkout Panda"
-              className="h-12 w-12 object-contain"
-              width={48}
-              height={48}
-            />
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
             <span className="text-2xl font-bold">Checkout Panda</span>
           </Link>
         </motion.div>
