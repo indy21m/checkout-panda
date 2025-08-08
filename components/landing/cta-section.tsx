@@ -78,14 +78,13 @@ export function CTASection() {
           </motion.h2>
           
           <motion.p 
-            className="text-xl md:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto text-center leading-relaxed"
+            className="text-xl md:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto text-center leading-relaxed whitespace-normal"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            Join thousands of entrepreneurs who are already converting more customers 
-            with beautiful, high-performing checkout pages.
+            Join thousands of entrepreneurs who are already converting more customers with beautiful, high-performing checkout pages.
           </motion.p>
 
           {/* Benefits */}
