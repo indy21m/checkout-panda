@@ -139,7 +139,7 @@ export function HeroSection() {
 
           {/* Description */}
           <motion.div 
-            className="mb-12 max-w-3xl mx-auto"
+            className="mb-12 max-w-5xl mx-auto"
             variants={itemVariants}
           >
             <p className="text-lg md:text-xl text-text-secondary leading-relaxed text-center whitespace-normal">

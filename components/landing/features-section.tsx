@@ -122,7 +122,7 @@ export function FeaturesSection() {
     <section id="features" className="py-20 lg:py-32 relative bg-background-secondary/30">
       <div className="container mx-auto px-6">
         <motion.div 
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-5xl mx-auto mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

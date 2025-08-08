@@ -78,7 +78,7 @@ export function CTASection() {
           </motion.h2>
           
           <motion.p 
-            className="text-xl md:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto text-center leading-relaxed whitespace-normal"
+            className="text-xl md:text-2xl text-text-secondary mb-12 max-w-5xl mx-auto text-center leading-relaxed whitespace-normal"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
