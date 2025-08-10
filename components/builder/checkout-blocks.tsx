@@ -270,7 +270,9 @@ interface CanvasBlockProps {
   canMoveUp: boolean
   canMoveDown: boolean
   isDragging?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dragAttributes?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dragListeners?: any
 }
 
