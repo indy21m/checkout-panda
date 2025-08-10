@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="bg-background flex min-h-screen">
+    <div className="flex min-h-screen bg-white">
       {/* User sync component */}
       <UserSync />
 
@@ -19,9 +19,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar />
 
       {/* Main content area */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20">
         {/* Background gradient overlay */}
-        <div className="from-background via-background-secondary/30 to-background fixed inset-0 -z-10 bg-gradient-to-br" />
+        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-white via-transparent to-blue-50/10" />
 
         {/* Content */}
         <div className="relative z-0">{children}</div>
