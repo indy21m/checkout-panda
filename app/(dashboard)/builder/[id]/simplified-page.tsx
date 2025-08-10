@@ -14,6 +14,7 @@ import {
   useSensor,
   useSensors,
   DragOverlay as DndDragOverlay,
+  useDroppable,
   type DragEndEvent
 } from '@dnd-kit/core'
 import {
@@ -39,6 +40,34 @@ import {
   type ProductBlockData
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
+
+// Column Drop Zone Component
+function ColumnDropZone({ 
+  id, 
+  title, 
+  children 
+}: { 
+  id: string
+  title: string
+  children: React.ReactNode 
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  })
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={cn(
+        "space-y-4 min-h-[200px]",
+        isOver && "bg-blue-50/50 rounded-lg transition-colors"
+      )}
+    >
+      <div className="text-xs text-gray-500 font-medium mb-2">{title}</div>
+      {children}
+    </div>
+  )
+}
 
 // Sortable Block Wrapper
 function SortableBlock({ 
@@ -492,12 +521,39 @@ export default function SimplifiedBuilderPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     
-    if (over && active.id !== over.id) {
-      const oldIndex = blocks.findIndex(b => b.id === active.id)
-      const newIndex = blocks.findIndex(b => b.id === over.id)
+    if (!over) return
+    
+    const activeId = active.id as string
+    const overId = over.id as string
+    
+    // Handle dropping on column drop zones
+    if (overId === 'left-column' || overId === 'right-column') {
+      const column = overId === 'left-column' ? 'left' : 'right'
+      const block = blocks.find(b => b.id === activeId)
+      if (block && block.column !== column) {
+        updateBlock(activeId, { column })
+      }
+      return
+    }
+    
+    // Handle reordering within or between columns
+    if (activeId !== overId) {
+      const oldIndex = blocks.findIndex(b => b.id === activeId)
+      const newIndex = blocks.findIndex(b => b.id === overId)
       
       if (oldIndex !== -1 && newIndex !== -1) {
-        reorderBlocks(oldIndex, newIndex)
+        // Check if we're moving between columns
+        const activeBlock = blocks[oldIndex]
+        const overBlock = blocks[newIndex]
+        
+        if (activeBlock && overBlock) {
+          // Update column if dropping on a block in a different column
+          if (activeBlock.column !== overBlock.column) {
+            updateBlock(activeId, { column: overBlock.column })
+          }
+          
+          reorderBlocks(oldIndex, newIndex)
+        }
       }
     }
   }
@@ -683,7 +739,7 @@ export default function SimplifiedBuilderPage() {
                     activeView === 'mobile' ? "grid-cols-1" : "grid-cols-2"
                   )}>
                     {blocks.length === 0 ? (
-                      <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
+                      <div className="col-span-2 bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
                         <Plus className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p className="text-gray-500 font-medium">Start by adding blocks</p>
                         <p className="text-sm text-gray-400 mt-1">Choose from the library on the left</p>
@@ -691,8 +747,7 @@ export default function SimplifiedBuilderPage() {
                     ) : (
                       <>
                         {/* Left Column */}
-                        <div className="space-y-4">
-                          <div className="text-xs text-gray-500 font-medium mb-2">Left Column</div>
+                        <ColumnDropZone id="left-column" title="Left Column">
                           {leftBlocks.map((block, index) => (
                             <SortableBlock
                               key={block.id}
@@ -714,11 +769,10 @@ export default function SimplifiedBuilderPage() {
                               <p className="text-sm">Drop blocks here</p>
                             </div>
                           )}
-                        </div>
+                        </ColumnDropZone>
                         
                         {/* Right Column */}
-                        <div className="space-y-4">
-                          <div className="text-xs text-gray-500 font-medium mb-2">Right Column</div>
+                        <ColumnDropZone id="right-column" title="Right Column">
                           {rightBlocks.map((block, index) => (
                             <SortableBlock
                               key={block.id}
@@ -740,7 +794,7 @@ export default function SimplifiedBuilderPage() {
                               <p className="text-sm">Drop blocks here</p>
                             </div>
                           )}
-                        </div>
+                        </ColumnDropZone>
                       </>
                     )}
                   </div>
