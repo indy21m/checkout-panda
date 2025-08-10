@@ -48,6 +48,7 @@ function SortableBlock({
   onDelete,
   onDuplicate,
   onToggleVisibility,
+  onToggleColumn,
   onMoveUp,
   onMoveDown,
   canMoveUp,
@@ -59,6 +60,7 @@ function SortableBlock({
   onDelete: () => void
   onDuplicate: () => void
   onToggleVisibility: () => void
+  onToggleColumn?: () => void
   onMoveUp: () => void
   onMoveDown: () => void
   canMoveUp: boolean
@@ -87,6 +89,7 @@ function SortableBlock({
         onDelete={onDelete}
         onDuplicate={onDuplicate}
         onToggleVisibility={onToggleVisibility}
+        onToggleColumn={onToggleColumn}
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         canMoveUp={canMoveUp}
@@ -361,6 +364,7 @@ export default function SimplifiedBuilderPage() {
     duplicateBlock,
     moveBlock,
     toggleBlockVisibility,
+    toggleBlockColumn,
     reorderBlocks,
     selectBlock,
     undo,
@@ -426,7 +430,8 @@ export default function SimplifiedBuilderPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const blocks = validBlocks.map((block: any) => ({
           ...block,
-          visible: block.visible !== undefined ? block.visible : true
+          visible: block.visible !== undefined ? block.visible : true,
+          column: block.column || 'left'
         }))
         setBlocks(blocks)
       } else if (pageData.sections) {
@@ -442,7 +447,8 @@ export default function SimplifiedBuilderPage() {
               if (blockTemplates[block.type as BlockType]) {
                 convertedBlocks.push({
                   ...block,
-                  visible: block.visible !== undefined ? block.visible : true
+                  visible: block.visible !== undefined ? block.visible : true,
+                  column: block.column || 'left'
                 })
               } else {
                 console.warn(`Filtering out unknown block type during conversion: ${block.type}`)
@@ -498,6 +504,10 @@ export default function SimplifiedBuilderPage() {
   
   // Selected block
   const selectedBlock = blocks.find(b => b.id === selectedBlockId) || null
+  
+  // Split blocks by column
+  const leftBlocks = blocks.filter(b => !b.column || b.column === 'left')
+  const rightBlocks = blocks.filter(b => b.column === 'right')
   
   // Loading state
   if (isLoading) {
@@ -668,7 +678,10 @@ export default function SimplifiedBuilderPage() {
                   items={blocks.map(b => b.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="space-y-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    activeView === 'mobile' ? "grid-cols-1" : "grid-cols-2"
+                  )}>
                     {blocks.length === 0 ? (
                       <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
                         <Plus className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -676,21 +689,59 @@ export default function SimplifiedBuilderPage() {
                         <p className="text-sm text-gray-400 mt-1">Choose from the library on the left</p>
                       </div>
                     ) : (
-                      blocks.map((block, index) => (
-                        <SortableBlock
-                          key={block.id}
-                          block={block}
-                          isSelected={selectedBlockId === block.id}
-                          onSelect={() => selectBlock(block.id)}
-                          onDelete={() => deleteBlock(block.id)}
-                          onDuplicate={() => duplicateBlock(block.id)}
-                          onToggleVisibility={() => toggleBlockVisibility(block.id)}
-                          onMoveUp={() => moveBlock(block.id, 'up')}
-                          onMoveDown={() => moveBlock(block.id, 'down')}
-                          canMoveUp={index > 0}
-                          canMoveDown={index < blocks.length - 1}
-                        />
-                      ))
+                      <>
+                        {/* Left Column */}
+                        <div className="space-y-4">
+                          <div className="text-xs text-gray-500 font-medium mb-2">Left Column</div>
+                          {leftBlocks.map((block, index) => (
+                            <SortableBlock
+                              key={block.id}
+                              block={block}
+                              isSelected={selectedBlockId === block.id}
+                              onSelect={() => selectBlock(block.id)}
+                              onDelete={() => deleteBlock(block.id)}
+                              onDuplicate={() => duplicateBlock(block.id)}
+                              onToggleVisibility={() => toggleBlockVisibility(block.id)}
+                              onToggleColumn={() => toggleBlockColumn(block.id)}
+                              onMoveUp={() => moveBlock(block.id, 'up')}
+                              onMoveDown={() => moveBlock(block.id, 'down')}
+                              canMoveUp={index > 0}
+                              canMoveDown={index < leftBlocks.length - 1}
+                            />
+                          ))}
+                          {leftBlocks.length === 0 && (
+                            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
+                              <p className="text-sm">Drop blocks here</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Right Column */}
+                        <div className="space-y-4">
+                          <div className="text-xs text-gray-500 font-medium mb-2">Right Column</div>
+                          {rightBlocks.map((block, index) => (
+                            <SortableBlock
+                              key={block.id}
+                              block={block}
+                              isSelected={selectedBlockId === block.id}
+                              onSelect={() => selectBlock(block.id)}
+                              onDelete={() => deleteBlock(block.id)}
+                              onDuplicate={() => duplicateBlock(block.id)}
+                              onToggleVisibility={() => toggleBlockVisibility(block.id)}
+                              onToggleColumn={() => toggleBlockColumn(block.id)}
+                              onMoveUp={() => moveBlock(block.id, 'up')}
+                              onMoveDown={() => moveBlock(block.id, 'down')}
+                              canMoveUp={index > 0}
+                              canMoveDown={index < rightBlocks.length - 1}
+                            />
+                          ))}
+                          {rightBlocks.length === 0 && (
+                            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
+                              <p className="text-sm">Drop blocks here</p>
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 </SortableContext>

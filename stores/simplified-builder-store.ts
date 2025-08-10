@@ -25,12 +25,13 @@ interface SimplifiedBuilderStore {
   isSaving: boolean
   
   // Actions - Block Management
-  addBlock: (type: BlockType, index?: number) => void
+  addBlock: (type: BlockType, index?: number, column?: 'left' | 'right') => void
   updateBlock: (id: string, updates: Partial<Block>) => void
   deleteBlock: (id: string) => void
   duplicateBlock: (id: string) => void
   moveBlock: (id: string, direction: 'up' | 'down') => void
   toggleBlockVisibility: (id: string) => void
+  toggleBlockColumn: (id: string) => void
   reorderBlocks: (startIndex: number, endIndex: number) => void
   
   // Actions - Selection
@@ -65,14 +66,15 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
     isSaving: false,
     
     // Add a new block
-    addBlock: (type: BlockType, index?: number) => {
+    addBlock: (type: BlockType, index?: number, column: 'left' | 'right' = 'left') => {
       set((state) => {
         const template = blockTemplates[type]
         const newBlock: Block = {
           id: generateBlockId(),
           type,
           data: { ...template.data },
-          visible: true
+          visible: true,
+          column
         }
         
         // Save current state to history before making changes
@@ -185,6 +187,18 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         if (block) {
           get().saveToHistory()
           block.visible = !block.visible
+          state.hasUnsavedChanges = true
+        }
+      })
+    },
+    
+    // Toggle block column
+    toggleBlockColumn: (id: string) => {
+      set((state) => {
+        const block = state.blocks.find(b => b.id === id)
+        if (block) {
+          get().saveToHistory()
+          block.column = block.column === 'right' ? 'left' : 'right'
           state.hasUnsavedChanges = true
         }
       })

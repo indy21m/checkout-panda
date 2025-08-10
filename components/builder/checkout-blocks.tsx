@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { 
   Type, ShoppingCart, Gift, Star, Shield, CreditCard, 
   Check, ChevronUp, ChevronDown, Copy, Trash2, Eye, EyeOff,
-  GripVertical, FileText, Clock
+  GripVertical, FileText, Clock, Columns2
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -115,6 +115,7 @@ export interface Block {
   type: BlockType
   data: BlockData
   visible: boolean
+  column?: 'left' | 'right'
 }
 
 // Block Templates
@@ -265,6 +266,7 @@ interface CanvasBlockProps {
   onDelete: () => void
   onDuplicate: () => void
   onToggleVisibility: () => void
+  onToggleColumn?: () => void
   onMoveUp: () => void
   onMoveDown: () => void
   canMoveUp: boolean
@@ -283,6 +285,7 @@ export function CanvasBlock({
   onDelete,
   onDuplicate,
   onToggleVisibility,
+  onToggleColumn,
   onMoveUp,
   onMoveDown,
   canMoveUp,
@@ -383,6 +386,15 @@ export function CanvasBlock({
               >
                 {block.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
+              {onToggleColumn && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleColumn(); }}
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                  title={`Move to ${block.column === 'right' ? 'left' : 'right'} column`}
+                >
+                  <Columns2 className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
                 className="p-1.5 hover:bg-gray-100 rounded transition-colors"
