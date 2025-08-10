@@ -79,7 +79,7 @@ function SortableBlock({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className="w-full" {...attributes} {...listeners}>
       <CanvasBlock
         block={block}
         isSelected={isSelected}

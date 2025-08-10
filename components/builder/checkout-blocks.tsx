@@ -315,7 +315,7 @@ export function CanvasBlock({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "relative group transition-all duration-200 cursor-pointer",
+        "relative group transition-all duration-200 cursor-pointer w-full",
         isSelected && "z-10"
       )}
       onClick={onSelect}
