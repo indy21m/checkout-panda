@@ -66,7 +66,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <GlassmorphicCard className="p-8">{children}</GlassmorphicCard>
+          <GlassmorphicCard className="p-8 min-h-[400px]">{children}</GlassmorphicCard>
         </motion.div>
 
         {/* Footer */}

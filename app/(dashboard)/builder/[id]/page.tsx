@@ -543,7 +543,7 @@ export default function EnhancedBuilderPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Left Panel - Block Library / Section Manager */}
           {!showLivePreview && (
-            <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-white/60 backdrop-blur-sm">
+            <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-white">
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActivePanel('blocks')}
@@ -609,7 +609,7 @@ export default function EnhancedBuilderPage() {
 
           {/* Properties Panel */}
           {!showLivePreview && (
-            <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-white/60 backdrop-blur-sm">
+            <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-white">
               <EnhancedPropertiesPanel />
             </div>
           )}

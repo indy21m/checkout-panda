@@ -32,7 +32,7 @@ export function GlassmorphicCard({
   }
 
   const variantClasses = {
-    light: 'bg-white/70',
+    light: 'bg-white/95 dark:bg-gray-900/70',
     dark: 'bg-gray-900/70',
     colored: 'bg-gradient-to-br from-primary/10 to-secondary/10',
   }
