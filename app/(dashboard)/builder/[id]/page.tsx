@@ -1,3 +1,10 @@
+// Temporarily redirect to simplified builder while keeping old implementation
+import SimplifiedBuilderPage from './simplified-page'
+
+export default SimplifiedBuilderPage
+
+// Original implementation preserved below for reference
+/*
 'use client'
 
 import { useEffect, useCallback, useMemo, useState } from 'react'
@@ -45,7 +52,7 @@ import { LivePreview } from '@/components/builder/live-preview'
 import { PerformanceMonitor } from '@/components/builder/performance-monitor'
 import { SmartTemplates } from '@/components/builder/smart-templates'
 
-export default function EnhancedBuilderPage() {
+function EnhancedBuilderPage() {
   const params = useParams()
   const checkoutId = params?.id as string
   const [showGridEditor, setShowGridEditor] = useState(false)
@@ -650,3 +657,4 @@ export default function EnhancedBuilderPage() {
     </DndContext>
   )
 }
+*/
