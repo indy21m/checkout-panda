@@ -255,7 +255,7 @@ function BlockEditor({ block, updateData }: { block: Block; updateData: (updates
             <label className="block text-sm font-medium mb-1">Type</label>
             <select
               value={productData.type}
-              onChange={(e) => updateData({ type: e.target.value })}
+              onChange={(e) => updateData({ type: e.target.value as 'onetime' | 'subscription' | 'payment-plan' })}
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="onetime">One-time</option>
