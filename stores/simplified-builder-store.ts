@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import type { Block, BlockType, BlockData } from '@/components/builder/checkout-blocks'
+import type { Block, BlockType } from '@/components/builder/checkout-blocks'
 import { blockTemplates, generateBlockId } from '@/components/builder/checkout-blocks'
 
 interface HistoryState {
@@ -99,14 +99,16 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
           
           // Deep merge the updates
           const block = state.blocks[blockIndex]
-          if (updates.data) {
-            block.data = { ...block.data, ...updates.data }
-          }
-          if (updates.type !== undefined) {
-            block.type = updates.type
-          }
-          if (updates.visible !== undefined) {
-            block.visible = updates.visible
+          if (block) {
+            if (updates.data) {
+              block.data = { ...block.data, ...updates.data }
+            }
+            if (updates.type !== undefined) {
+              block.type = updates.type
+            }
+            if (updates.visible !== undefined) {
+              block.visible = updates.visible
+            }
           }
           
           state.hasUnsavedChanges = true
@@ -138,15 +140,17 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
           get().saveToHistory()
           
           const originalBlock = state.blocks[blockIndex]
-          const newBlock: Block = {
-            ...originalBlock,
-            id: generateBlockId(),
-            data: { ...originalBlock.data }
+          if (originalBlock) {
+            const newBlock: Block = {
+              ...originalBlock,
+              id: generateBlockId(),
+              data: { ...originalBlock.data }
+            }
+            
+            state.blocks.splice(blockIndex + 1, 0, newBlock)
+            state.selectedBlockId = newBlock.id
+            state.hasUnsavedChanges = true
           }
-          
-          state.blocks.splice(blockIndex + 1, 0, newBlock)
-          state.selectedBlockId = newBlock.id
-          state.hasUnsavedChanges = true
         }
       })
     },
@@ -164,8 +168,11 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         
         // Swap blocks
         const temp = state.blocks[index]
-        state.blocks[index] = state.blocks[newIndex]
-        state.blocks[newIndex] = temp
+        const other = state.blocks[newIndex]
+        if (temp && other) {
+          state.blocks[index] = other
+          state.blocks[newIndex] = temp
+        }
         
         state.hasUnsavedChanges = true
       })
@@ -191,7 +198,9 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         get().saveToHistory()
         
         const [removed] = state.blocks.splice(startIndex, 1)
-        state.blocks.splice(endIndex, 0, removed)
+        if (removed) {
+          state.blocks.splice(endIndex, 0, removed)
+        }
         
         state.hasUnsavedChanges = true
       })

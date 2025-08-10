@@ -39,7 +39,6 @@ import {
   type ProductBlockData
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
-import debounce from 'lodash.debounce'
 
 // Sortable Block Wrapper
 function SortableBlock({ 
@@ -445,24 +444,15 @@ export default function SimplifiedBuilderPage() {
   }, [blocks, checkoutId, saveCheckout])
   
   // Auto-save
-  const debouncedSave = useCallback(
-    debounce(() => {
-      if (hasUnsavedChanges && !isSaving) {
-        handleSave(false)
-      }
-    }, 5000),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hasUnsavedChanges, isSaving]
-  )
-  
   useEffect(() => {
-    if (hasUnsavedChanges) {
-      debouncedSave()
-    }
-    return () => {
-      debouncedSave.cancel()
-    }
-  }, [hasUnsavedChanges, debouncedSave])
+    if (!hasUnsavedChanges || isSaving) return
+    
+    const timer = setTimeout(() => {
+      handleSave(false)
+    }, 5000)
+    
+    return () => clearTimeout(timer)
+  }, [hasUnsavedChanges, isSaving, handleSave])
   
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
@@ -531,14 +521,14 @@ export default function SimplifiedBuilderPage() {
           {/* View Toggle */}
           <div className="flex items-center gap-1 border-r pr-2 mr-2">
             <Button
-              variant={activeView === 'desktop' ? 'default' : 'ghost'}
+              variant={activeView === 'desktop' ? 'primary' : 'ghost'}
               size="icon"
               onClick={() => setActiveView('desktop')}
             >
               <Monitor className="h-4 w-4" />
             </Button>
             <Button
-              variant={activeView === 'mobile' ? 'default' : 'ghost'}
+              variant={activeView === 'mobile' ? 'primary' : 'ghost'}
               size="icon"
               onClick={() => setActiveView('mobile')}
             >
