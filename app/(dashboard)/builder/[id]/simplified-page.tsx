@@ -401,8 +401,11 @@ export default function SimplifiedBuilderPage() {
       } else if (checkout.pageData.sections) {
         // Convert from old format - just take the first block from each section
         const convertedBlocks: Block[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         checkout.pageData.sections.forEach((section: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           section.columns?.forEach((column: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             column.blocks?.forEach((block: any) => {
               convertedBlocks.push(block)
             })
