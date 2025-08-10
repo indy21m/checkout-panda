@@ -321,7 +321,7 @@ export function CanvasBlock({
       onClick={onSelect}
     >
       <div className={cn(
-        "relative overflow-hidden rounded-xl border-2 transition-all",
+        "relative overflow-hidden rounded-xl border-2 transition-all w-full",
         isSelected 
           ? "border-blue-500 shadow-lg shadow-blue-500/20" 
           : "border-gray-200 hover:border-gray-300 hover:shadow-md",
