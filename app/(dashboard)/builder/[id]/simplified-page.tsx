@@ -397,7 +397,13 @@ export default function SimplifiedBuilderPage() {
     if (checkout?.pageData) {
       // Check if it's the new simplified format
       if (Array.isArray(checkout.pageData.blocks)) {
-        setBlocks(checkout.pageData.blocks)
+        // Ensure all blocks have the visible property
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blocks = checkout.pageData.blocks.map((block: any) => ({
+          ...block,
+          visible: block.visible !== undefined ? block.visible : true
+        }))
+        setBlocks(blocks)
       } else if (checkout.pageData.sections) {
         // Convert from old format - just take the first block from each section
         const convertedBlocks: Block[] = []
@@ -407,7 +413,10 @@ export default function SimplifiedBuilderPage() {
           section.columns?.forEach((column: any) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             column.blocks?.forEach((block: any) => {
-              convertedBlocks.push(block)
+              convertedBlocks.push({
+                ...block,
+                visible: block.visible !== undefined ? block.visible : true
+              })
             })
           })
         })
