@@ -395,20 +395,23 @@ export default function SimplifiedBuilderPage() {
   // Load checkout data
   useEffect(() => {
     if (checkout?.pageData) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pageData = checkout.pageData as any
+      
       // Check if it's the new simplified format
-      if (Array.isArray(checkout.pageData.blocks)) {
+      if (Array.isArray(pageData.blocks)) {
         // Ensure all blocks have the visible property
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blocks = checkout.pageData.blocks.map((block: any) => ({
+        const blocks = pageData.blocks.map((block: any) => ({
           ...block,
           visible: block.visible !== undefined ? block.visible : true
         }))
         setBlocks(blocks)
-      } else if (checkout.pageData.sections) {
+      } else if (pageData.sections) {
         // Convert from old format - just take the first block from each section
         const convertedBlocks: Block[] = []
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        checkout.pageData.sections.forEach((section: any) => {
+        pageData.sections.forEach((section: any) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           section.columns?.forEach((column: any) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
