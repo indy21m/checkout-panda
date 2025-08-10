@@ -287,6 +287,22 @@ export function CanvasBlock({
 }: CanvasBlockProps) {
   const template = blockTemplates[block.type]
   
+  // Handle unknown block types
+  if (!template) {
+    console.warn(`Unknown block type: ${block.type}`)
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+        <p className="font-medium">Unknown block type: {block.type}</p>
+        <button
+          onClick={onDelete}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
+          Remove this block
+        </button>
+      </div>
+    )
+  }
+  
   return (
     <motion.div
       layout
@@ -381,6 +397,11 @@ export function CanvasBlock({
 
 // Get block preview text
 function getBlockPreview(block: Block): string {
+  // Check if block type exists in templates
+  if (!blockTemplates[block.type]) {
+    return `Unknown block type: ${block.type}`
+  }
+  
   switch (block.type) {
     case 'header':
       return (block.data as HeaderBlockData).title || 'No title set'

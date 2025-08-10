@@ -99,7 +99,7 @@ function SortableBlock({
 
 // Block Library Sidebar
 function BlockLibrary({ onAddBlock }: { onAddBlock: (type: BlockType) => void }) {
-  const blockTypes = Object.entries(blockTemplates) as [BlockType, typeof blockTemplates[BlockType]][]
+  const blockTypes = Object.entries(blockTemplates).filter(([_, template]) => template != null) as [BlockType, typeof blockTemplates[BlockType]][]
   
   return (
     <div className="space-y-2">
@@ -153,13 +153,25 @@ function PropertiesPanel({
     onUpdate({ data: { ...block.data, ...updates } })
   }
 
+  const template = blockTemplates[block.type]
+  if (!template) {
+    return (
+      <div className="h-full flex items-center justify-center text-red-500">
+        <div className="text-center">
+          <p className="font-medium">Unknown block type</p>
+          <p className="text-sm mt-1">{block.type}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {blockTemplates[block.type].icon}
-            <h3 className="font-semibold">{blockTemplates[block.type].name}</h3>
+            {template.icon}
+            <h3 className="font-semibold">{template.name}</h3>
           </div>
           <button
             onClick={onClose}
@@ -399,9 +411,18 @@ export default function SimplifiedBuilderPage() {
       
       // Check if it's the new simplified format
       if (Array.isArray(pageData.blocks)) {
-        // Ensure all blocks have the visible property
+        // Filter out blocks with unknown types and ensure all blocks have the visible property
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blocks = pageData.blocks.map((block: any) => ({
+        const validBlocks = pageData.blocks.filter((block: any) => {
+          if (!blockTemplates[block.type as BlockType]) {
+            console.warn(`Filtering out unknown block type: ${block.type}`)
+            return false
+          }
+          return true
+        })
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blocks = validBlocks.map((block: any) => ({
           ...block,
           visible: block.visible !== undefined ? block.visible : true
         }))
@@ -415,10 +436,15 @@ export default function SimplifiedBuilderPage() {
           section.columns?.forEach((column: any) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             column.blocks?.forEach((block: any) => {
-              convertedBlocks.push({
-                ...block,
-                visible: block.visible !== undefined ? block.visible : true
-              })
+              // Only add blocks with known types
+              if (blockTemplates[block.type as BlockType]) {
+                convertedBlocks.push({
+                  ...block,
+                  visible: block.visible !== undefined ? block.visible : true
+                })
+              } else {
+                console.warn(`Filtering out unknown block type during conversion: ${block.type}`)
+              }
             })
           })
         })
@@ -617,14 +643,17 @@ export default function SimplifiedBuilderPage() {
             {isPreviewMode ? (
               // Preview Mode
               <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                {blocks.filter(b => b.visible).map((block) => (
-                  <div key={block.id}>
-                    {/* Render preview of each block */}
-                    <div className="p-6 border-b">
-                      {blockTemplates[block.type].name}
+                {blocks.filter(b => b.visible).map((block) => {
+                  const template = blockTemplates[block.type]
+                  return (
+                    <div key={block.id}>
+                      {/* Render preview of each block */}
+                      <div className="p-6 border-b">
+                        {template ? template.name : `Unknown block: ${block.type}`}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               // Edit Mode
