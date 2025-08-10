@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useEffect, useCallback, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import React, { useEffect, useCallback, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
@@ -13,12 +13,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay as DndDragOverlay
+  DragOverlay as DndDragOverlay,
+  type DragEndEvent
 } from '@dnd-kit/core'
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -28,26 +26,17 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { 
   ArrowLeft, Save, Eye, Rocket, Undo, Redo, Plus, 
-  Smartphone, Monitor, Command, Loader2, Check,
-  Type, ShoppingCart, Gift, Star, Shield, CreditCard,
-  FileText, Clock, ChevronRight, Sparkles, Menu, X
+  Smartphone, Monitor, Loader2, Sparkles, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SaveIndicator } from '@/components/ui/save-indicator'
 import { 
   CanvasBlock, 
-  blockTemplates, 
-  Block, 
-  BlockType,
-  HeaderBlockData,
-  ProductBlockData,
-  BenefitsBlockData,
-  OrderBumpBlockData,
-  TestimonialBlockData,
-  GuaranteeBlockData,
-  FAQBlockData,
-  CountdownBlockData,
-  PaymentBlockData
+  blockTemplates,
+  type Block, 
+  type BlockType,
+  type HeaderBlockData,
+  type ProductBlockData
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
 import debounce from 'lodash.debounce'
@@ -161,7 +150,7 @@ function PropertiesPanel({
     )
   }
 
-  const updateData = (updates: any) => {
+  const updateData = (updates: Partial<Block['data']>) => {
     onUpdate({ data: { ...block.data, ...updates } })
   }
 
@@ -190,7 +179,7 @@ function PropertiesPanel({
 }
 
 // Block Editor Components
-function BlockEditor({ block, updateData }: { block: Block; updateData: (updates: any) => void }) {
+function BlockEditor({ block, updateData }: { block: Block; updateData: (updates: Partial<Block['data']>) => void }) {
   switch (block.type) {
     case 'header':
       const headerData = block.data as HeaderBlockData
@@ -339,10 +328,9 @@ function useKeyboardShortcuts() {
 // Main Builder Component
 export default function SimplifiedBuilderPage() {
   const params = useParams()
-  const router = useRouter()
   const checkoutId = params?.id as string
   
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen] = useState(true)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop')
@@ -367,8 +355,7 @@ export default function SimplifiedBuilderPage() {
     setBlocks,
     setHasUnsavedChanges,
     setPreviewMode,
-    setSaving,
-    resetBuilder
+    setSaving
   } = useSimplifiedBuilderStore()
   
   // Keyboard shortcuts
@@ -426,25 +413,6 @@ export default function SimplifiedBuilderPage() {
     }
   }, [checkout, setBlocks])
   
-  // Auto-save
-  const debouncedSave = useCallback(
-    debounce(() => {
-      if (hasUnsavedChanges && !isSaving) {
-        handleSave(false)
-      }
-    }, 5000),
-    [hasUnsavedChanges, isSaving]
-  )
-  
-  useEffect(() => {
-    if (hasUnsavedChanges) {
-      debouncedSave()
-    }
-    return () => {
-      debouncedSave.cancel()
-    }
-  }, [hasUnsavedChanges, debouncedSave])
-  
   // Save handler
   const handleSave = useCallback((publish = false) => {
     const pageData = {
@@ -460,6 +428,26 @@ export default function SimplifiedBuilderPage() {
       publish
     })
   }, [blocks, checkoutId, saveCheckout])
+  
+  // Auto-save
+  const debouncedSave = useCallback(
+    debounce(() => {
+      if (hasUnsavedChanges && !isSaving) {
+        handleSave(false)
+      }
+    }, 5000),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [hasUnsavedChanges, isSaving]
+  )
+  
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      debouncedSave()
+    }
+    return () => {
+      debouncedSave.cancel()
+    }
+  }, [hasUnsavedChanges, debouncedSave])
   
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {

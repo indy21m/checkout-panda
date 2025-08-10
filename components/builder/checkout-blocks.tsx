@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { cn } from '@/lib/utils'
 import { 
   Type, ShoppingCart, Gift, Star, Shield, CreditCard, 
   Check, ChevronUp, ChevronDown, Copy, Trash2, Eye, EyeOff,
-  GripVertical, Sparkles, Image, FileText, Clock
+  GripVertical, FileText, Clock
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
