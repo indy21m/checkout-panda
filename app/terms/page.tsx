@@ -41,7 +41,7 @@ export default function TermsPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-text mt-8">3. Disclaimer</h2>
             <p className="leading-relaxed">
-              The materials on Checkout Panda are provided "as is". Checkout Panda makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+              The materials on Checkout Panda are provided &ldquo;as is&rdquo;. Checkout Panda makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
             </p>
           </section>
 
