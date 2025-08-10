@@ -638,7 +638,7 @@ export default function SimplifiedBuilderPage() {
         <div className="flex-1 overflow-auto">
           <div className={cn(
             "mx-auto p-8 transition-all",
-            activeView === 'mobile' ? "max-w-sm" : "max-w-3xl"
+            activeView === 'mobile' ? "max-w-sm" : "max-w-5xl"
           )}>
             {isPreviewMode ? (
               // Preview Mode

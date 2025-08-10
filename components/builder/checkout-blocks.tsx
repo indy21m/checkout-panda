@@ -333,18 +333,18 @@ export function CanvasBlock({
         </div>
         
         {/* Content */}
-        <div className="pl-10 pr-4 py-4 bg-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="pl-10 pr-4 py-4 bg-white w-full">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className={cn(
                 "p-2 rounded-lg",
                 isSelected ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600"
               )}>
                 {template.icon}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-sm">{template.name}</h3>
-                <p className="text-xs text-gray-500">{getBlockPreview(block)}</p>
+                <p className="text-xs text-gray-500 truncate">{getBlockPreview(block)}</p>
               </div>
             </div>
             
