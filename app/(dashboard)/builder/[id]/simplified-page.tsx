@@ -32,7 +32,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { SaveIndicator } from '@/components/ui/save-indicator'
 import { 
-  CanvasBlock, 
+  WYSIWYGBlock, 
   blockTemplates,
   type Block, 
   type BlockType,
@@ -111,7 +111,7 @@ function SortableBlock({
 
   return (
     <div ref={setNodeRef} style={style} className="w-full">
-      <CanvasBlock
+      <WYSIWYGBlock
         block={block}
         isSelected={isSelected}
         onSelect={onSelect}
