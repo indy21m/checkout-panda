@@ -79,7 +79,7 @@ function SortableBlock({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="w-full" {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className="w-full">
       <CanvasBlock
         block={block}
         isSelected={isSelected}
@@ -92,6 +92,8 @@ function SortableBlock({
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
         isDragging={isDragging}
+        dragAttributes={attributes}
+        dragListeners={listeners}
       />
     </div>
   )

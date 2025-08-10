@@ -270,6 +270,8 @@ interface CanvasBlockProps {
   canMoveUp: boolean
   canMoveDown: boolean
   isDragging?: boolean
+  dragAttributes?: any
+  dragListeners?: any
 }
 
 export function CanvasBlock({
@@ -283,7 +285,9 @@ export function CanvasBlock({
   onMoveDown,
   canMoveUp,
   canMoveDown,
-  isDragging
+  isDragging,
+  dragAttributes,
+  dragListeners
 }: CanvasBlockProps) {
   const template = blockTemplates[block.type]
   
@@ -328,7 +332,11 @@ export function CanvasBlock({
         !block.visible && "opacity-60"
       )}>
         {/* Drag Handle */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gray-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-move">
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-8 bg-gray-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-move"
+          {...dragAttributes}
+          {...dragListeners}
+        >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
         
