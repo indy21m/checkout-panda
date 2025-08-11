@@ -27,10 +27,12 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { 
-  ArrowLeft, Save, Eye, Rocket, Undo, Redo, Plus, 
+  ArrowLeft, Save, Rocket, Undo, Redo, Plus, 
   Smartphone, Monitor, Loader2, Sparkles, X, Palette,
   Type as TypeIcon, Layers, TrendingUp, BarChart3, Users,
-  DollarSign, ShoppingCart
+  DollarSign, ShoppingCart, Star,
+  Shield, CheckCircle,
+  Package
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,7 +51,14 @@ import {
   type Block, 
   type BlockType,
   type HeaderBlockData,
-  type ProductBlockData
+  type ProductBlockData,
+  type FAQBlockData,
+  type GuaranteeBlockData,
+  type OrderBumpBlockData,
+  type TestimonialBlockData,
+  type CountdownBlockData,
+  type BenefitsBlockData,
+  type PaymentBlockData
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
 import { ProductSelectorModal } from '@/components/builder/product-selector-modal'
@@ -381,6 +390,9 @@ function BlockEditor({
   updateData: (updates: Partial<Block['data']>) => void;
   onSelectProduct?: () => void;
 }) {
+  // State for order bump product selector
+  const [showOrderBumpProductSelector, setShowOrderBumpProductSelector] = useState(false)
+  const updateBlockData = updateData // Alias for clarity
   switch (block.type) {
     case 'header':
       const headerData = block.data as HeaderBlockData
@@ -490,9 +502,564 @@ function BlockEditor({
         </div>
       )
 
-    // Add more block type editors...
+    case 'faq':
+      const faqData = block.data as FAQBlockData
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Section Title</label>
+            <Input
+              value={faqData.title}
+              onChange={(e) => updateBlockData({ ...faqData, title: e.target.value })}
+              placeholder="Frequently Asked Questions"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Questions & Answers</label>
+            <div className="space-y-3">
+              {faqData.faqs.map((faq, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      <Input
+                        value={faq.question}
+                        onChange={(e) => {
+                          const newFaqs = [...faqData.faqs]
+                          newFaqs[index] = { ...faq, question: e.target.value }
+                          updateBlockData({ ...faqData, faqs: newFaqs })
+                        }}
+                        placeholder="Question"
+                      />
+                      <Textarea
+                        value={faq.answer}
+                        onChange={(e) => {
+                          const newFaqs = [...faqData.faqs]
+                          newFaqs[index] = { ...faq, answer: e.target.value }
+                          updateBlockData({ ...faqData, faqs: newFaqs })
+                        }}
+                        placeholder="Answer"
+                        rows={3}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newFaqs = faqData.faqs.filter((_, i) => i !== index)
+                        updateBlockData({ ...faqData, faqs: newFaqs })
+                      }}
+                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                onClick={() => {
+                  const newFaqs = [...faqData.faqs, { question: '', answer: '' }]
+                  updateBlockData({ ...faqData, faqs: newFaqs })
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'guarantee':
+      const guaranteeData = block.data as GuaranteeBlockData
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Title</label>
+            <Input
+              value={guaranteeData.title}
+              onChange={(e) => updateBlockData({ ...guaranteeData, title: e.target.value })}
+              placeholder="100% Money-Back Guarantee"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description</label>
+            <Textarea
+              value={guaranteeData.description}
+              onChange={(e) => updateBlockData({ ...guaranteeData, description: e.target.value })}
+              placeholder="If you're not satisfied within 30 days, we'll refund your entire purchase."
+              rows={3}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Guarantee Period (days)</label>
+            <Input
+              type="number"
+              value={guaranteeData.days || ''}
+              onChange={(e) => updateBlockData({ ...guaranteeData, days: parseInt(e.target.value) || undefined })}
+              placeholder="30"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Badge Text (Optional)</label>
+            <Input
+              value={guaranteeData.badge || ''}
+              onChange={(e) => updateBlockData({ ...guaranteeData, badge: e.target.value })}
+              placeholder="Risk-Free"
+            />
+          </div>
+        </div>
+      )
+
+    case 'orderBump':
+      const orderBumpData = block.data as OrderBumpBlockData
+      return (
+        <>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Title</label>
+              <Input
+                value={orderBumpData.title}
+                onChange={(e) => updateBlockData({ ...orderBumpData, title: e.target.value })}
+                placeholder="🎁 Add Premium Support (Save 50%)"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Description</label>
+              <Textarea
+                value={orderBumpData.description}
+                onChange={(e) => updateBlockData({ ...orderBumpData, description: e.target.value })}
+                placeholder="Get priority support and exclusive bonuses"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Price</label>
+                <Input
+                  value={orderBumpData.price}
+                  onChange={(e) => updateBlockData({ ...orderBumpData, price: e.target.value })}
+                  placeholder="$49"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Compare Price</label>
+                <Input
+                  value={orderBumpData.comparePrice || ''}
+                  onChange={(e) => updateBlockData({ ...orderBumpData, comparePrice: e.target.value })}
+                  placeholder="$99"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowOrderBumpProductSelector(true)}
+              variant="outline"
+              className="w-full"
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Select from Product Database
+            </Button>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="order-bump-default"
+                checked={orderBumpData.isCheckedByDefault || false}
+                onChange={(e) => updateBlockData({ ...orderBumpData, isCheckedByDefault: e.target.checked })}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="order-bump-default" className="text-sm text-gray-600">
+                Pre-check by default
+              </label>
+            </div>
+          </div>
+          {showOrderBumpProductSelector && (
+            <ProductSelectorModal
+              isOpen={showOrderBumpProductSelector}
+              onClose={() => setShowOrderBumpProductSelector(false)}
+              onSelectProduct={(product) => {
+                updateBlockData({
+                  ...orderBumpData,
+                  title: `🎁 Add ${product.name}`,
+                  description: product.description || '',
+                  price: `$${(product.price / 100).toFixed(2)}`,
+                  comparePrice: undefined, // compareAtPrice not available in product type
+                })
+                setShowOrderBumpProductSelector(false)
+              }}
+            />
+          )}
+        </>
+      )
+
+    case 'testimonial':
+      const testimonialData = block.data as TestimonialBlockData
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Layout</label>
+            <Select
+              value={testimonialData.layout}
+              onValueChange={(value: 'single' | 'grid' | 'carousel') => 
+                updateBlockData({ ...testimonialData, layout: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Testimonials</label>
+            <div className="space-y-3">
+              {testimonialData.testimonials.map((testimonial, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input
+                          value={testimonial.author}
+                          onChange={(e) => {
+                            const newTestimonials = [...testimonialData.testimonials]
+                            newTestimonials[index] = { ...testimonial, author: e.target.value }
+                            updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                          }}
+                          placeholder="John Doe"
+                        />
+                        <Input
+                          value={testimonial.title || ''}
+                          onChange={(e) => {
+                            const newTestimonials = [...testimonialData.testimonials]
+                            newTestimonials[index] = { ...testimonial, title: e.target.value }
+                            updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                          }}
+                          placeholder="CEO, Company"
+                        />
+                      </div>
+                      <Textarea
+                        value={testimonial.content}
+                        onChange={(e) => {
+                          const newTestimonials = [...testimonialData.testimonials]
+                          newTestimonials[index] = { ...testimonial, content: e.target.value }
+                          updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                        }}
+                        placeholder="This product changed my life..."
+                        rows={3}
+                      />
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Rating:</label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => {
+                                const newTestimonials = [...testimonialData.testimonials]
+                                newTestimonials[index] = { ...testimonial, rating: star }
+                                updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                              }}
+                              className="p-0.5"
+                            >
+                              <Star 
+                                className={cn(
+                                  "w-5 h-5 transition-colors",
+                                  star <= testimonial.rating 
+                                    ? "fill-yellow-400 text-yellow-400" 
+                                    : "text-gray-300"
+                                )}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newTestimonials = testimonialData.testimonials.filter((_, i) => i !== index)
+                        updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                      }}
+                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                onClick={() => {
+                  const newTestimonials = [...testimonialData.testimonials, 
+                    { author: '', content: '', rating: 5, title: '' }]
+                  updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Testimonial
+              </Button>
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'countdown':
+      const countdownData = block.data as CountdownBlockData
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Title</label>
+            <Input
+              value={countdownData.title}
+              onChange={(e) => updateBlockData({ ...countdownData, title: e.target.value })}
+              placeholder="Limited Time Offer Ends In:"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">End Date & Time</label>
+            <Input
+              type="datetime-local"
+              value={countdownData.endDate ? new Date(countdownData.endDate).toISOString().slice(0, 16) : ''}
+              onChange={(e) => updateBlockData({ ...countdownData, endDate: new Date(e.target.value).toISOString() })}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Display Units</label>
+            <div className="space-y-2">
+              {[
+                { key: 'showDays', label: 'Show Days' },
+                { key: 'showHours', label: 'Show Hours' },
+                { key: 'showMinutes', label: 'Show Minutes' },
+                { key: 'showSeconds', label: 'Show Seconds' },
+              ].map(({ key, label }) => (
+                <div key={key} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`countdown-${key}`}
+                    checked={countdownData[key as keyof CountdownBlockData] as boolean || false}
+                    onChange={(e) => updateBlockData({ ...countdownData, [key]: e.target.checked })}
+                    className="rounded border-gray-300"
+                  />
+                  <label htmlFor={`countdown-${key}`} className="text-sm text-gray-600">
+                    {label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'benefits':
+      const benefitsData = block.data as BenefitsBlockData
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Section Title</label>
+            <Input
+              value={benefitsData.title}
+              onChange={(e) => updateBlockData({ ...benefitsData, title: e.target.value })}
+              placeholder="Why Choose Us"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Benefits</label>
+            <div className="space-y-3">
+              {benefitsData.benefits.map((benefit, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      <div className="grid grid-cols-[60px_1fr] gap-3">
+                        <Input
+                          value={benefit.icon || ''}
+                          onChange={(e) => {
+                            const newBenefits = [...benefitsData.benefits]
+                            newBenefits[index] = { ...benefit, icon: e.target.value }
+                            updateBlockData({ ...benefitsData, benefits: newBenefits })
+                          }}
+                          placeholder="✅"
+                          className="text-center"
+                        />
+                        <Input
+                          value={benefit.title}
+                          onChange={(e) => {
+                            const newBenefits = [...benefitsData.benefits]
+                            newBenefits[index] = { ...benefit, title: e.target.value }
+                            updateBlockData({ ...benefitsData, benefits: newBenefits })
+                          }}
+                          placeholder="Benefit Title"
+                        />
+                      </div>
+                      <Textarea
+                        value={benefit.description}
+                        onChange={(e) => {
+                          const newBenefits = [...benefitsData.benefits]
+                          newBenefits[index] = { ...benefit, description: e.target.value }
+                          updateBlockData({ ...benefitsData, benefits: newBenefits })
+                        }}
+                        placeholder="Describe this benefit..."
+                        rows={2}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newBenefits = benefitsData.benefits.filter((_, i) => i !== index)
+                        updateBlockData({ ...benefitsData, benefits: newBenefits })
+                      }}
+                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                onClick={() => {
+                  const newBenefits = [...benefitsData.benefits, 
+                    { icon: '✨', title: '', description: '' }]
+                  updateBlockData({ ...benefitsData, benefits: newBenefits })
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Benefit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )
+
+    case 'payment':
+      const paymentData = block.data as PaymentBlockData
+      return (
+        <div className="space-y-4">
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <Shield className="w-4 h-4 inline mr-1" />
+              Professional payment form with Stripe-level security
+            </p>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Button Text</label>
+            <Input
+              value={paymentData.buttonText || ''}
+              onChange={(e) => updateBlockData({ ...paymentData, buttonText: e.target.value })}
+              placeholder="Complete Purchase"
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Security Text</label>
+            <Input
+              value={paymentData.secureText || ''}
+              onChange={(e) => updateBlockData({ ...paymentData, secureText: e.target.value })}
+              placeholder="Your payment is secured with 256-bit SSL encryption"
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Required Fields</label>
+            <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={true}
+                  disabled
+                  className="rounded border-gray-300 opacity-50"
+                />
+                <label className="text-sm text-gray-600">
+                  Email Address (Always Required)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={true}
+                  disabled
+                  className="rounded border-gray-300 opacity-50"
+                />
+                <label className="text-sm text-gray-600">
+                  Card Information (Always Required)
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Optional Fields</label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-billing"
+                  checked={paymentData.showBillingAddress || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, showBillingAddress: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-billing" className="text-sm text-gray-600">
+                  Billing Address
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-phone"
+                  checked={paymentData.showPhoneField || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, showPhoneField: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-phone" className="text-sm text-gray-600">
+                  Phone Number
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-company"
+                  checked={paymentData.showCompanyField || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, showCompanyField: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-company" className="text-sm text-gray-600">
+                  Company Name
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+            <h4 className="font-medium text-sm mb-2">Payment Features Included:</h4>
+            <ul className="space-y-1 text-sm text-gray-600">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Real-time card validation
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Auto-detect card type (Visa, Mastercard, etc.)
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                3D Secure authentication
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Support for digital wallets (Apple Pay, Google Pay)
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                PCI DSS compliant
+              </li>
+            </ul>
+          </div>
+        </div>
+      )
+
     default:
-      return <div className="text-gray-500">Editor for {block.type} coming soon...</div>
+      return <div className="text-gray-500">Unknown block type: {block.type}</div>
   }
 }
 
@@ -857,7 +1424,6 @@ export default function SimplifiedBuilderPage() {
     selectedBlockId,
     hasUnsavedChanges,
     history,
-    isPreviewMode,
     isSaving,
     addBlock,
     updateBlock,
@@ -871,7 +1437,6 @@ export default function SimplifiedBuilderPage() {
     redo,
     setBlocks,
     setHasUnsavedChanges,
-    setPreviewMode,
     setSaving
   } = useSimplifiedBuilderStore()
   
@@ -1041,16 +1606,19 @@ export default function SimplifiedBuilderPage() {
     const activeBlock = blocks.find(b => b.id === activeId)
     if (!activeBlock) return
     
+    // Create a working copy of blocks
+    let newBlocks = [...blocks]
+    
     // Handle dropping on column drop zones (empty columns)
     if (overId === 'left-column' || overId === 'right-column') {
       const targetColumn: 'left' | 'right' = overId === 'left-column' ? 'left' : 'right'
-      if (activeBlock.column !== targetColumn) {
-        // Move to empty column
-        const updatedBlocks = blocks.map(b => 
-          b.id === activeId ? { ...b, column: targetColumn } : b
-        )
-        setBlocks(updatedBlocks)
-      }
+      
+      // Update the block's column
+      newBlocks = newBlocks.map(b => 
+        b.id === activeId ? { ...b, column: targetColumn } : b
+      )
+      
+      setBlocks(newBlocks)
       return
     }
     
@@ -1058,66 +1626,35 @@ export default function SimplifiedBuilderPage() {
     const overBlock = blocks.find(b => b.id === overId)
     if (!overBlock) return
     
-    // Determine target column from the block we're dropping on
+    const activeIndex = newBlocks.findIndex(b => b.id === activeId)
+    const overIndex = newBlocks.findIndex(b => b.id === overId)
+    
+    if (activeIndex === -1 || overIndex === -1) return
+    
+    // Determine target column
     const targetColumn: 'left' | 'right' = overBlock.column || 'left'
     
-    // Get blocks in source and target columns
-    const sourceColumn: 'left' | 'right' = activeBlock.column || 'left'
-    const sourceBlocks = blocks.filter(b => (b.column || 'left') === sourceColumn)
-    const targetBlocks = blocks.filter(b => (b.column || 'left') === targetColumn)
+    // Remove active block from array
+    const [movedBlock] = newBlocks.splice(activeIndex, 1)
     
-    if (sourceColumn === targetColumn) {
-      // Reordering within the same column
-      const oldIndex = sourceBlocks.findIndex(b => b.id === activeId)
-      const newIndex = targetBlocks.findIndex(b => b.id === overId)
-      
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        const reorderedBlocks = [...sourceBlocks]
-        const [movedBlock] = reorderedBlocks.splice(oldIndex, 1)
-        if (movedBlock) {
-          reorderedBlocks.splice(newIndex, 0, movedBlock)
-        }
-        
-        // Rebuild full blocks array maintaining other column
-        const otherColumnBlocks = blocks.filter(b => (b.column || 'left') !== sourceColumn)
-        const updatedBlocks = [...otherColumnBlocks, ...reorderedBlocks].sort((a, b) => {
-          // Maintain some consistent ordering
-          if (a.column === b.column) return 0
-          return a.column === 'left' ? -1 : 1
-        })
-        
-        setBlocks(updatedBlocks)
-      }
+    if (!movedBlock) return // Safety check
+    
+    // Update the moved block's column
+    movedBlock.column = targetColumn
+    
+    // Find the new index after removal
+    const newOverIndex = newBlocks.findIndex(b => b.id === overId)
+    
+    // Insert at the new position
+    if (newOverIndex !== -1) {
+      // Insert after the target block
+      newBlocks.splice(newOverIndex + 1, 0, movedBlock)
     } else {
-      // Moving between columns
-      const targetIndex = targetBlocks.findIndex(b => b.id === overId)
-      
-      // Update block's column
-      const updatedBlock = { ...activeBlock, column: targetColumn }
-      
-      // Remove from source column
-      const newSourceBlocks = sourceBlocks.filter(b => b.id !== activeId)
-      
-      // Add to target column at the correct position
-      const newTargetBlocks = [...targetBlocks]
-      const insertIndex = targetIndex >= 0 ? targetIndex + 1 : targetBlocks.length
-      newTargetBlocks.splice(insertIndex, 0, updatedBlock)
-      
-      // Combine all blocks
-      const otherBlocks = blocks.filter(b => 
-        b.id !== activeId && b.id !== overId && 
-        (b.column || 'left') !== sourceColumn && 
-        (b.column || 'left') !== targetColumn
-      )
-      
-      const updatedBlocks = [
-        ...otherBlocks,
-        ...newSourceBlocks,
-        ...newTargetBlocks.filter(b => b.id !== activeId) // Remove duplicate if it exists
-      ].map(b => b.id === activeId ? updatedBlock : b)
-      
-      setBlocks(updatedBlocks)
+      // If target not found, add to end
+      newBlocks.push(movedBlock)
     }
+    
+    setBlocks(newBlocks)
   }
   
   // Selected block
@@ -1253,13 +1790,6 @@ export default function SimplifiedBuilderPage() {
             Save
           </Button>
           <Button
-            variant="secondary"
-            onClick={() => setPreviewMode(!isPreviewMode)}
-          >
-            <Eye className="mr-2 h-4 w-4" />
-            {isPreviewMode ? 'Edit' : 'Preview'}
-          </Button>
-          <Button
             variant="primary"
             onClick={() => handleSave(true)}
             disabled={isSaving}
@@ -1274,7 +1804,7 @@ export default function SimplifiedBuilderPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <AnimatePresence>
-          {sidebarOpen && !isPreviewMode && (
+          {sidebarOpen && (
             <motion.div
               initial={{ x: -300 }}
               animate={{ x: 0 }}
@@ -1294,7 +1824,7 @@ export default function SimplifiedBuilderPage() {
         {/* Canvas */}
         <div className="flex-1 overflow-auto">
           {/* A/B Test Variant Switcher */}
-          {abTestEnabled && !isPreviewMode && (
+          {abTestEnabled && (
             <div className="sticky top-0 z-10 bg-white border-b px-8 py-3">
               <div className="max-w-5xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1336,24 +1866,7 @@ export default function SimplifiedBuilderPage() {
             "mx-auto p-8 transition-all",
             activeView === 'mobile' ? "max-w-sm" : "max-w-5xl"
           )}>
-            {isPreviewMode ? (
-              // Preview Mode
-              <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                {blocks.filter(b => b.visible).map((block) => {
-                  const template = blockTemplates[block.type]
-                  return (
-                    <div key={block.id}>
-                      {/* Render preview of each block */}
-                      <div className="p-6 border-b">
-                        {template ? template.name : `Unknown block: ${block.type}`}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              // Edit Mode
-              <>
+            {/* Edit Mode */}
                 {/* Analytics Summary Bar */}
                 {showAnalytics && (
                   <div className="mb-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-xl">
@@ -1519,13 +2032,11 @@ export default function SimplifiedBuilderPage() {
                   ) : null}
                 </DndDragOverlay>
               </DndContext>
-              </>
-            )}
           </div>
         </div>
         
         {/* Properties Panel */}
-        {!isPreviewMode && selectedBlock && (
+        {selectedBlock && (
           <div className="w-80 bg-white border-l flex-shrink-0">
             <PropertiesPanel
               block={selectedBlock}
