@@ -15,6 +15,7 @@ import {
   useSensors,
   DragOverlay as DndDragOverlay,
   useDroppable,
+  type DragStartEvent,
   type DragEndEvent
 } from '@dnd-kit/core'
 import {
@@ -31,6 +32,15 @@ import {
   Type as TypeIcon, Layers
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { SaveIndicator } from '@/components/ui/save-indicator'
 import { 
   WYSIWYGBlock, 
@@ -283,21 +293,19 @@ function BlockEditor({ block, updateData }: { block: Block; updateData: (updates
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
-            <input
+            <Input
               type="text"
               value={headerData.title}
               onChange={(e) => updateData({ title: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter checkout title"
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Subtitle</label>
-            <input
+            <Input
               type="text"
               value={headerData.subtitle}
               onChange={(e) => updateData({ subtitle: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Optional subtitle"
             />
           </div>
@@ -310,61 +318,61 @@ function BlockEditor({ block, updateData }: { block: Block; updateData: (updates
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Product Name</label>
-            <input
+            <Input
               type="text"
               value={productData.name}
               onChange={(e) => updateData({ name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
+            <Textarea
               value={productData.description}
               onChange={(e) => updateData({ description: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={3}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Price</label>
-              <input
+              <Input
                 type="text"
                 value={productData.price}
                 onChange={(e) => updateData({ price: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Compare Price</label>
-              <input
+              <Input
                 type="text"
                 value={productData.comparePrice || ''}
                 onChange={(e) => updateData({ comparePrice: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Optional"
               />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Type</label>
-            <select
+            <Select
               value={productData.type}
-              onChange={(e) => updateData({ type: e.target.value as 'onetime' | 'subscription' | 'payment-plan' })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onValueChange={(value) => updateData({ type: value as 'onetime' | 'subscription' | 'payment-plan' })}
             >
-              <option value="onetime">One-time</option>
-              <option value="subscription">Subscription</option>
-              <option value="payment-plan">Payment Plan</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="onetime">One-time</SelectItem>
+                <SelectItem value="subscription">Subscription</SelectItem>
+                <SelectItem value="payment-plan">Payment Plan</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Features (one per line)</label>
-            <textarea
+            <Textarea
               value={productData.features.join('\n')}
               onChange={(e) => updateData({ features: e.target.value.split('\n').filter(f => f.trim()) })}
-              className="w-full px-3 py-2 border rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="font-mono text-sm"
               rows={5}
             />
           </div>
@@ -398,32 +406,40 @@ function StylesEditor({
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Padding</label>
-            <select
+            <Select
               value={styles.padding || '1.5rem'}
-              onChange={(e) => updateStyles({ padding: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ padding: value })}
             >
-              <option value="0">None</option>
-              <option value="0.5rem">Small (8px)</option>
-              <option value="1rem">Medium (16px)</option>
-              <option value="1.5rem">Large (24px)</option>
-              <option value="2rem">XL (32px)</option>
-              <option value="3rem">2XL (48px)</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">None</SelectItem>
+                <SelectItem value="0.5rem">Small (8px)</SelectItem>
+                <SelectItem value="1rem">Medium (16px)</SelectItem>
+                <SelectItem value="1.5rem">Large (24px)</SelectItem>
+                <SelectItem value="2rem">XL (32px)</SelectItem>
+                <SelectItem value="3rem">2XL (48px)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
-            <select
+            <Select
               value={styles.margin || '0'}
-              onChange={(e) => updateStyles({ margin: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ margin: value })}
             >
-              <option value="0">None</option>
-              <option value="0.5rem">Small (8px)</option>
-              <option value="1rem">Medium (16px)</option>
-              <option value="1.5rem">Large (24px)</option>
-              <option value="2rem">XL (32px)</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">None</SelectItem>
+                <SelectItem value="0.5rem">Small (8px)</SelectItem>
+                <SelectItem value="1rem">Medium (16px)</SelectItem>
+                <SelectItem value="1.5rem">Large (24px)</SelectItem>
+                <SelectItem value="2rem">XL (32px)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -437,14 +453,18 @@ function StylesEditor({
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select
+            <Select
               value={styles.backgroundType || 'color'}
-              onChange={(e) => updateStyles({ backgroundType: e.target.value as 'color' | 'gradient' })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ backgroundType: value as 'color' | 'gradient' })}
             >
-              <option value="color">Solid Color</option>
-              <option value="gradient">Gradient</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="color">Solid Color</SelectItem>
+                <SelectItem value="gradient">Gradient</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           {styles.backgroundType === 'gradient' ? (
@@ -475,11 +495,11 @@ function StylesEditor({
                   onChange={(e) => updateStyles({ background: e.target.value })}
                   className="h-10 w-20 rounded border cursor-pointer"
                 />
-                <input
+                <Input
                   type="text"
                   value={styles.background || '#ffffff'}
                   onChange={(e) => updateStyles({ background: e.target.value })}
-                  className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                  className="font-mono text-sm"
                   placeholder="#ffffff"
                 />
               </div>
@@ -504,46 +524,54 @@ function StylesEditor({
                 onChange={(e) => updateStyles({ textColor: e.target.value })}
                 className="h-10 w-20 rounded border cursor-pointer"
               />
-              <input
+              <Input
                 type="text"
                 value={styles.textColor || '#000000'}
                 onChange={(e) => updateStyles({ textColor: e.target.value })}
-                className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                className="font-mono text-sm"
                 placeholder="#000000"
               />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
-            <select
+            <Select
               value={styles.fontSize || '1rem'}
-              onChange={(e) => updateStyles({ fontSize: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ fontSize: value })}
             >
-              <option value="0.75rem">XS (12px)</option>
-              <option value="0.875rem">SM (14px)</option>
-              <option value="1rem">Base (16px)</option>
-              <option value="1.125rem">LG (18px)</option>
-              <option value="1.25rem">XL (20px)</option>
-              <option value="1.5rem">2XL (24px)</option>
-              <option value="2rem">3XL (32px)</option>
-              <option value="3rem">4XL (48px)</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0.75rem">XS (12px)</SelectItem>
+                <SelectItem value="0.875rem">SM (14px)</SelectItem>
+                <SelectItem value="1rem">Base (16px)</SelectItem>
+                <SelectItem value="1.125rem">LG (18px)</SelectItem>
+                <SelectItem value="1.25rem">XL (20px)</SelectItem>
+                <SelectItem value="1.5rem">2XL (24px)</SelectItem>
+                <SelectItem value="2rem">3XL (32px)</SelectItem>
+                <SelectItem value="3rem">4XL (48px)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Font Weight</label>
-            <select
+            <Select
               value={styles.fontWeight || '400'}
-              onChange={(e) => updateStyles({ fontWeight: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ fontWeight: value })}
             >
-              <option value="300">Light</option>
-              <option value="400">Regular</option>
-              <option value="500">Medium</option>
-              <option value="600">Semibold</option>
-              <option value="700">Bold</option>
-              <option value="900">Black</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="300">Light</SelectItem>
+                <SelectItem value="400">Regular</SelectItem>
+                <SelectItem value="500">Medium</SelectItem>
+                <SelectItem value="600">Semibold</SelectItem>
+                <SelectItem value="700">Bold</SelectItem>
+                <SelectItem value="900">Black</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -554,50 +582,62 @@ function StylesEditor({
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Border Radius</label>
-            <select
+            <Select
               value={styles.borderRadius || '0.75rem'}
-              onChange={(e) => updateStyles({ borderRadius: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ borderRadius: value })}
             >
-              <option value="0">None</option>
-              <option value="0.25rem">Small (4px)</option>
-              <option value="0.375rem">Medium (6px)</option>
-              <option value="0.5rem">Large (8px)</option>
-              <option value="0.75rem">XL (12px)</option>
-              <option value="1rem">2XL (16px)</option>
-              <option value="1.5rem">3XL (24px)</option>
-              <option value="9999px">Full (pill)</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">None</SelectItem>
+                <SelectItem value="0.25rem">Small (4px)</SelectItem>
+                <SelectItem value="0.375rem">Medium (6px)</SelectItem>
+                <SelectItem value="0.5rem">Large (8px)</SelectItem>
+                <SelectItem value="0.75rem">XL (12px)</SelectItem>
+                <SelectItem value="1rem">2XL (16px)</SelectItem>
+                <SelectItem value="1.5rem">3XL (24px)</SelectItem>
+                <SelectItem value="9999px">Full (pill)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Shadow</label>
-            <select
+            <Select
               value={styles.shadow || ''}
-              onChange={(e) => updateStyles({ shadow: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              onValueChange={(value) => updateStyles({ shadow: value })}
             >
-              <option value="">None</option>
-              <option value="0 1px 3px 0 rgba(0, 0, 0, 0.1)">Small</option>
-              <option value="0 4px 6px -1px rgba(0, 0, 0, 0.1)">Medium</option>
-              <option value="0 10px 15px -3px rgba(0, 0, 0, 0.1)">Large</option>
-              <option value="0 20px 25px -5px rgba(0, 0, 0, 0.1)">XL</option>
-              <option value="0 0 20px rgba(66, 153, 225, 0.5)">Blue Glow</option>
-              <option value="0 0 20px rgba(159, 122, 234, 0.5)">Purple Glow</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="0 1px 3px 0 rgba(0, 0, 0, 0.1)">Small</SelectItem>
+                <SelectItem value="0 4px 6px -1px rgba(0, 0, 0, 0.1)">Medium</SelectItem>
+                <SelectItem value="0 10px 15px -3px rgba(0, 0, 0, 0.1)">Large</SelectItem>
+                <SelectItem value="0 20px 25px -5px rgba(0, 0, 0, 0.1)">XL</SelectItem>
+                <SelectItem value="0 0 20px rgba(66, 153, 225, 0.5)">Blue Glow</SelectItem>
+                <SelectItem value="0 0 20px rgba(159, 122, 234, 0.5)">Purple Glow</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Border</label>
             <div className="flex gap-2">
-              <select
+              <Select
                 value={styles.borderWidth || '0'}
-                onChange={(e) => updateStyles({ borderWidth: e.target.value })}
-                className="flex-1 px-3 py-2 border rounded-lg"
+                onValueChange={(value) => updateStyles({ borderWidth: value })}
               >
-                <option value="0">None</option>
-                <option value="1px">1px</option>
-                <option value="2px">2px</option>
-                <option value="4px">4px</option>
-              </select>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">None</SelectItem>
+                  <SelectItem value="1px">1px</SelectItem>
+                  <SelectItem value="2px">2px</SelectItem>
+                  <SelectItem value="4px">4px</SelectItem>
+                </SelectContent>
+              </Select>
               <input
                 type="color"
                 value={styles.borderColor || '#e5e7eb'}
@@ -674,6 +714,7 @@ export default function SimplifiedBuilderPage() {
     buttonStyle: 'rounded' as 'default' | 'rounded' | 'sharp',
     buttonColor: '#3b82f6',
   })
+  const [activeId, setActiveId] = useState<string | null>(null)
   
   const {
     blocks,
@@ -812,9 +853,17 @@ export default function SimplifiedBuilderPage() {
     return () => clearTimeout(timer)
   }, [hasUnsavedChanges, isSaving, handleSave])
   
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    setActiveId(active.id as string)
+  }
+  
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
+    
+    setActiveId(null)
     
     if (!over) return
     
@@ -1032,6 +1081,7 @@ export default function SimplifiedBuilderPage() {
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
@@ -1104,7 +1154,25 @@ export default function SimplifiedBuilderPage() {
                   </div>
                 </SortableContext>
                 <DndDragOverlay>
-                  {/* Drag overlay content */}
+                  {activeId ? (
+                    <div className="opacity-80 rotate-2 scale-105">
+                      <WYSIWYGBlock
+                        block={blocks.find(b => b.id === activeId)!}
+                        isSelected={false}
+                        onSelect={() => {}}
+                        onDelete={() => {}}
+                        onDuplicate={() => {}}
+                        onToggleVisibility={() => {}}
+                        onMoveUp={() => {}}
+                        onMoveDown={() => {}}
+                        canMoveUp={false}
+                        canMoveDown={false}
+                        isDragging={true}
+                        dragAttributes={{}}
+                        dragListeners={{}}
+                      />
+                    </div>
+                  ) : null}
                 </DndDragOverlay>
               </DndContext>
             )}
@@ -1213,11 +1281,11 @@ function ThemeSettingsModal({
                       onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
                       className="h-10 w-20 rounded border cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={localTheme.primaryColor}
                       onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                      className="font-mono text-sm"
                     />
                   </div>
                 </div>
@@ -1230,11 +1298,11 @@ function ThemeSettingsModal({
                       onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
                       className="h-10 w-20 rounded border cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={localTheme.secondaryColor}
                       onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                      className="font-mono text-sm"
                     />
                   </div>
                 </div>
@@ -1249,19 +1317,23 @@ function ThemeSettingsModal({
               </h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
-                <select
+                <Select
                   value={localTheme.fontFamily}
-                  onChange={(e) => setLocalTheme({ ...localTheme, fontFamily: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  onValueChange={(value) => setLocalTheme({ ...localTheme, fontFamily: value })}
                 >
-                  <option value="system-ui">System UI</option>
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Open Sans">Open Sans</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Playfair Display">Playfair Display</option>
-                  <option value="Georgia">Georgia (Serif)</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="system-ui">System UI</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                    <SelectItem value="Roboto">Roboto</SelectItem>
+                    <SelectItem value="Open Sans">Open Sans</SelectItem>
+                    <SelectItem value="Montserrat">Montserrat</SelectItem>
+                    <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                    <SelectItem value="Georgia">Georgia (Serif)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
@@ -1277,11 +1349,11 @@ function ThemeSettingsModal({
                     onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
                     className="h-10 w-20 rounded border cursor-pointer"
                   />
-                  <input
+                  <Input
                     type="text"
                     value={localTheme.pageBackground}
                     onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
-                    className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                    className="font-mono text-sm"
                   />
                 </div>
               </div>
@@ -1341,11 +1413,11 @@ function ThemeSettingsModal({
                       onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
                       className="h-10 w-20 rounded border cursor-pointer"
                     />
-                    <input
+                    <Input
                       type="text"
                       value={localTheme.buttonColor}
                       onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
-                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                      className="font-mono text-sm"
                     />
                   </div>
                 </div>
