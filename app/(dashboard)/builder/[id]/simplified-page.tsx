@@ -51,6 +51,8 @@ import {
   type ProductBlockData
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
+import { ProductSelectorModal } from '@/components/builder/product-selector-modal'
+import type { RouterOutputs } from '@/lib/trpc/api'
 
 // Column Drop Zone Component
 function ColumnDropZone({ 
@@ -186,13 +188,21 @@ const gradientPresets = [
 function PropertiesPanel({ 
   block, 
   onUpdate, 
-  onClose 
+  onClose,
+  onSelectProduct
 }: {
   block: Block | null
   onUpdate: (updates: Partial<Block>) => void
   onClose: () => void
+  onSelectProduct?: (blockId: string) => void
 }) {
   const [activeTab, setActiveTab] = useState<'content' | 'styles'>('content')
+  
+  const openProductSelector = (blockId: string) => {
+    if (onSelectProduct) {
+      onSelectProduct(blockId)
+    }
+  }
   
   if (!block) {
     return (
@@ -275,7 +285,11 @@ function PropertiesPanel({
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'content' ? (
-          <BlockEditor block={block} updateData={updateData} />
+          <BlockEditor 
+            block={block} 
+            updateData={updateData}
+            onSelectProduct={block.type === 'product' ? () => openProductSelector(block.id) : undefined}
+          />
         ) : (
           <StylesEditor block={block} updateStyles={updateStyles} />
         )}
@@ -285,7 +299,15 @@ function PropertiesPanel({
 }
 
 // Block Editor Components
-function BlockEditor({ block, updateData }: { block: Block; updateData: (updates: Partial<Block['data']>) => void }) {
+function BlockEditor({ 
+  block, 
+  updateData,
+  onSelectProduct 
+}: { 
+  block: Block; 
+  updateData: (updates: Partial<Block['data']>) => void;
+  onSelectProduct?: () => void;
+}) {
   switch (block.type) {
     case 'header':
       const headerData = block.data as HeaderBlockData
@@ -316,6 +338,22 @@ function BlockEditor({ block, updateData }: { block: Block; updateData: (updates
       const productData = block.data as ProductBlockData
       return (
         <div className="space-y-4">
+          {/* Product Selection */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-900">Product Source</span>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onSelectProduct}
+              >
+                Select from Database
+              </Button>
+            </div>
+            <p className="text-xs text-blue-700">
+              Choose a product from your database to auto-fill details, or enter manually below.
+            </p>
+          </div>
           <div>
             <label className="block text-sm font-medium mb-1">Product Name</label>
             <Input
@@ -696,6 +734,9 @@ function useKeyboardShortcuts() {
   }, [store])
 }
 
+// Type definitions
+type Product = RouterOutputs['product']['list'][0]
+
 // Main Builder Component
 export default function SimplifiedBuilderPage() {
   const params = useParams()
@@ -706,6 +747,8 @@ export default function SimplifiedBuilderPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop')
   const [showThemeModal, setShowThemeModal] = useState(false)
+  const [showProductSelector, setShowProductSelector] = useState(false)
+  const [selectedBlockForProduct, setSelectedBlockForProduct] = useState<string | null>(null)
   const [globalTheme, setGlobalTheme] = useState({
     primaryColor: '#3b82f6',
     secondaryColor: '#8b5cf6',
@@ -852,6 +895,38 @@ export default function SimplifiedBuilderPage() {
     
     return () => clearTimeout(timer)
   }, [hasUnsavedChanges, isSaving, handleSave])
+  
+  // Handle product selection from database
+  const handleProductSelection = (product: Product) => {
+    if (selectedBlockForProduct) {
+      // Update the selected product block with database product data
+      const productData: ProductBlockData = {
+        name: product.name,
+        description: product.description || '',
+        price: `$${(product.price / 100).toFixed(2)}`,
+        comparePrice: undefined, // Product type doesn't have this field
+        type: product.isRecurring ? 'subscription' : 'onetime',
+        features: product.features || [],
+        imageUrl: product.thumbnail || undefined,
+        badge: undefined, // Product type doesn't have this field
+      }
+      
+      updateBlock(selectedBlockForProduct, { data: productData })
+      
+      // Clear selection
+      setSelectedBlockForProduct(null)
+      setShowProductSelector(false)
+      
+      // Show success message
+      toast.success('Product imported successfully!')
+    }
+  }
+  
+  // Handle opening product selector for a specific block
+  const openProductSelector = (blockId: string) => {
+    setSelectedBlockForProduct(blockId)
+    setShowProductSelector(true)
+  }
   
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
@@ -1186,6 +1261,7 @@ export default function SimplifiedBuilderPage() {
               block={selectedBlock}
               onUpdate={(updates) => updateBlock(selectedBlock.id, updates)}
               onClose={() => selectBlock(null)}
+              onSelectProduct={openProductSelector}
             />
           </div>
         )}
@@ -1199,6 +1275,17 @@ export default function SimplifiedBuilderPage() {
           onClose={() => setShowThemeModal(false)}
         />
       )}
+      
+      {/* Product Selector Modal */}
+      <ProductSelectorModal
+        isOpen={showProductSelector}
+        onClose={() => {
+          setShowProductSelector(false)
+          setSelectedBlockForProduct(null)
+        }}
+        onSelectProduct={handleProductSelection}
+        selectedProductId={undefined}
+      />
     </div>
   )
 }
