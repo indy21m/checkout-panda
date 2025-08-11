@@ -1167,27 +1167,27 @@ function ThemeSettingsModal({
   }
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      {/* Modal - Fixed width issues */}
+      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-2xl min-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
+        <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50 flex-shrink-0">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex-shrink-0">
                 <Palette className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-xl font-semibold">Global Theme Settings</h2>
                 <p className="text-sm text-gray-600">Customize the overall look and feel</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/50 rounded-lg transition-colors flex-shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1195,8 +1195,8 @@ function ThemeSettingsModal({
         </div>
         
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          <div className="space-y-6">
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6 w-full">
             {/* Colors Section */}
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -1384,7 +1384,7 @@ function ThemeSettingsModal({
         </div>
         
         {/* Footer */}
-        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 flex-shrink-0 w-full">
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
