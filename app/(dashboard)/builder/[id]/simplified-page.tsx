@@ -749,6 +749,10 @@ export default function SimplifiedBuilderPage() {
   const [showThemeModal, setShowThemeModal] = useState(false)
   const [showProductSelector, setShowProductSelector] = useState(false)
   const [selectedBlockForProduct, setSelectedBlockForProduct] = useState<string | null>(null)
+  const [showABTestModal, setShowABTestModal] = useState(false)
+  const [activeVariant, setActiveVariant] = useState<'A' | 'B'>('A')
+  const [abTestEnabled, setABTestEnabled] = useState(false)
+  const [variantB, setVariantB] = useState<Block[]>([])
   const [globalTheme, setGlobalTheme] = useState({
     primaryColor: '#3b82f6',
     secondaryColor: '#8b5cf6',
@@ -1078,6 +1082,15 @@ export default function SimplifiedBuilderPage() {
             Theme
           </Button>
           
+          {/* A/B Testing */}
+          <Button
+            variant="ghost"
+            onClick={() => setShowABTestModal(true)}
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            A/B Test
+          </Button>
+          
           {/* Actions */}
           <Button
             variant="ghost"
@@ -1132,6 +1145,45 @@ export default function SimplifiedBuilderPage() {
         
         {/* Canvas */}
         <div className="flex-1 overflow-auto">
+          {/* A/B Test Variant Switcher */}
+          {abTestEnabled && !isPreviewMode && (
+            <div className="sticky top-0 z-10 bg-white border-b px-8 py-3">
+              <div className="max-w-5xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-medium">A/B Test Active</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Editing:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setActiveVariant('A')}
+                      className={cn(
+                        "px-3 py-1 rounded text-sm font-medium transition-all",
+                        activeVariant === 'A' 
+                          ? "bg-white text-blue-600 shadow-sm" 
+                          : "text-gray-600 hover:text-gray-900"
+                      )}
+                    >
+                      Variant A
+                    </button>
+                    <button
+                      onClick={() => setActiveVariant('B')}
+                      className={cn(
+                        "px-3 py-1 rounded text-sm font-medium transition-all",
+                        activeVariant === 'B' 
+                          ? "bg-white text-purple-600 shadow-sm" 
+                          : "text-gray-600 hover:text-gray-900"
+                      )}
+                    >
+                      Variant B
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className={cn(
             "mx-auto p-8 transition-all",
             activeView === 'mobile' ? "max-w-sm" : "max-w-5xl"
@@ -1286,6 +1338,233 @@ export default function SimplifiedBuilderPage() {
         onSelectProduct={handleProductSelection}
         selectedProductId={undefined}
       />
+      
+      {/* A/B Testing Modal */}
+      {showABTestModal && (
+        <ABTestingModal
+          enabled={abTestEnabled}
+          activeVariant={activeVariant}
+          variantA={blocks}
+          variantB={variantB}
+          onToggleEnabled={setABTestEnabled}
+          onVariantChange={setActiveVariant}
+          onVariantBUpdate={setVariantB}
+          onClose={() => setShowABTestModal(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// A/B Testing Modal Component
+function ABTestingModal({
+  enabled,
+  activeVariant: _activeVariant,
+  variantA,
+  variantB,
+  onToggleEnabled,
+  onVariantChange: _onVariantChange,
+  onVariantBUpdate,
+  onClose
+}: {
+  enabled: boolean
+  activeVariant: 'A' | 'B'
+  variantA: Block[]
+  variantB: Block[]
+  onToggleEnabled: (enabled: boolean) => void
+  onVariantChange: (variant: 'A' | 'B') => void
+  onVariantBUpdate: (blocks: Block[]) => void
+  onClose: () => void
+}) {
+  const [localEnabled, setLocalEnabled] = useState(enabled)
+  const [localVariantB, setLocalVariantB] = useState(variantB.length > 0 ? variantB : [...variantA])
+  const [trafficSplit, setTrafficSplit] = useState(50)
+  
+  const handleApply = () => {
+    onToggleEnabled(localEnabled)
+    onVariantBUpdate(localVariantB)
+    onClose()
+    toast.success('A/B test settings updated!')
+  }
+  
+  const handleDuplicateVariantA = () => {
+    setLocalVariantB([...variantA])
+    toast.success('Variant A duplicated to Variant B')
+  }
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-4xl min-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-semibold">A/B Testing Configuration</h2>
+              <p className="text-sm text-gray-600">Test different checkout variations</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6">
+            {/* Enable/Disable Toggle */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-900">A/B Test Status</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {localEnabled 
+                      ? 'A/B testing is active. Visitors will see different variants.'
+                      : 'A/B testing is disabled. All visitors see Variant A.'}
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={localEnabled}
+                    onChange={(e) => setLocalEnabled(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+            
+            {/* Traffic Split */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Traffic Distribution</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Variant A</span>
+                      <span className="text-sm text-gray-600">{100 - trafficSplit}%</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Variant B</span>
+                      <span className="text-sm text-gray-600">{trafficSplit}%</span>
+                    </div>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={trafficSplit}
+                  onChange={(e) => setTrafficSplit(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${trafficSplit}%, #e5e7eb ${trafficSplit}%, #e5e7eb 100%)`
+                  }}
+                />
+                <p className="text-xs text-gray-500">
+                  Adjust how traffic is split between variants
+                </p>
+              </div>
+            </div>
+            
+            {/* Variant Management */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Variant Management</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium">Variant A (Control)</h4>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                      Original
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {variantA.length} blocks configured
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    This is your current checkout design
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium">Variant B (Test)</h4>
+                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                      Test
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {localVariantB.length} blocks configured
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleDuplicateVariantA}
+                    className="w-full"
+                  >
+                    Duplicate from Variant A
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Note:</strong> To edit Variant B, enable A/B testing and use the variant switcher in the builder.
+                </p>
+              </div>
+            </div>
+            
+            {/* Test Goals */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Test Goals & Metrics</h3>
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input type="checkbox" className="mt-1" defaultChecked />
+                  <div>
+                    <p className="font-medium text-sm">Conversion Rate</p>
+                    <p className="text-xs text-gray-600">Track checkout completion percentage</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input type="checkbox" className="mt-1" defaultChecked />
+                  <div>
+                    <p className="font-medium text-sm">Average Order Value</p>
+                    <p className="text-xs text-gray-600">Compare revenue per transaction</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input type="checkbox" className="mt-1" />
+                  <div>
+                    <p className="font-medium text-sm">Cart Abandonment</p>
+                    <p className="text-xs text-gray-600">Monitor drop-off rates</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex items-center justify-between p-6 border-t bg-gray-50 flex-shrink-0">
+          <div className="text-sm text-gray-600">
+            Changes will apply to new visitors only
+          </div>
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleApply}>
+              Apply Settings
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
