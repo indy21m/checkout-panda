@@ -27,7 +27,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { 
   ArrowLeft, Save, Eye, Rocket, Undo, Redo, Plus, 
-  Smartphone, Monitor, Loader2, Sparkles, X
+  Smartphone, Monitor, Loader2, Sparkles, X, Palette,
+  Type as TypeIcon, Layers
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SaveIndicator } from '@/components/ui/save-indicator'
@@ -161,7 +162,17 @@ function BlockLibrary({ onAddBlock }: { onAddBlock: (type: BlockType) => void })
   )
 }
 
-// Properties Panel
+// Aurora gradient presets
+const gradientPresets = [
+  { name: 'Aurora Blue', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { name: 'Sunset', value: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+  { name: 'Ocean', value: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+  { name: 'Fire', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+  { name: 'Royal', value: 'linear-gradient(135deg, #667eea 0%, #4ca2cd 100%)' },
+  { name: 'Emerald', value: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+]
+
+// Properties Panel with Styles Tab
 function PropertiesPanel({ 
   block, 
   onUpdate, 
@@ -171,6 +182,8 @@ function PropertiesPanel({
   onUpdate: (updates: Partial<Block>) => void
   onClose: () => void
 }) {
+  const [activeTab, setActiveTab] = useState<'content' | 'styles'>('content')
+  
   if (!block) {
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
@@ -187,6 +200,10 @@ function PropertiesPanel({
     onUpdate({ data: { ...block.data, ...updates } })
   }
 
+  const updateStyles = (updates: Partial<Block['styles']>) => {
+    onUpdate({ styles: { ...block.styles, ...updates } })
+  }
+
   const template = blockTemplates[block.type]
   if (!template) {
     return (
@@ -201,6 +218,7 @@ function PropertiesPanel({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Header */}
       <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -216,8 +234,41 @@ function PropertiesPanel({
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b">
+        <button
+          onClick={() => setActiveTab('content')}
+          className={cn(
+            "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
+            activeTab === 'content' 
+              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" 
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          )}
+        >
+          <TypeIcon className="w-4 h-4" />
+          Content
+        </button>
+        <button
+          onClick={() => setActiveTab('styles')}
+          className={cn(
+            "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
+            activeTab === 'styles' 
+              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" 
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          )}
+        >
+          <Palette className="w-4 h-4" />
+          Styles
+        </button>
+      </div>
+
+      {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        <BlockEditor block={block} updateData={updateData} />
+        {activeTab === 'content' ? (
+          <BlockEditor block={block} updateData={updateData} />
+        ) : (
+          <StylesEditor block={block} updateStyles={updateStyles} />
+        )}
       </div>
     </div>
   )
@@ -326,6 +377,241 @@ function BlockEditor({ block, updateData }: { block: Block; updateData: (updates
   }
 }
 
+// Styles Editor Component
+function StylesEditor({ 
+  block, 
+  updateStyles 
+}: { 
+  block: Block
+  updateStyles: (updates: Partial<Block['styles']>) => void 
+}) {
+  const styles = block.styles || {}
+  
+  return (
+    <div className="space-y-6">
+      {/* Spacing Section */}
+      <div>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <Layers className="w-4 h-4" />
+          Spacing
+        </h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Padding</label>
+            <select
+              value={styles.padding || '1.5rem'}
+              onChange={(e) => updateStyles({ padding: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="0">None</option>
+              <option value="0.5rem">Small (8px)</option>
+              <option value="1rem">Medium (16px)</option>
+              <option value="1.5rem">Large (24px)</option>
+              <option value="2rem">XL (32px)</option>
+              <option value="3rem">2XL (48px)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
+            <select
+              value={styles.margin || '0'}
+              onChange={(e) => updateStyles({ margin: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="0">None</option>
+              <option value="0.5rem">Small (8px)</option>
+              <option value="1rem">Medium (16px)</option>
+              <option value="1.5rem">Large (24px)</option>
+              <option value="2rem">XL (32px)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Background Section */}
+      <div>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <Palette className="w-4 h-4" />
+          Background
+        </h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select
+              value={styles.backgroundType || 'color'}
+              onChange={(e) => updateStyles({ backgroundType: e.target.value as 'color' | 'gradient' })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="color">Solid Color</option>
+              <option value="gradient">Gradient</option>
+            </select>
+          </div>
+          
+          {styles.backgroundType === 'gradient' ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Aurora Gradients</label>
+              <div className="grid grid-cols-2 gap-2">
+                {gradientPresets.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => updateStyles({ background: preset.value })}
+                    className={cn(
+                      "h-12 rounded-lg border-2 transition-all hover:scale-105",
+                      styles.background === preset.value ? "border-blue-500 shadow-lg" : "border-gray-200"
+                    )}
+                    style={{ background: preset.value }}
+                    title={preset.name}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  value={styles.background || '#ffffff'}
+                  onChange={(e) => updateStyles({ background: e.target.value })}
+                  className="h-10 w-20 rounded border cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={styles.background || '#ffffff'}
+                  onChange={(e) => updateStyles({ background: e.target.value })}
+                  className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                  placeholder="#ffffff"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Typography Section */}
+      <div>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <TypeIcon className="w-4 h-4" />
+          Typography
+        </h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Text Color</label>
+            <div className="flex gap-2">
+              <input
+                type="color"
+                value={styles.textColor || '#000000'}
+                onChange={(e) => updateStyles({ textColor: e.target.value })}
+                className="h-10 w-20 rounded border cursor-pointer"
+              />
+              <input
+                type="text"
+                value={styles.textColor || '#000000'}
+                onChange={(e) => updateStyles({ textColor: e.target.value })}
+                className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+            <select
+              value={styles.fontSize || '1rem'}
+              onChange={(e) => updateStyles({ fontSize: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="0.75rem">XS (12px)</option>
+              <option value="0.875rem">SM (14px)</option>
+              <option value="1rem">Base (16px)</option>
+              <option value="1.125rem">LG (18px)</option>
+              <option value="1.25rem">XL (20px)</option>
+              <option value="1.5rem">2XL (24px)</option>
+              <option value="2rem">3XL (32px)</option>
+              <option value="3rem">4XL (48px)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Font Weight</label>
+            <select
+              value={styles.fontWeight || '400'}
+              onChange={(e) => updateStyles({ fontWeight: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="300">Light</option>
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semibold</option>
+              <option value="700">Bold</option>
+              <option value="900">Black</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Borders & Effects Section */}
+      <div>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3">Borders & Effects</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Border Radius</label>
+            <select
+              value={styles.borderRadius || '0.75rem'}
+              onChange={(e) => updateStyles({ borderRadius: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="0">None</option>
+              <option value="0.25rem">Small (4px)</option>
+              <option value="0.375rem">Medium (6px)</option>
+              <option value="0.5rem">Large (8px)</option>
+              <option value="0.75rem">XL (12px)</option>
+              <option value="1rem">2XL (16px)</option>
+              <option value="1.5rem">3XL (24px)</option>
+              <option value="9999px">Full (pill)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Shadow</label>
+            <select
+              value={styles.shadow || ''}
+              onChange={(e) => updateStyles({ shadow: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg"
+            >
+              <option value="">None</option>
+              <option value="0 1px 3px 0 rgba(0, 0, 0, 0.1)">Small</option>
+              <option value="0 4px 6px -1px rgba(0, 0, 0, 0.1)">Medium</option>
+              <option value="0 10px 15px -3px rgba(0, 0, 0, 0.1)">Large</option>
+              <option value="0 20px 25px -5px rgba(0, 0, 0, 0.1)">XL</option>
+              <option value="0 0 20px rgba(66, 153, 225, 0.5)">Blue Glow</option>
+              <option value="0 0 20px rgba(159, 122, 234, 0.5)">Purple Glow</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Border</label>
+            <div className="flex gap-2">
+              <select
+                value={styles.borderWidth || '0'}
+                onChange={(e) => updateStyles({ borderWidth: e.target.value })}
+                className="flex-1 px-3 py-2 border rounded-lg"
+              >
+                <option value="0">None</option>
+                <option value="1px">1px</option>
+                <option value="2px">2px</option>
+                <option value="4px">4px</option>
+              </select>
+              <input
+                type="color"
+                value={styles.borderColor || '#e5e7eb'}
+                onChange={(e) => updateStyles({ borderColor: e.target.value })}
+                className="h-10 w-20 rounded border cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Keyboard Shortcuts Hook
 function useKeyboardShortcuts() {
   const store = useSimplifiedBuilderStore()
@@ -379,6 +665,15 @@ export default function SimplifiedBuilderPage() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop')
+  const [showThemeModal, setShowThemeModal] = useState(false)
+  const [globalTheme, setGlobalTheme] = useState({
+    primaryColor: '#3b82f6',
+    secondaryColor: '#8b5cf6',
+    fontFamily: 'system-ui',
+    pageBackground: '#ffffff',
+    buttonStyle: 'rounded' as 'default' | 'rounded' | 'sharp',
+    buttonColor: '#3b82f6',
+  })
   
   const {
     blocks,
@@ -650,6 +945,15 @@ export default function SimplifiedBuilderPage() {
             <Redo className="h-4 w-4" />
           </Button>
           
+          {/* Theme Settings */}
+          <Button
+            variant="ghost"
+            onClick={() => setShowThemeModal(true)}
+          >
+            <Palette className="mr-2 h-4 w-4" />
+            Theme
+          </Button>
+          
           {/* Actions */}
           <Button
             variant="ghost"
@@ -817,6 +1121,277 @@ export default function SimplifiedBuilderPage() {
             />
           </div>
         )}
+      </div>
+      
+      {/* Theme Settings Modal */}
+      {showThemeModal && (
+        <ThemeSettingsModal
+          theme={globalTheme}
+          onUpdate={setGlobalTheme}
+          onClose={() => setShowThemeModal(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// Theme Settings Modal Component
+function ThemeSettingsModal({
+  theme,
+  onUpdate,
+  onClose
+}: {
+  theme: {
+    primaryColor: string
+    secondaryColor: string
+    fontFamily: string
+    pageBackground: string
+    buttonStyle: 'default' | 'rounded' | 'sharp'
+    buttonColor: string
+  }
+  onUpdate: (theme: {
+    primaryColor: string
+    secondaryColor: string
+    fontFamily: string
+    pageBackground: string
+    buttonStyle: 'default' | 'rounded' | 'sharp'
+    buttonColor: string
+  }) => void
+  onClose: () => void
+}) {
+  const [localTheme, setLocalTheme] = useState(theme)
+  
+  const handleApply = () => {
+    onUpdate(localTheme)
+    onClose()
+  }
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
+                <Palette className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Global Theme Settings</h2>
+                <p className="text-sm text-gray-600">Customize the overall look and feel</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          <div className="space-y-6">
+            {/* Colors Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                Brand Colors
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Primary Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={localTheme.primaryColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
+                      className="h-10 w-20 rounded border cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={localTheme.primaryColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
+                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={localTheme.secondaryColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
+                      className="h-10 w-20 rounded border cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={localTheme.secondaryColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
+                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Typography Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <TypeIcon className="w-4 h-4" />
+                Typography
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
+                <select
+                  value={localTheme.fontFamily}
+                  onChange={(e) => setLocalTheme({ ...localTheme, fontFamily: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="system-ui">System UI</option>
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Georgia">Georgia (Serif)</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Page Background */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Page Background</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={localTheme.pageBackground}
+                    onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
+                    className="h-10 w-20 rounded border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={localTheme.pageBackground}
+                    onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
+                    className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Button Styles */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Button Styles</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Style</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'default' })}
+                      className={cn(
+                        "p-3 border-2 rounded-lg transition-all",
+                        localTheme.buttonStyle === 'default' 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-gray-200 hover:border-gray-300"
+                      )}
+                    >
+                      <div className="h-8 bg-blue-600 rounded-md" />
+                      <p className="text-xs mt-2">Default</p>
+                    </button>
+                    <button
+                      onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'rounded' })}
+                      className={cn(
+                        "p-3 border-2 rounded-lg transition-all",
+                        localTheme.buttonStyle === 'rounded' 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-gray-200 hover:border-gray-300"
+                      )}
+                    >
+                      <div className="h-8 bg-blue-600 rounded-full" />
+                      <p className="text-xs mt-2">Rounded</p>
+                    </button>
+                    <button
+                      onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'sharp' })}
+                      className={cn(
+                        "p-3 border-2 rounded-lg transition-all",
+                        localTheme.buttonStyle === 'sharp' 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-gray-200 hover:border-gray-300"
+                      )}
+                    >
+                      <div className="h-8 bg-blue-600" />
+                      <p className="text-xs mt-2">Sharp</p>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={localTheme.buttonColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
+                      className="h-10 w-20 rounded border cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={localTheme.buttonColor}
+                      onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
+                      className="flex-1 px-3 py-2 border rounded-lg font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Preview Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Preview</h3>
+              <div 
+                className="p-6 rounded-lg border"
+                style={{ 
+                  backgroundColor: localTheme.pageBackground,
+                  fontFamily: localTheme.fontFamily 
+                }}
+              >
+                <h4 
+                  className="text-2xl font-bold mb-2"
+                  style={{ color: localTheme.primaryColor }}
+                >
+                  Sample Heading
+                </h4>
+                <p className="mb-4">This is how your checkout page will look with these theme settings.</p>
+                <button
+                  className="px-6 py-3 text-white font-semibold"
+                  style={{
+                    backgroundColor: localTheme.buttonColor,
+                    borderRadius: localTheme.buttonStyle === 'rounded' ? '9999px' : localTheme.buttonStyle === 'sharp' ? '0' : '0.5rem'
+                  }}
+                >
+                  Sample Button
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleApply}>
+            Apply Theme
+          </Button>
+        </div>
       </div>
     </div>
   )

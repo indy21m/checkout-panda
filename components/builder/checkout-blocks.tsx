@@ -110,12 +110,29 @@ export type BlockData =
   | CountdownBlockData
   | PaymentBlockData
 
+export interface BlockStyles {
+  padding?: string
+  margin?: string
+  background?: string
+  backgroundType?: 'color' | 'gradient' | 'image'
+  borderRadius?: string
+  borderColor?: string
+  borderWidth?: string
+  shadow?: string
+  fontSize?: string
+  fontWeight?: string
+  textColor?: string
+  titleColor?: string
+  subtitleColor?: string
+}
+
 export interface Block {
   id: string
   type: BlockType
   data: BlockData
   visible: boolean
   column?: 'left' | 'right'
+  styles?: BlockStyles
 }
 
 // Block Templates with Danish Real Estate Example
@@ -495,20 +512,53 @@ export function WYSIWYGBlock({
   dragListeners
 }: WYSIWYGBlockProps) {
   const renderContent = () => {
+    // Apply custom styles if provided
+    const customStyles: React.CSSProperties = block.styles ? {
+      padding: block.styles.padding,
+      margin: block.styles.margin,
+      background: block.styles.backgroundType === 'gradient' ? block.styles.background : block.styles.background,
+      borderRadius: block.styles.borderRadius,
+      borderColor: block.styles.borderColor,
+      borderWidth: block.styles.borderWidth,
+      borderStyle: block.styles.borderWidth ? 'solid' : undefined,
+      boxShadow: block.styles.shadow,
+      color: block.styles.textColor,
+      fontSize: block.styles.fontSize,
+      fontWeight: block.styles.fontWeight as React.CSSProperties['fontWeight'],
+    } : {}
+
     switch (block.type) {
       case 'header':
         const headerData = block.data as HeaderBlockData
+        const defaultHeaderStyle = !block.styles?.background ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' : ''
         return (
-          <div className="text-center py-8 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl">
-            <h1 className="text-3xl font-bold mb-2">{headerData.title}</h1>
-            <p className="text-lg opacity-90">{headerData.subtitle}</p>
+          <div 
+            className={cn("text-center py-8 px-6 rounded-t-xl", defaultHeaderStyle)}
+            style={customStyles}
+          >
+            <h1 
+              className="text-3xl font-bold mb-2"
+              style={{ color: block.styles?.titleColor }}
+            >
+              {headerData.title}
+            </h1>
+            <p 
+              className="text-lg opacity-90"
+              style={{ color: block.styles?.subtitleColor }}
+            >
+              {headerData.subtitle}
+            </p>
           </div>
         )
       
       case 'product':
         const productData = block.data as ProductBlockData
+        const defaultProductStyle = !block.styles?.background ? 'bg-white border border-gray-200 shadow-sm' : ''
         return (
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div 
+            className={cn("rounded-xl p-6", defaultProductStyle)}
+            style={customStyles}
+          >
             {productData.badge && (
               <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full mb-4">
                 {productData.badge}
