@@ -715,14 +715,14 @@ function StylesEditor({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Shadow</label>
             <Select
-              value={styles.shadow || ''}
-              onValueChange={(value) => updateStyles({ shadow: value })}
+              value={styles.shadow || 'none'}
+              onValueChange={(value) => updateStyles({ shadow: value === 'none' ? '' : value })}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 <SelectItem value="0 1px 3px 0 rgba(0, 0, 0, 0.1)">Small</SelectItem>
                 <SelectItem value="0 4px 6px -1px rgba(0, 0, 0, 0.1)">Medium</SelectItem>
                 <SelectItem value="0 10px 15px -3px rgba(0, 0, 0, 0.1)">Large</SelectItem>
@@ -866,7 +866,6 @@ export default function SimplifiedBuilderPage() {
     moveBlock,
     toggleBlockVisibility,
     toggleBlockColumn,
-    reorderBlocks,
     selectBlock,
     undo,
     redo,
@@ -1038,35 +1037,86 @@ export default function SimplifiedBuilderPage() {
     const activeId = active.id as string
     const overId = over.id as string
     
-    // Handle dropping on column drop zones
+    // Find the active block
+    const activeBlock = blocks.find(b => b.id === activeId)
+    if (!activeBlock) return
+    
+    // Handle dropping on column drop zones (empty columns)
     if (overId === 'left-column' || overId === 'right-column') {
-      const column = overId === 'left-column' ? 'left' : 'right'
-      const block = blocks.find(b => b.id === activeId)
-      if (block && block.column !== column) {
-        updateBlock(activeId, { column })
+      const targetColumn: 'left' | 'right' = overId === 'left-column' ? 'left' : 'right'
+      if (activeBlock.column !== targetColumn) {
+        // Move to empty column
+        const updatedBlocks = blocks.map(b => 
+          b.id === activeId ? { ...b, column: targetColumn } : b
+        )
+        setBlocks(updatedBlocks)
       }
       return
     }
     
-    // Handle reordering within or between columns
-    if (activeId !== overId) {
-      const oldIndex = blocks.findIndex(b => b.id === activeId)
-      const newIndex = blocks.findIndex(b => b.id === overId)
+    // Handle dropping on another block
+    const overBlock = blocks.find(b => b.id === overId)
+    if (!overBlock) return
+    
+    // Determine target column from the block we're dropping on
+    const targetColumn: 'left' | 'right' = overBlock.column || 'left'
+    
+    // Get blocks in source and target columns
+    const sourceColumn: 'left' | 'right' = activeBlock.column || 'left'
+    const sourceBlocks = blocks.filter(b => (b.column || 'left') === sourceColumn)
+    const targetBlocks = blocks.filter(b => (b.column || 'left') === targetColumn)
+    
+    if (sourceColumn === targetColumn) {
+      // Reordering within the same column
+      const oldIndex = sourceBlocks.findIndex(b => b.id === activeId)
+      const newIndex = targetBlocks.findIndex(b => b.id === overId)
       
-      if (oldIndex !== -1 && newIndex !== -1) {
-        // Check if we're moving between columns
-        const activeBlock = blocks[oldIndex]
-        const overBlock = blocks[newIndex]
-        
-        if (activeBlock && overBlock) {
-          // Update column if dropping on a block in a different column
-          if (activeBlock.column !== overBlock.column) {
-            updateBlock(activeId, { column: overBlock.column })
-          }
-          
-          reorderBlocks(oldIndex, newIndex)
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const reorderedBlocks = [...sourceBlocks]
+        const [movedBlock] = reorderedBlocks.splice(oldIndex, 1)
+        if (movedBlock) {
+          reorderedBlocks.splice(newIndex, 0, movedBlock)
         }
+        
+        // Rebuild full blocks array maintaining other column
+        const otherColumnBlocks = blocks.filter(b => (b.column || 'left') !== sourceColumn)
+        const updatedBlocks = [...otherColumnBlocks, ...reorderedBlocks].sort((a, b) => {
+          // Maintain some consistent ordering
+          if (a.column === b.column) return 0
+          return a.column === 'left' ? -1 : 1
+        })
+        
+        setBlocks(updatedBlocks)
       }
+    } else {
+      // Moving between columns
+      const targetIndex = targetBlocks.findIndex(b => b.id === overId)
+      
+      // Update block's column
+      const updatedBlock = { ...activeBlock, column: targetColumn }
+      
+      // Remove from source column
+      const newSourceBlocks = sourceBlocks.filter(b => b.id !== activeId)
+      
+      // Add to target column at the correct position
+      const newTargetBlocks = [...targetBlocks]
+      const insertIndex = targetIndex >= 0 ? targetIndex + 1 : targetBlocks.length
+      newTargetBlocks.splice(insertIndex, 0, updatedBlock)
+      
+      // Combine all blocks
+      const otherBlocks = blocks.filter(b => 
+        b.id !== activeId && b.id !== overId && 
+        (b.column || 'left') !== sourceColumn && 
+        (b.column || 'left') !== targetColumn
+      )
+      
+      const updatedBlocks = [
+        ...otherBlocks,
+        ...newSourceBlocks,
+        ...newTargetBlocks.filter(b => b.id !== activeId) // Remove duplicate if it exists
+      ].map(b => b.id === activeId ? updatedBlock : b)
+      
+      setBlocks(updatedBlocks)
     }
   }
   
@@ -1369,24 +1419,24 @@ export default function SimplifiedBuilderPage() {
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
-                <SortableContext
-                  items={blocks.map(b => b.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className={cn(
-                    "grid gap-4",
-                    activeView === 'mobile' ? "grid-cols-1" : "grid-cols-2"
-                  )}>
-                    {blocks.length === 0 ? (
-                      <div className="col-span-2 bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
-                        <Plus className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                        <p className="text-gray-500 font-medium">Start by adding blocks</p>
-                        <p className="text-sm text-gray-400 mt-1">Choose from the library on the left</p>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Left Column */}
-                        <ColumnDropZone id="left-column" title="Left Column">
+                <div className={cn(
+                  "grid gap-4",
+                  activeView === 'mobile' ? "grid-cols-1" : "grid-cols-2"
+                )}>
+                  {blocks.length === 0 ? (
+                    <div className="col-span-2 bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
+                      <Plus className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <p className="text-gray-500 font-medium">Start by adding blocks</p>
+                      <p className="text-sm text-gray-400 mt-1">Choose from the library on the left</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Left Column */}
+                      <ColumnDropZone id="left-column" title="Left Column">
+                        <SortableContext
+                          items={leftBlocks.map(b => b.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
                           {leftBlocks.map((block, index) => (
                             <SortableBlock
                               key={block.id}
@@ -1410,10 +1460,15 @@ export default function SimplifiedBuilderPage() {
                               <p className="text-sm">Drop blocks here</p>
                             </div>
                           )}
+                        </SortableContext>
                         </ColumnDropZone>
                         
                         {/* Right Column */}
                         <ColumnDropZone id="right-column" title="Right Column">
+                          <SortableContext
+                            items={rightBlocks.map(b => b.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
                           {rightBlocks.map((block, index) => (
                             <SortableBlock
                               key={block.id}
@@ -1437,11 +1492,11 @@ export default function SimplifiedBuilderPage() {
                               <p className="text-sm">Drop blocks here</p>
                             </div>
                           )}
+                          </SortableContext>
                         </ColumnDropZone>
                       </>
                     )}
                   </div>
-                </SortableContext>
                 <DndDragOverlay>
                   {activeId ? (
                     <div className="opacity-80 rotate-2 scale-105">
