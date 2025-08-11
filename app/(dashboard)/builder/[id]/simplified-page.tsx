@@ -29,7 +29,8 @@ import { cn } from '@/lib/utils'
 import { 
   ArrowLeft, Save, Eye, Rocket, Undo, Redo, Plus, 
   Smartphone, Monitor, Loader2, Sparkles, X, Palette,
-  Type as TypeIcon, Layers
+  Type as TypeIcon, Layers, TrendingUp, BarChart3, Users,
+  DollarSign, ShoppingCart
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -94,7 +95,9 @@ function SortableBlock({
   onMoveUp,
   onMoveDown,
   canMoveUp,
-  canMoveDown
+  canMoveDown,
+  showAnalytics,
+  analyticsData
 }: {
   block: Block
   isSelected: boolean
@@ -107,6 +110,8 @@ function SortableBlock({
   onMoveDown: () => void
   canMoveUp: boolean
   canMoveDown: boolean
+  showAnalytics?: boolean
+  analyticsData?: { views: number; clicks: number; engagement: number }
 }) {
   const {
     attributes,
@@ -123,7 +128,10 @@ function SortableBlock({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="w-full">
+    <div ref={setNodeRef} style={style} className="w-full relative">
+      {showAnalytics && analyticsData && (
+        <AnalyticsOverlay blockType={block.type} metrics={analyticsData} />
+      )}
       <WYSIWYGBlock
         block={block}
         isSelected={isSelected}
@@ -140,6 +148,71 @@ function SortableBlock({
         dragAttributes={attributes}
         dragListeners={listeners}
       />
+    </div>
+  )
+}
+
+// Analytics Overlay Component
+function AnalyticsOverlay({ 
+  blockType: _blockType, 
+  metrics 
+}: { 
+  blockType: string
+  metrics?: { views: number; clicks: number; engagement: number }
+}) {
+  if (!metrics) return null
+  
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}k`
+    }
+    return num.toString()
+  }
+  
+  return (
+    <div className="absolute top-2 right-2 z-20 pointer-events-none">
+      <div className="bg-black/80 backdrop-blur-sm rounded-lg p-3 text-white shadow-xl">
+        <div className="flex items-center gap-2 mb-2">
+          <BarChart3 className="w-4 h-4 text-blue-400" />
+          <span className="text-xs font-semibold">Analytics</span>
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-gray-300">Views:</span>
+            <span className="text-xs font-medium">{formatNumber(metrics.views)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-gray-300">Clicks:</span>
+            <span className="text-xs font-medium">{formatNumber(metrics.clicks)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-gray-300">Engagement:</span>
+            <span className="text-xs font-medium text-green-400">{metrics.engagement.toFixed(1)}%</span>
+          </div>
+        </div>
+        
+        {/* Performance Indicator */}
+        <div className="mt-2 pt-2 border-t border-white/20">
+          <div className="flex items-center gap-1">
+            {metrics.engagement > 50 ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs text-green-400">High Performance</span>
+              </>
+            ) : metrics.engagement > 25 ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                <span className="text-xs text-yellow-400">Average</span>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <span className="text-xs text-red-400">Needs Optimization</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -753,6 +826,22 @@ export default function SimplifiedBuilderPage() {
   const [activeVariant, setActiveVariant] = useState<'A' | 'B'>('A')
   const [abTestEnabled, setABTestEnabled] = useState(false)
   const [variantB, setVariantB] = useState<Block[]>([])
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [analyticsData] = useState({
+    totalViews: 12543,
+    conversions: 1879,
+    conversionRate: 14.98,
+    avgOrderValue: 127.50,
+    cartAbandonment: 23.4,
+    blockMetrics: {
+      'header': { views: 12543, clicks: 3421, engagement: 27.3 },
+      'product': { views: 11987, clicks: 8765, engagement: 73.1 },
+      'orderBump': { views: 10234, clicks: 2156, engagement: 21.1 },
+      'testimonial': { views: 9876, clicks: 1234, engagement: 12.5 },
+      'guarantee': { views: 8765, clicks: 3210, engagement: 36.6 },
+      'payment': { views: 7654, clicks: 1879, engagement: 24.5 },
+    } as Record<string, { views: number; clicks: number; engagement: number }>
+  })
   const [globalTheme, setGlobalTheme] = useState({
     primaryColor: '#3b82f6',
     secondaryColor: '#8b5cf6',
@@ -1091,6 +1180,15 @@ export default function SimplifiedBuilderPage() {
             A/B Test
           </Button>
           
+          {/* Analytics Overlay */}
+          <Button
+            variant={showAnalytics ? "primary" : "ghost"}
+            onClick={() => setShowAnalytics(!showAnalytics)}
+          >
+            <TrendingUp className="mr-2 h-4 w-4" />
+            Analytics
+          </Button>
+          
           {/* Actions */}
           <Button
             variant="ghost"
@@ -1205,6 +1303,66 @@ export default function SimplifiedBuilderPage() {
               </div>
             ) : (
               // Edit Mode
+              <>
+                {/* Analytics Summary Bar */}
+                {showAnalytics && (
+                  <div className="mb-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur">
+                          <TrendingUp className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold">Live Analytics Overview</h3>
+                          <p className="text-sm text-white/80">Last 30 days performance</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-5 gap-4">
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="w-4 h-4 text-white/60" />
+                          <span className="text-xs text-white/60">Total Views</span>
+                        </div>
+                        <p className="text-2xl font-bold">{analyticsData.totalViews.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-4 h-4 text-white/60" />
+                          <span className="text-xs text-white/60">Conversions</span>
+                        </div>
+                        <p className="text-2xl font-bold">{analyticsData.conversions.toLocaleString()}</p>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <BarChart3 className="w-4 h-4 text-white/60" />
+                          <span className="text-xs text-white/60">Conv. Rate</span>
+                        </div>
+                        <p className="text-2xl font-bold">{analyticsData.conversionRate}%</p>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <DollarSign className="w-4 h-4 text-white/60" />
+                          <span className="text-xs text-white/60">Avg. Order</span>
+                        </div>
+                        <p className="text-2xl font-bold">${analyticsData.avgOrderValue}</p>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShoppingCart className="w-4 h-4 text-white/60" />
+                          <span className="text-xs text-white/60">Abandonment</span>
+                        </div>
+                        <p className="text-2xl font-bold">{analyticsData.cartAbandonment}%</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -1243,6 +1401,8 @@ export default function SimplifiedBuilderPage() {
                               onMoveDown={() => moveBlock(block.id, 'down')}
                               canMoveUp={index > 0}
                               canMoveDown={index < leftBlocks.length - 1}
+                              showAnalytics={showAnalytics}
+                              analyticsData={analyticsData.blockMetrics[block.type]}
                             />
                           ))}
                           {leftBlocks.length === 0 && (
@@ -1268,6 +1428,8 @@ export default function SimplifiedBuilderPage() {
                               onMoveDown={() => moveBlock(block.id, 'down')}
                               canMoveUp={index > 0}
                               canMoveDown={index < rightBlocks.length - 1}
+                              showAnalytics={showAnalytics}
+                              analyticsData={analyticsData.blockMetrics[block.type]}
                             />
                           ))}
                           {rightBlocks.length === 0 && (
@@ -1302,6 +1464,7 @@ export default function SimplifiedBuilderPage() {
                   ) : null}
                 </DndDragOverlay>
               </DndContext>
+              </>
             )}
           </div>
         </div>
