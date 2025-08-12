@@ -935,11 +935,22 @@ function BlockEditor({
       const paymentData = block.data as PaymentBlockData
       return (
         <div className="space-y-4">
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <Shield className="w-4 h-4 inline mr-1" />
-              Professional payment form with Stripe-level security
-            </p>
+          <div className="space-y-3">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <Shield className="w-4 h-4 inline mr-1" />
+                Professional payment form with Stripe-level security
+              </p>
+            </div>
+            
+            {paymentData.useStripeElements !== false && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-xs text-yellow-800">
+                  <strong>Note:</strong> If you see Stripe errors in the console (r.stripe.com blocked), 
+                  these are from ad blockers blocking telemetry. The payment form will still work correctly.
+                </p>
+              </div>
+            )}
           </div>
           
           <div>
