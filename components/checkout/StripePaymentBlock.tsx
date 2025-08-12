@@ -37,10 +37,10 @@ interface StripePaymentBlockProps {
 
 export function StripePaymentBlock({
   data,
-  checkoutId,
+  checkoutId: _checkoutId,
   productId,
   planId,
-  orderBumpIds = [],
+  orderBumpIds: _orderBumpIds = [],
   amount: initialAmount,
   onPaymentSuccess,
   onAnalyticsEvent,
@@ -118,7 +118,7 @@ export function StripePaymentBlock({
           reason: result.data?.message 
         })
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to validate coupon')
     } finally {
       setIsValidatingCoupon(false)
