@@ -99,11 +99,11 @@ export function StripePaymentBlock({
     try {
       const result = await validateCoupon.refetch()
       
-      if (result.data?.valid) {
+      if (result.data?.valid && result.data.discountAmount !== undefined && result.data.finalAmount !== undefined) {
         setAppliedCoupon({
           code: couponCode.toUpperCase(),
           discountAmount: result.data.discountAmount,
-          discountDisplay: result.data.discountDisplay,
+          discountDisplay: result.data.discountDisplay || '',
         })
         setAmount(result.data.finalAmount)
         toast.success(`Coupon applied! ${result.data.discountDisplay}`)
