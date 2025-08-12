@@ -734,29 +734,116 @@ export function WYSIWYGBlock({
         return (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="space-y-4">
+              {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="john@example.com" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="john@example.com" 
+                  defaultValue="john@example.com"
+                />
               </div>
+              
+              {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium mb-1">Card Information</label>
-                <div className="border border-gray-300 rounded-lg p-3 bg-gray-50">
-                  <CreditCard className="w-6 h-6 text-gray-400 inline mr-2" />
-                  <span className="text-gray-500">•••• •••• •••• ••••</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  placeholder="John Doe" 
+                  defaultValue="John Doe"
+                />
+              </div>
+              
+              {/* Card Information */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Card Information</label>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      className="w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      placeholder="1234 5678 9012 3456"
+                      defaultValue="1234 5678 9012 3456"
+                    />
+                    <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input 
+                      type="text" 
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      placeholder="MM/YY"
+                      defaultValue="MM/YY"
+                    />
+                    <input 
+                      type="text" 
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      placeholder="CVC"
+                      defaultValue="CVC"
+                    />
+                  </div>
                 </div>
               </div>
+              
+              {/* Billing Address */}
               {paymentData.showBillingAddress && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Billing Address</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="123 Main St" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Billing Address</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="123 Main St, City, State 12345"
+                    defaultValue="123 Main St, City, State 12345" 
+                  />
                 </div>
               )}
+              
+              {/* Phone Number */}
+              {paymentData.showPhoneField && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                    placeholder="+1 (555) 123-4567"
+                    defaultValue="+1 (555) 123-4567" 
+                  />
+                </div>
+              )}
+              
+              {/* Express Checkout */}
+              <div className="pt-2">
+                <div className="flex gap-3 mb-3">
+                  <button className="flex-1 bg-black text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors">
+                    <span className="text-lg">🍎</span>
+                    <span>Pay</span>
+                  </button>
+                  <button className="flex-1 bg-white border border-gray-300 py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                    <span className="font-bold text-lg">G</span>
+                    <span>Pay</span>
+                  </button>
+                </div>
+                
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or pay with card</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Submit Button */}
               <button className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">
-                {paymentData.buttonText}
+                {paymentData.buttonText || 'Complete Purchase'}
               </button>
+              
+              {/* Security Text */}
               <p className="text-xs text-center text-gray-500">
                 <Shield className="w-4 h-4 inline mr-1" />
-                {paymentData.secureText}
+                {paymentData.secureText || 'Your payment is secured with 256-bit SSL encryption'}
               </p>
             </div>
           </div>

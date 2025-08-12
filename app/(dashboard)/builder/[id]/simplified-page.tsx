@@ -2091,7 +2091,7 @@ export default function SimplifiedBuilderPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
+            className="bg-white rounded-xl p-6 min-w-[500px] max-w-md w-full mx-4"
           >
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
