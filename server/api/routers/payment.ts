@@ -2,14 +2,264 @@ import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/api/trpc'
 import { StripeService } from '@/server/services/stripe-service'
 import { db } from '@/server/db'
-import { eq } from 'drizzle-orm'
-import { checkouts, products, users } from '@/server/db/schema'
+import { eq, and } from 'drizzle-orm'
+import { checkouts, products, users, productPlans, orderBumps, analyticsEvents } from '@/server/db/schema'
 import { TRPCError } from '@trpc/server'
 import { stripe } from '@/lib/stripe/config'
+import type Stripe from 'stripe'
 
 const stripeService = new StripeService()
 
 export const paymentRouter = createTRPCRouter({
+  // Create payment intent for one-time or subscription payments
+  createCheckoutIntent: publicProcedure
+    .input(
+      z.object({
+        checkoutId: z.string().uuid(),
+        email: z.string().email(),
+        // Product selection
+        productId: z.string().uuid().optional(),
+        planId: z.string().uuid().optional(),
+        // Order bumps
+        orderBumpIds: z.array(z.string().uuid()).optional(),
+        // Pricing
+        couponCode: z.string().optional(),
+        // Customer info
+        customerName: z.string().optional(),
+        customerPhone: z.string().optional(),
+        billingAddress: z.object({
+          line1: z.string(),
+          line2: z.string().optional(),
+          city: z.string(),
+          state: z.string(),
+          postal_code: z.string(),
+          country: z.string(),
+        }).optional(),
+        // Tax
+        vatNumber: z.string().optional(),
+        enableTax: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Get checkout
+        const checkout = await db.query.checkouts.findFirst({
+          where: eq(checkouts.id, input.checkoutId),
+        })
+
+        if (!checkout) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Checkout not found',
+          })
+        }
+
+        // Get product or plan
+        let amount = 0
+        let description = ''
+        let mode: 'payment' | 'subscription' = 'payment'
+        let stripePriceId: string | undefined
+        let metadata: Record<string, string> = {
+          checkoutId: input.checkoutId,
+        }
+
+        if (input.planId) {
+          const plan = await db.query.productPlans.findFirst({
+            where: eq(productPlans.id, input.planId),
+            with: { product: true },
+          })
+
+          if (!plan) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Plan not found',
+            })
+          }
+
+          amount = plan.price
+          description = `${plan.product.name} - ${plan.name}`
+          mode = plan.isRecurring ? 'subscription' : 'payment'
+          stripePriceId = plan.stripePriceId || undefined
+          metadata.planId = input.planId
+          metadata.productId = plan.productId
+        } else if (input.productId) {
+          const product = await db.query.products.findFirst({
+            where: eq(products.id, input.productId),
+          })
+
+          if (!product) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Product not found',
+            })
+          }
+
+          amount = product.price
+          description = product.name
+          metadata.productId = input.productId
+        }
+
+        // Add order bumps to amount
+        if (input.orderBumpIds && input.orderBumpIds.length > 0) {
+          const bumps = await db.query.orderBumps.findMany({
+            where: and(
+              eq(orderBumps.checkoutId, input.checkoutId),
+            ),
+            with: { product: true },
+          })
+
+          for (const bump of bumps) {
+            if (input.orderBumpIds.includes(bump.id)) {
+              amount += bump.product.price
+              metadata[`bump_${bump.id}`] = bump.product.name
+            }
+          }
+        }
+
+        // Apply coupon if provided
+        if (input.couponCode) {
+          try {
+            const coupon = await stripe.coupons.retrieve(input.couponCode)
+            if (coupon.amount_off) {
+              amount = Math.max(0, amount - coupon.amount_off)
+            } else if (coupon.percent_off) {
+              amount = Math.round(amount * (1 - coupon.percent_off / 100))
+            }
+          } catch {
+            // Invalid coupon, ignore
+          }
+        }
+
+        // Get or create customer
+        let customer = await stripe.customers.list({
+          email: input.email,
+          limit: 1,
+        })
+
+        let customerId: string
+        if (customer.data.length > 0) {
+          const firstCustomer = customer.data[0]
+          if (!firstCustomer) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Customer data is invalid',
+            })
+          }
+          customerId = firstCustomer.id
+          // Update customer info if provided
+          if (input.customerName || input.customerPhone || input.billingAddress) {
+            await stripe.customers.update(customerId, {
+              name: input.customerName,
+              phone: input.customerPhone,
+              address: input.billingAddress,
+              metadata: {
+                ...(firstCustomer.metadata || {}),
+                checkoutId: input.checkoutId,
+              },
+            })
+          }
+        } else {
+          // Create new customer
+          const newCustomer = await stripe.customers.create({
+            email: input.email,
+            name: input.customerName,
+            phone: input.customerPhone,
+            address: input.billingAddress,
+            metadata: {
+              checkoutId: input.checkoutId,
+            },
+          })
+          customerId = newCustomer.id
+        }
+
+        // Add VAT ID if provided
+        if (input.vatNumber) {
+          await stripe.customers.createTaxId(customerId, {
+            type: 'eu_vat',
+            value: input.vatNumber,
+          })
+        }
+
+        // Create appropriate intent based on mode
+        let clientSecret: string
+        let intentId: string
+
+        if (mode === 'subscription' && stripePriceId) {
+          // Create subscription with trial if configured
+          const subscription = await stripe.subscriptions.create({
+            customer: customerId,
+            items: [{ price: stripePriceId }],
+            payment_behavior: 'default_incomplete',
+            payment_settings: {
+              save_default_payment_method: 'on_subscription',
+            },
+            expand: ['latest_invoice.payment_intent'],
+            metadata,
+          })
+
+          const invoice = subscription.latest_invoice as Stripe.Invoice
+          if (invoice && typeof invoice === 'object' && 'payment_intent' in invoice) {
+            const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent
+            clientSecret = paymentIntent.client_secret!
+            intentId = paymentIntent.id
+          } else {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to create subscription payment intent',
+            })
+          }
+        } else {
+          // Create payment intent for one-time payment
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount,
+            currency: 'usd',
+            customer: customerId,
+            description,
+            automatic_payment_methods: {
+              enabled: true,
+            },
+            metadata,
+            // Enable tax calculation if requested
+            ...(input.enableTax && {
+              automatic_tax: {
+                enabled: true,
+              },
+            }),
+          })
+
+          clientSecret = paymentIntent.client_secret!
+          intentId = paymentIntent.id
+        }
+
+        // Track intent creation
+        await db.insert(analyticsEvents).values({
+          checkoutId: input.checkoutId,
+          eventType: 'payment_intent_created',
+          eventData: {
+            intentId,
+            amount,
+            mode,
+            email: input.email,
+          },
+        })
+
+        return {
+          clientSecret,
+          intentId,
+          amount,
+          mode,
+          customerId,
+        }
+      } catch (error) {
+        console.error('Payment intent creation error:', error)
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create payment intent',
+        })
+      }
+    }),
+
   createIntent: publicProcedure
     .input(
       z.object({
@@ -188,4 +438,84 @@ export const paymentRouter = createTRPCRouter({
       })
     }
   }),
+
+  // Validate coupon code
+  validateCoupon: publicProcedure
+    .input(
+      z.object({
+        code: z.string(),
+        amount: z.number(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const coupon = await stripe.coupons.retrieve(input.code)
+        
+        if (!coupon.valid) {
+          return {
+            valid: false,
+            message: 'This coupon is no longer valid',
+          }
+        }
+
+        let discountAmount = 0
+        let discountDisplay = ''
+
+        if (coupon.amount_off) {
+          discountAmount = coupon.amount_off
+          discountDisplay = `$${(coupon.amount_off / 100).toFixed(2)} off`
+        } else if (coupon.percent_off) {
+          discountAmount = Math.round(input.amount * (coupon.percent_off / 100))
+          discountDisplay = `${coupon.percent_off}% off`
+        }
+
+        return {
+          valid: true,
+          discountAmount,
+          discountDisplay,
+          finalAmount: Math.max(0, input.amount - discountAmount),
+        }
+      } catch {
+        return {
+          valid: false,
+          message: 'Invalid coupon code',
+        }
+      }
+    }),
+
+  // Calculate tax for a given amount
+  calculateTax: publicProcedure
+    .input(
+      z.object({
+        amount: z.number(),
+        address: z.object({
+          line1: z.string(),
+          city: z.string(),
+          state: z.string(),
+          postal_code: z.string(),
+          country: z.string(),
+        }),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        // This would integrate with Stripe Tax in production
+        // For now, return a simple calculation
+        const taxRate = 0.0875 // 8.75% example tax rate
+        const taxAmount = Math.round(input.amount * taxRate)
+
+        return {
+          taxAmount,
+          taxRate,
+          totalAmount: input.amount + taxAmount,
+        }
+      } catch (error) {
+        console.error('Tax calculation error:', error)
+        return {
+          taxAmount: 0,
+          taxRate: 0,
+          totalAmount: input.amount,
+        }
+      }
+    }),
 })

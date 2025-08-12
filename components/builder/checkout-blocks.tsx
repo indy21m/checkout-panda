@@ -97,6 +97,15 @@ export interface PaymentBlockData {
   showPhoneField?: boolean
   buttonText?: string
   secureText?: string
+  // New Stripe-specific settings
+  useStripeElements?: boolean
+  enableWallets?: boolean
+  enableStripeLink?: boolean
+  collectVAT?: boolean
+  enableStripeTax?: boolean
+  enableCoupons?: boolean
+  showGuarantee?: boolean
+  guaranteeText?: string
 }
 
 export type BlockData = 

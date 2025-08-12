@@ -1030,6 +1030,119 @@ function BlockEditor({
             </div>
           </div>
           
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Stripe Payment Features</label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-stripe"
+                  checked={paymentData.useStripeElements !== false}
+                  onChange={(e) => updateBlockData({ ...paymentData, useStripeElements: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-stripe" className="text-sm text-gray-600">
+                  Use Stripe Elements (Recommended)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-wallets"
+                  checked={paymentData.enableWallets || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, enableWallets: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-wallets" className="text-sm text-gray-600">
+                  Enable Apple Pay & Google Pay
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-link"
+                  checked={paymentData.enableStripeLink || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, enableStripeLink: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-link" className="text-sm text-gray-600">
+                  Enable Stripe Link (1-Click Checkout)
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Tax & Compliance</label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-vat"
+                  checked={paymentData.collectVAT || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, collectVAT: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-vat" className="text-sm text-gray-600">
+                  Collect VAT Number
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-tax"
+                  checked={paymentData.enableStripeTax || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, enableStripeTax: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-tax" className="text-sm text-gray-600">
+                  Enable Stripe Tax (Automatic Tax Calculation)
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Promotions & Trust</label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-coupons"
+                  checked={paymentData.enableCoupons || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, enableCoupons: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-coupons" className="text-sm text-gray-600">
+                  Enable Coupon Codes
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="payment-guarantee"
+                  checked={paymentData.showGuarantee || false}
+                  onChange={(e) => updateBlockData({ ...paymentData, showGuarantee: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="payment-guarantee" className="text-sm text-gray-600">
+                  Show Money Back Guarantee
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          {paymentData.showGuarantee && (
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Guarantee Text</label>
+              <Input
+                value={paymentData.guaranteeText || ''}
+                onChange={(e) => updateBlockData({ ...paymentData, guaranteeText: e.target.value })}
+                placeholder="30-Day Money Back Guarantee"
+              />
+            </div>
+          )}
+          
           <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
             <h4 className="font-medium text-sm mb-2">Payment Features Included:</h4>
             <ul className="space-y-1 text-sm text-gray-600">

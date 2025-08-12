@@ -10,6 +10,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { StripeProvider } from '@/components/checkout/StripeProvider'
+import { StripePaymentBlock } from '@/components/checkout/StripePaymentBlock'
+import { api } from '@/lib/trpc/client'
 import type { 
   Block, 
   HeaderBlockData, 
@@ -43,6 +46,59 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
   const leftBlocks = visibleBlocks.filter(b => b.column === 'left' || !b.column)
   const rightBlocks = visibleBlocks.filter(b => b.column === 'right')
   
+  // State for order management
+  const [selectedOrderBumps, setSelectedOrderBumps] = React.useState<string[]>([])
+  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
+  const [totalAmount, setTotalAmount] = React.useState(0)
+  const [selectedProductId] = React.useState<string | null>(null)
+  const [selectedPlanId] = React.useState<string | null>(null)
+  const [isLoadingPayment, setIsLoadingPayment] = React.useState(false)
+  const [, setCustomerEmail] = React.useState('')
+  
+  // Find product and payment blocks to extract data
+  const productBlock = blocks.find(b => b.type === 'product')
+  // const paymentBlock = blocks.find(b => b.type === 'payment')
+  // const orderBumpBlocks = blocks.filter(b => b.type === 'orderBump')
+  
+  // Create payment intent mutation
+  const createIntentMutation = api.payment.createCheckoutIntent.useMutation()
+  
+  // Extract product data
+  React.useEffect(() => {
+    if (productBlock) {
+      const productData = productBlock.data as ProductBlockData
+      // For now, we'll use a simple product ID (would need to be passed from builder)
+      // In production, this would come from the product selection in the builder
+      setTotalAmount(parseInt(productData.price.replace(/[^0-9]/g, '')) * 100) // Convert to cents
+    }
+  }, [productBlock])
+  
+  // Initialize payment when email is provided
+  const initializePayment = React.useCallback(async (email: string) => {
+    if (!email || isLoadingPayment) return
+    
+    setIsLoadingPayment(true)
+    setCustomerEmail(email)
+    
+    try {
+      const result = await createIntentMutation.mutateAsync({
+        checkoutId: checkout.id,
+        email,
+        productId: selectedProductId || undefined,
+        planId: selectedPlanId || undefined,
+        orderBumpIds: selectedOrderBumps,
+        enableTax: false, // Could be configured in payment block settings
+      })
+      
+      setClientSecret(result.clientSecret)
+      setTotalAmount(result.amount)
+    } catch (error) {
+      console.error('Failed to create payment intent:', error)
+    } finally {
+      setIsLoadingPayment(false)
+    }
+  }, [checkout.id, selectedProductId, selectedPlanId, selectedOrderBumps, createIntentMutation, isLoadingPayment])
+  
   const hasRightColumn = rightBlocks.length > 0
   
   return (
@@ -55,7 +111,18 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
           {/* Main Column */}
           <div className="space-y-6">
             {leftBlocks.map((block) => (
-              <BlockRenderer key={block.id} block={block} />
+              <BlockRenderer 
+                key={block.id} 
+                block={block}
+                checkout={checkout}
+                selectedOrderBumps={selectedOrderBumps}
+                setSelectedOrderBumps={setSelectedOrderBumps}
+                initializePayment={initializePayment}
+                clientSecret={clientSecret}
+                totalAmount={totalAmount}
+                selectedProductId={selectedProductId}
+                selectedPlanId={selectedPlanId}
+              />
             ))}
           </div>
           
@@ -63,7 +130,18 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
           {hasRightColumn && (
             <div className="space-y-6">
               {rightBlocks.map((block) => (
-                <BlockRenderer key={block.id} block={block} />
+                <BlockRenderer 
+                  key={block.id} 
+                  block={block}
+                  checkout={checkout}
+                  selectedOrderBumps={selectedOrderBumps}
+                  setSelectedOrderBumps={setSelectedOrderBumps}
+                  initializePayment={initializePayment}
+                  clientSecret={clientSecret}
+                  totalAmount={totalAmount}
+                  selectedProductId={selectedProductId}
+                  selectedPlanId={selectedPlanId}
+                />
               ))}
             </div>
           )}
@@ -73,7 +151,18 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
   )
 }
 
-function BlockRenderer({ block }: { block: Block }) {
+function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBumps: _setSelectedOrderBumps, initializePayment: _initializePayment, clientSecret, totalAmount, selectedProductId, selectedPlanId }: { 
+  block: Block
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  checkout?: any
+  selectedOrderBumps?: string[]
+  setSelectedOrderBumps?: (bumps: string[]) => void
+  initializePayment?: (email: string) => void
+  clientSecret?: string | null
+  totalAmount?: number
+  selectedProductId?: string | null
+  selectedPlanId?: string | null
+}) {
   const applyStyles = (defaultClasses: string) => {
     return cn(
       defaultClasses
@@ -244,7 +333,32 @@ function BlockRenderer({ block }: { block: Block }) {
       return <CountdownBlock block={block} applyStyles={applyStyles} getBlockStyles={getBlockStyles} />
     
     case 'payment':
-      return <PaymentBlock data={block.data as PaymentBlockData} getBlockStyles={getBlockStyles} />
+      const paymentData = block.data as PaymentBlockData
+      
+      // If we're using Stripe Elements, wrap in provider
+      if (paymentData.useStripeElements !== false) {
+        return (
+          <StripeProvider clientSecret={clientSecret || undefined} amount={totalAmount}>
+            <StripePaymentBlock
+              data={paymentData}
+              checkoutId={checkout.id}
+              productId={selectedProductId || undefined}
+              planId={selectedPlanId || undefined}
+              orderBumpIds={selectedOrderBumps}
+              amount={totalAmount || 0}
+              onPaymentSuccess={(paymentIntentId) => {
+                console.log('Payment successful:', paymentIntentId)
+              }}
+              onAnalyticsEvent={(event, data) => {
+                console.log('Analytics event:', event, data)
+              }}
+            />
+          </StripeProvider>
+        )
+      }
+      
+      // Fallback to old payment block (will be removed)
+      return <PaymentBlock data={paymentData} getBlockStyles={getBlockStyles} />
     
     default:
       return null
