@@ -29,11 +29,15 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         name: checkout.name,
         slug: checkout.slug,
         pageData: {
-          blocks: checkout.pageData.blocks.map((block) => ({
-            ...block,
-            visible: 'visible' in block && block.visible !== undefined ? block.visible : true,
-            column: 'column' in block ? block.column : 'left'
-          })) as Block[],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          blocks: (checkout.pageData.blocks as any[]).map((block): Block => ({
+            id: block.id,
+            type: block.type,
+            data: block.data,
+            visible: block.visible !== undefined ? block.visible : true,
+            column: block.column || 'left',
+            styles: block.styles || {}
+          })),
           settings: checkout.pageData.settings
         }
       }
