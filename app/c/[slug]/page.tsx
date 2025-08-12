@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import { createApi } from '@/lib/trpc/server'
-import { CheckoutRenderer } from '@/components/checkout/checkout-renderer'
 import { SimplifiedCheckoutRenderer } from '@/components/checkout/simplified-checkout-renderer'
 import type { Block } from '@/components/builder/checkout-blocks'
 
@@ -44,7 +43,8 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
       return <SimplifiedCheckoutRenderer checkout={transformedCheckout} />
     }
     
-    return <CheckoutRenderer checkout={checkout} />
+    // For old format checkouts, we'll need to handle differently or migrate
+    return <div>This checkout uses an old format. Please recreate it in the builder.</div>
   } catch {
     // If checkout not found, show 404
     notFound()
