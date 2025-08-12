@@ -2,8 +2,18 @@ import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/api/trpc'
 import { StripeService } from '@/server/services/stripe-service'
 import { db } from '@/server/db'
-import { eq, and } from 'drizzle-orm'
-import { checkouts, products, users, productPlans, orderBumps, analyticsEvents } from '@/server/db/schema'
+import { eq, and, sql } from 'drizzle-orm'
+import { 
+  checkouts, 
+  products, 
+  users, 
+  productPlans, 
+  orderBumps, 
+  analyticsEvents,
+  coupons,
+  couponProducts,
+  couponRedemptions 
+} from '@/server/db/schema'
 import { TRPCError } from '@trpc/server'
 import { stripe } from '@/lib/stripe/config'
 import type Stripe from 'stripe'
@@ -116,17 +126,71 @@ export const paymentRouter = createTRPCRouter({
           }
         }
 
-        // Apply coupon if provided
+        // Apply our custom coupon if provided
+        let appliedCouponId: string | undefined
+        let discountAmount = 0
+        
         if (input.couponCode) {
-          try {
-            const coupon = await stripe.coupons.retrieve(input.couponCode)
-            if (coupon.amount_off) {
-              amount = Math.max(0, amount - coupon.amount_off)
-            } else if (coupon.percent_off) {
-              amount = Math.round(amount * (1 - coupon.percent_off / 100))
+          // First check our custom coupons
+          const customCoupon = await db.query.coupons.findFirst({
+            where: and(
+              eq(coupons.code, input.couponCode.toUpperCase()),
+              eq(coupons.isActive, true)
+            ),
+            with: {
+              couponProducts: true,
+            },
+          })
+          
+          if (customCoupon) {
+            // Validate coupon eligibility
+            const now = new Date()
+            const isValid = 
+              (!customCoupon.redeemableFrom || customCoupon.redeemableFrom <= now) &&
+              (!customCoupon.expiresAt || customCoupon.expiresAt >= now) &&
+              (!customCoupon.maxRedemptions || (customCoupon.timesRedeemed || 0) < customCoupon.maxRedemptions)
+            
+            // Check product scope
+            let isValidForProduct = customCoupon.productScope === 'all'
+            if (customCoupon.productScope === 'specific') {
+              const productIdToCheck = input.productId || 
+                (input.planId ? (await db.query.productPlans.findFirst({
+                  where: eq(productPlans.id, input.planId),
+                }))?.productId : undefined)
+              
+              isValidForProduct = !!productIdToCheck && 
+                customCoupon.couponProducts.some(cp => cp.productId === productIdToCheck)
             }
-          } catch {
-            // Invalid coupon, ignore
+            
+            if (isValid && isValidForProduct) {
+              // Apply discount
+              if (customCoupon.discountType === 'fixed') {
+                discountAmount = Math.min(amount, customCoupon.discountValue)
+              } else {
+                discountAmount = Math.round(amount * (customCoupon.discountValue / 100))
+              }
+              
+              amount = Math.max(0, amount - discountAmount)
+              appliedCouponId = customCoupon.id
+              metadata.couponCode = customCoupon.code
+              metadata.couponId = customCoupon.id
+              metadata.discountAmount = discountAmount.toString()
+            }
+          } else {
+            // Fallback to Stripe coupons for backward compatibility
+            try {
+              const stripeCoupon = await stripe.coupons.retrieve(input.couponCode)
+              if (stripeCoupon.amount_off) {
+                discountAmount = stripeCoupon.amount_off
+                amount = Math.max(0, amount - stripeCoupon.amount_off)
+              } else if (stripeCoupon.percent_off) {
+                discountAmount = Math.round(amount * (stripeCoupon.percent_off / 100))
+                amount = Math.max(0, amount - discountAmount)
+              }
+              metadata.stripeCouponCode = input.couponCode
+            } catch {
+              // Invalid coupon, ignore
+            }
           }
         }
 
@@ -249,6 +313,8 @@ export const paymentRouter = createTRPCRouter({
           amount,
           mode,
           customerId,
+          couponId: appliedCouponId,
+          discountAmount,
         }
       } catch (error) {
         console.error('Payment intent creation error:', error)
@@ -516,6 +582,54 @@ export const paymentRouter = createTRPCRouter({
           taxRate: 0,
           totalAmount: input.amount,
         }
+      }
+    }),
+
+  // Record coupon redemption after successful payment
+  recordCouponRedemption: publicProcedure
+    .input(
+      z.object({
+        couponId: z.string().uuid(),
+        stripePaymentIntentId: z.string(),
+        customerEmail: z.string().email(),
+        customerId: z.string().optional(),
+        checkoutSessionId: z.string().uuid().optional(),
+        originalAmount: z.number(),
+        discountAmount: z.number(),
+        finalAmount: z.number(),
+        productId: z.string().uuid().optional(),
+        productName: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        // Record the redemption
+        await db.insert(couponRedemptions).values({
+          couponId: input.couponId,
+          stripePaymentIntentId: input.stripePaymentIntentId,
+          customerEmail: input.customerEmail,
+          customerId: input.customerId,
+          checkoutSessionId: input.checkoutSessionId,
+          originalAmount: input.originalAmount,
+          discountApplied: input.discountAmount,
+          finalAmount: input.finalAmount,
+          productId: input.productId,
+          productName: input.productName,
+        })
+
+        // Increment the redemption count
+        await db
+          .update(coupons)
+          .set({
+            timesRedeemed: sql`${coupons.timesRedeemed} + 1`,
+          })
+          .where(eq(coupons.id, input.couponId))
+
+        return { success: true }
+      } catch (error) {
+        console.error('Failed to record coupon redemption:', error)
+        // Don't throw - we don't want to fail the payment flow
+        return { success: false }
       }
     }),
 })

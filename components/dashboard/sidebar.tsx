@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Search,
   Plus,
+  Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
@@ -41,6 +42,12 @@ const navItems: NavItem[] = [
     href: '/products',
     icon: Package,
     color: 'from-emerald-400 to-emerald-600',
+  },
+  {
+    title: 'Coupons',
+    href: '/coupons',
+    icon: Tag,
+    color: 'from-amber-400 to-amber-600',
   },
   {
     title: 'Checkouts',

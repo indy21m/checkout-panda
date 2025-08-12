@@ -31,6 +31,9 @@ export const productTypeEnum = pgEnum('product_type', [
 export const planTierEnum = pgEnum('plan_tier', ['basic', 'pro', 'enterprise', 'custom'])
 export const assetTypeEnum = pgEnum('asset_type', ['download', 'video', 'document', 'resource'])
 export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'DKK'])
+export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed'])
+export const couponDurationEnum = pgEnum('coupon_duration', ['forever', 'once', 'repeating'])
+export const productScopeEnum = pgEnum('product_scope', ['all', 'specific'])
 
 // Users (from Clerk)
 export const users = pgTable('users', {
@@ -335,11 +338,116 @@ export const analyticsEvents = pgTable(
   })
 )
 
+// Coupons
+export const coupons = pgTable(
+  'coupons',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    
+    // Coupon details
+    code: text('code').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description'),
+    
+    // Discount configuration
+    discountType: discountTypeEnum('discount_type').notNull(),
+    discountValue: integer('discount_value').notNull(), // percentage (0-100) or cents
+    currency: currencyEnum('currency').default('USD').notNull(),
+    
+    // Duration settings
+    duration: couponDurationEnum('duration').default('once').notNull(),
+    durationInMonths: integer('duration_in_months'), // for repeating discounts
+    
+    // Redemption limits
+    maxRedemptions: integer('max_redemptions'), // null = unlimited
+    maxRedemptionsPerCustomer: integer('max_redemptions_per_customer').default(1),
+    
+    // Validity period
+    redeemableFrom: timestamp('redeemable_from').defaultNow(),
+    expiresAt: timestamp('expires_at'),
+    
+    // Product scope
+    productScope: productScopeEnum('product_scope').default('all').notNull(),
+    
+    // Analytics
+    timesRedeemed: integer('times_redeemed').default(0),
+    
+    // Status
+    isActive: boolean('is_active').default(true),
+    
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    codeIndex: index('coupons_code_idx').on(table.code),
+    userIdIndex: index('coupons_user_id_idx').on(table.userId),
+    activeIndex: index('coupons_active_idx').on(table.isActive),
+  })
+)
+
+// Coupon to Product linking
+export const couponProducts = pgTable(
+  'coupon_products',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    couponId: uuid('coupon_id')
+      .notNull()
+      .references(() => coupons.id, { onDelete: 'cascade' }),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => ({
+    couponProductIndex: index('coupon_product_idx').on(table.couponId, table.productId),
+  })
+)
+
+// Coupon redemptions tracking
+export const couponRedemptions = pgTable(
+  'coupon_redemptions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    couponId: uuid('coupon_id')
+      .notNull()
+      .references(() => coupons.id),
+    
+    // Customer info
+    customerEmail: text('customer_email').notNull(),
+    customerId: text('customer_id'), // Stripe customer ID if available
+    
+    // Session/Payment info
+    checkoutSessionId: uuid('checkout_session_id').references(() => checkoutSessions.id),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    
+    // Applied discount
+    discountApplied: integer('discount_applied').notNull(), // amount in cents
+    originalAmount: integer('original_amount').notNull(),
+    finalAmount: integer('final_amount').notNull(),
+    
+    // Product info
+    productId: uuid('product_id').references(() => products.id),
+    productName: text('product_name'),
+    
+    redeemedAt: timestamp('redeemed_at').defaultNow(),
+  },
+  (table) => ({
+    couponIdIndex: index('redemptions_coupon_id_idx').on(table.couponId),
+    customerEmailIndex: index('redemptions_customer_email_idx').on(table.customerEmail),
+    redeemedAtIndex: index('redemptions_redeemed_at_idx').on(table.redeemedAt),
+  })
+)
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   checkouts: many(checkouts),
   products: many(products),
   funnels: many(funnels),
+  coupons: many(coupons),
 }))
 
 export const checkoutsRelations = relations(checkouts, ({ one, many }) => ({
@@ -369,6 +477,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   orderBumps: many(orderBumps),
   plans: many(productPlans),
   assets: many(productAssets),
+  couponProducts: many(couponProducts),
 }))
 
 export const productPlansRelations = relations(productPlans, ({ one, many }) => ({
@@ -427,6 +536,41 @@ export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => 
   }),
   session: one(checkoutSessions, {
     fields: [analyticsEvents.sessionId],
+    references: [checkoutSessions.id],
+  }),
+}))
+
+export const couponsRelations = relations(coupons, ({ one, many }) => ({
+  user: one(users, {
+    fields: [coupons.userId],
+    references: [users.id],
+  }),
+  couponProducts: many(couponProducts),
+  redemptions: many(couponRedemptions),
+}))
+
+export const couponProductsRelations = relations(couponProducts, ({ one }) => ({
+  coupon: one(coupons, {
+    fields: [couponProducts.couponId],
+    references: [coupons.id],
+  }),
+  product: one(products, {
+    fields: [couponProducts.productId],
+    references: [products.id],
+  }),
+}))
+
+export const couponRedemptionsRelations = relations(couponRedemptions, ({ one }) => ({
+  coupon: one(coupons, {
+    fields: [couponRedemptions.couponId],
+    references: [coupons.id],
+  }),
+  product: one(products, {
+    fields: [couponRedemptions.productId],
+    references: [products.id],
+  }),
+  checkoutSession: one(checkoutSessions, {
+    fields: [couponRedemptions.checkoutSessionId],
     references: [checkoutSessions.id],
   }),
 }))

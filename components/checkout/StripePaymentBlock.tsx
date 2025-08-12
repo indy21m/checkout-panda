@@ -17,9 +17,11 @@ import type {
   PaymentRequest
 } from '@stripe/stripe-js'
 import { Button } from '@/components/ui/button'
-import { Lock, ShieldCheck, CreditCard } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Lock, ShieldCheck, CreditCard, Tag, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { api } from '@/lib/trpc/client'
 import type { PaymentBlockData } from '@/components/builder/checkout-blocks'
 
 interface StripePaymentBlockProps {
@@ -35,11 +37,11 @@ interface StripePaymentBlockProps {
 
 export function StripePaymentBlock({
   data,
-  checkoutId: _checkoutId,
-  productId: _productId,
-  planId: _planId,
-  orderBumpIds: _orderBumpIds = [],
-  amount,
+  checkoutId,
+  productId,
+  planId,
+  orderBumpIds = [],
+  amount: initialAmount,
   onPaymentSuccess,
   onAnalyticsEvent,
 }: StripePaymentBlockProps) {
@@ -54,12 +56,82 @@ export function StripePaymentBlock({
   const [canMakePayment, setCanMakePayment] = React.useState(false)
   const [isStripeLoading, setIsStripeLoading] = React.useState(true)
   
+  // Coupon state
+  const [couponCode, setCouponCode] = React.useState('')
+  const [appliedCoupon, setAppliedCoupon] = React.useState<{
+    code: string
+    discountAmount: number
+    discountDisplay: string
+  } | null>(null)
+  const [isValidatingCoupon, setIsValidatingCoupon] = React.useState(false)
+  const [amount, setAmount] = React.useState(initialAmount)
+  
   // Track when Stripe Elements are ready
   React.useEffect(() => {
     if (stripe && elements) {
       setIsStripeLoading(false)
     }
   }, [stripe, elements])
+  
+  // Validate and apply coupon
+  const validateCoupon = api.coupon.validate.useQuery(
+    {
+      code: couponCode,
+      productId,
+      planId,
+      amount: initialAmount,
+      customerEmail: email || undefined,
+    },
+    {
+      enabled: false, // Manual trigger
+    }
+  )
+  
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code')
+      return
+    }
+    
+    setIsValidatingCoupon(true)
+    onAnalyticsEvent?.('coupon_attempt', { code: couponCode })
+    
+    try {
+      const result = await validateCoupon.refetch()
+      
+      if (result.data?.valid) {
+        setAppliedCoupon({
+          code: couponCode.toUpperCase(),
+          discountAmount: result.data.discountAmount,
+          discountDisplay: result.data.discountDisplay,
+        })
+        setAmount(result.data.finalAmount)
+        toast.success(`Coupon applied! ${result.data.discountDisplay}`)
+        onAnalyticsEvent?.('coupon_applied', { 
+          code: couponCode,
+          discount: result.data.discountAmount 
+        })
+      } else {
+        toast.error(result.data?.message || 'Invalid coupon code')
+        onAnalyticsEvent?.('coupon_invalid', { 
+          code: couponCode,
+          reason: result.data?.message 
+        })
+      }
+    } catch (error) {
+      toast.error('Failed to validate coupon')
+    } finally {
+      setIsValidatingCoupon(false)
+    }
+  }
+  
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setAmount(initialAmount)
+    setCouponCode('')
+    toast.info('Coupon removed')
+    onAnalyticsEvent?.('coupon_removed', { code: appliedCoupon?.code })
+  }
 
   // Initialize payment request for Apple Pay / Google Pay
   React.useEffect(() => {
@@ -291,6 +363,84 @@ export function StripePaymentBlock({
               }
             }}
           />
+        </div>
+
+        {/* Coupon Code Field */}
+        <div className="space-y-3">
+          {!appliedCoupon ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Have a coupon code?
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    className="pl-10 uppercase"
+                    disabled={isValidatingCoupon}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleApplyCoupon}
+                  disabled={isValidatingCoupon || !couponCode.trim()}
+                  className="px-6"
+                >
+                  {isValidatingCoupon ? 'Validating...' : 'Apply'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <Tag className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-900">
+                      Coupon applied: {appliedCoupon.code}
+                    </p>
+                    <p className="text-sm text-green-700">
+                      {appliedCoupon.discountDisplay} • 
+                      You save ${(appliedCoupon.discountAmount / 100).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="p-1.5 hover:bg-green-100 rounded-lg transition-colors"
+                  aria-label="Remove coupon"
+                >
+                  <X className="w-4 h-4 text-green-600" />
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Price Summary with Discount */}
+          {appliedCoupon && (
+            <div className="border-t border-gray-200 pt-3 space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Subtotal</span>
+                <span>${(initialAmount / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-green-600 font-medium">
+                <span>Discount ({appliedCoupon.code})</span>
+                <span>-${(appliedCoupon.discountAmount / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t pt-2">
+                <span>Total</span>
+                <span>${(amount / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Payment Element for card and other payment methods */}
