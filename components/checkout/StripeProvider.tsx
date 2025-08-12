@@ -67,25 +67,7 @@ const appearance: Appearance = {
     '.CheckboxInput': {
       borderColor: '#d1d5db',
     },
-    '.CheckboxInput:checked': {
-      backgroundColor: '#3b82f6',
-      borderColor: '#3b82f6',
-    },
-    // Payment Request Button (Apple Pay / Google Pay)
-    '.PaymentRequestButton': {
-      height: '48px',
-      backgroundColor: '#000000',
-      borderRadius: '12px',
-      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-    },
-    '.PaymentRequestButton:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    },
-    '.PaymentRequestButton--light': {
-      backgroundColor: '#ffffff',
-      border: '1px solid #e5e7eb',
-    },
+    // Remove :checked pseudo-class - not supported by Stripe
     // Tab styles for payment method selection
     '.Tab': {
       padding: '12px 16px',
@@ -117,15 +99,6 @@ const appearance: Appearance = {
       borderTop: '1px solid #e5e7eb',
       paddingTop: '16px',
       paddingBottom: '16px',
-    },
-    '.AccordionItemLabel': {
-      fontSize: '14px',
-      fontWeight: '500',
-      color: '#1f2937',
-    },
-    // Link Authentication Element
-    '.LinkAuthenticationElement': {
-      marginBottom: '24px',
     },
   },
 }

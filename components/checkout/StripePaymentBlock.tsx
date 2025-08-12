@@ -52,6 +52,14 @@ export function StripePaymentBlock({
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [paymentRequest, setPaymentRequest] = React.useState<PaymentRequest | null>(null)
   const [canMakePayment, setCanMakePayment] = React.useState(false)
+  const [isStripeLoading, setIsStripeLoading] = React.useState(true)
+  
+  // Track when Stripe Elements are ready
+  React.useEffect(() => {
+    if (stripe && elements) {
+      setIsStripeLoading(false)
+    }
+  }, [stripe, elements])
 
   // Initialize payment request for Apple Pay / Google Pay
   React.useEffect(() => {
@@ -126,7 +134,7 @@ export function StripePaymentBlock({
     layout: {
       type: 'tabs',
       defaultCollapsed: false,
-      radios: false,
+      // Remove radios option - only supported with 'accordion' layout
     },
     defaultValues: {
       billingDetails: {
@@ -161,11 +169,7 @@ export function StripePaymentBlock({
     fields: {
       phone: data.showPhoneField ? 'always' : 'never',
     },
-    validation: {
-      phone: {
-        required: data.showPhoneField ? 'always' : 'never',
-      },
-    },
+    // Don't set validation.phone - let Stripe handle it based on fields.phone
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,6 +233,25 @@ export function StripePaymentBlock({
     }
   }
 
+  // Show loading state while Stripe initializes
+  if (isStripeLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-xl shadow-lg p-6"
+      >
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading secure payment form...</p>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
