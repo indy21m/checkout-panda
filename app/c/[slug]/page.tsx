@@ -29,10 +29,10 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         name: checkout.name,
         slug: checkout.slug,
         pageData: {
-          blocks: checkout.pageData.blocks.map((block: any) => ({
+          blocks: checkout.pageData.blocks.map((block) => ({
             ...block,
-            visible: block.visible !== undefined ? block.visible : true,
-            column: block.column || 'left'
+            visible: 'visible' in block && block.visible !== undefined ? block.visible : true,
+            column: 'column' in block ? block.column : 'left'
           })) as Block[],
           settings: checkout.pageData.settings
         }
