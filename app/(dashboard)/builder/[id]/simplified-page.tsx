@@ -32,7 +32,7 @@ import {
   Type as TypeIcon, Layers, TrendingUp, BarChart3, Users,
   DollarSign, ShoppingCart, Star,
   Shield, CheckCircle,
-  Package
+  Package, Copy, ExternalLink
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1394,6 +1394,8 @@ export default function SimplifiedBuilderPage() {
   const [abTestEnabled, setABTestEnabled] = useState(false)
   const [variantB, setVariantB] = useState<Block[]>([])
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [publishedUrl, setPublishedUrl] = useState('')
   const [analyticsData] = useState({
     totalViews: 12543,
     conversions: 1879,
@@ -1460,12 +1462,20 @@ export default function SimplifiedBuilderPage() {
       setSaveStatus('saving')
       setSaving(true)
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       setHasUnsavedChanges(false)
       setSaveStatus('saved')
       setLastSaved(new Date())
       setSaving(false)
-      toast.success('Changes saved!')
+      
+      if (variables.publish && data) {
+        const checkoutUrl = `${window.location.origin}/c/${data.slug}`
+        setPublishedUrl(checkoutUrl)
+        setShowPublishModal(true)
+        toast.success('Checkout published successfully!')
+      } else {
+        toast.success('Changes saved!')
+      }
     },
     onError: (error) => {
       setSaveStatus('error')
@@ -1541,6 +1551,13 @@ export default function SimplifiedBuilderPage() {
       publish
     })
   }, [blocks, checkoutId, saveCheckout])
+  
+  // Handle publish
+  // Copy URL to clipboard
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(publishedUrl)
+    toast.success('URL copied to clipboard!')
+  }
   
   // Auto-save
   useEffect(() => {
@@ -2067,6 +2084,64 @@ export default function SimplifiedBuilderPage() {
         onSelectProduct={handleProductSelection}
         selectedProductId={undefined}
       />
+      
+      {/* Publish Success Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Checkout Published!</h2>
+              <p className="text-gray-600 mb-6">
+                Your checkout is now live and ready to accept payments.
+              </p>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <label className="text-sm text-gray-500 block mb-2">Checkout URL</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={publishedUrl}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-white border rounded-lg text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={copyToClipboard}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowPublishModal(false)}
+                >
+                  Continue Editing
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={() => window.open(publishedUrl, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Checkout
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
       
       {/* A/B Testing Modal */}
       {showABTestModal && (
