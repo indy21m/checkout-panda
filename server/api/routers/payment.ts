@@ -11,7 +11,6 @@ import {
   orderBumps, 
   analyticsEvents,
   coupons,
-  couponProducts,
   couponRedemptions 
 } from '@/server/db/schema'
 import { TRPCError } from '@trpc/server'
