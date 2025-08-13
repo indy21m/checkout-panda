@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { 
   Check, Shield, Star, ChevronDown, ChevronUp,
-  CreditCard, Lock, ShieldCheck, Clock, Tag
+  CreditCard, Lock, ShieldCheck, Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -94,17 +94,21 @@ function useCartAndQuote(initialCart: CartState) {
     },
     {
       enabled: !!debouncedCart.productId, // Only fetch quote if we have a product
-      onSuccess: (data) => {
-        setQuote(data)
-        setIsQuoteLoading(false)
-      },
-      onError: (error) => {
-        console.error('Quote error:', error)
-        toast.error('Failed to calculate price')
-        setIsQuoteLoading(false)
-      }
     }
   )
+  
+  // Handle quote success/error
+  React.useEffect(() => {
+    if (quoteQuery.data) {
+      setQuote(quoteQuery.data)
+      setIsQuoteLoading(false)
+    }
+    if (quoteQuery.error) {
+      console.error('Quote error:', quoteQuery.error)
+      toast.error('Failed to calculate price')
+      setIsQuoteLoading(false)
+    }
+  }, [quoteQuery.data, quoteQuery.error])
   
   // Set loading state when cart changes
   React.useEffect(() => {
@@ -181,7 +185,9 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
   const initializePaymentMutation = api.checkout.initializePayment.useMutation({
     onSuccess: (data) => {
       setClientSecret(data.clientSecret)
-      setPaymentIntent(data.paymentIntentId)
+      if ('paymentIntentId' in data && data.paymentIntentId) {
+        setPaymentIntent(data.paymentIntentId as string)
+      }
       setIsInitializingPayment(false)
     },
     onError: (error) => {
@@ -394,23 +400,16 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
 
 // Individual block renderers
 function BlockRenderer({ 
-  block, 
-  cart,
-  quote,
-  updateCart,
-  toggleOrderBump,
-  initializePayment,
-  clientSecret,
-  checkout
+  block
 }: { 
   block: Block
-  cart: CartState
-  quote: Quote | null
-  updateCart: (updates: Partial<CartState>) => void
-  toggleOrderBump: (id: string) => void
-  initializePayment: (email: string) => void
-  clientSecret: string | null
-  checkout: any
+  cart?: CartState
+  quote?: Quote | null
+  updateCart?: (updates: Partial<CartState>) => void
+  toggleOrderBump?: (id: string) => void
+  initializePayment?: (email: string) => void
+  clientSecret?: string | null
+  checkout?: unknown
 }) {
   const applyStyles = (defaultClasses: string) => cn(defaultClasses)
   
@@ -777,97 +776,3 @@ function CountdownBlock({
   )
 }
 
-// Legacy Payment Block (for backward compatibility)
-function PaymentBlock({ data, getBlockStyles }: { 
-  data: PaymentBlockData
-  getBlockStyles: () => React.CSSProperties 
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-      style={getBlockStyles()}
-    >
-      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-        <Lock className="w-5 h-5" />
-        {data.title}
-      </h3>
-      
-      <form className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName">First Name</Label>
-            <Input id="firstName" placeholder="John" />
-          </div>
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input id="lastName" placeholder="Doe" />
-          </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="john@example.com" />
-        </div>
-        
-        {data.collectPhone && (
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
-          </div>
-        )}
-        
-        {data.collectAddress && (
-          <>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input id="address" placeholder="123 Main St" />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="New York" />
-              </div>
-              <div>
-                <Label htmlFor="zip">ZIP Code</Label>
-                <Input id="zip" placeholder="10001" />
-              </div>
-            </div>
-          </>
-        )}
-        
-        <div className="pt-4 border-t">
-          <div className="mb-4">
-            <Label htmlFor="card">Card Information</Label>
-            <Input 
-              id="card" 
-              placeholder="4242 4242 4242 4242" 
-              className="mb-2"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="MM / YY" />
-              <Input placeholder="CVC" />
-            </div>
-          </div>
-          
-          <Button size="lg" className="w-full">
-            <CreditCard className="w-4 h-4 mr-2" />
-            {data.buttonText}
-          </Button>
-        </div>
-      </form>
-      
-      <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
-        <div className="flex items-center gap-1">
-          <Lock className="w-3 h-3" />
-          <span>Secure Checkout</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <ShieldCheck className="w-3 h-3" />
-          <span>SSL Encrypted</span>
-        </div>
-      </div>
-    </motion.div>
-  )
-}

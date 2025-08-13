@@ -13,10 +13,29 @@ interface OrderSummaryProps {
   quote?: Quote | null
   className?: string
   // Legacy props for backward compatibility
-  product?: any
-  orderBumps?: any
-  coupon?: any
-  tax?: any
+  product?: {
+    name: string
+    price: string
+    comparePrice?: string
+    type?: string
+    badge?: string
+    features?: string[]
+  }
+  orderBumps?: Array<{
+    selected: boolean
+    data: {
+      title: string
+      price: string
+    }
+  }>
+  coupon?: {
+    code: string
+    discountAmount: number
+  }
+  tax?: {
+    rate: number
+    amount: number
+  }
 }
 
 export function OrderSummary({
@@ -31,8 +50,8 @@ export function OrderSummary({
   // Use quote data if available (new flow)
   if (quote) {
     const currency = quote.currency || 'USD'
-    const hasDiscount = quote.discount > 0
-    const hasTax = quote.tax > 0
+    const hasDiscount = (quote.discount || 0) > 0
+    const hasTax = (quote.tax || 0) > 0
     const isSubscription = quote.meta?.planInterval
     
     // Format renewal date for subscriptions
@@ -111,7 +130,7 @@ export function OrderSummary({
                 {quote.meta?.couponCode ? `Discount (${quote.meta.couponCode})` : 'Discount'}
               </span>
               <span className="font-medium text-green-600">
-                -{formatMoney(quote.discount, currency)}
+                -{formatMoney(quote.discount || 0, currency)}
               </span>
             </div>
           )}
@@ -123,7 +142,7 @@ export function OrderSummary({
                 {quote.meta?.reverseCharge ? 'VAT (Reverse Charge)' : 'Tax'}
               </span>
               <span className="font-medium text-gray-900">
-                {formatMoney(quote.tax, currency)}
+                {formatMoney(quote.tax || 0, currency)}
               </span>
             </div>
           )}
@@ -196,8 +215,8 @@ export function OrderSummary({
   
   const productPrice = product ? parsePrice(product.price) : 0
   const bumpTotal = orderBumps
-    .filter((b: any) => b.selected)
-    .reduce((sum: number, bump: any) => sum + parsePrice(bump.data.price), 0)
+    .filter((b) => b.selected)
+    .reduce((sum, bump) => sum + parsePrice(bump.data.price), 0)
   
   const subtotal = productPrice + bumpTotal
   const discount = coupon?.discountAmount || 0

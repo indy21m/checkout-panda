@@ -60,6 +60,7 @@ export interface OrderBumpBlockData {
   price: string
   comparePrice?: string
   isCheckedByDefault?: boolean
+  productId?: string  // Added for product-driven pricing
 }
 
 export interface TestimonialBlockData {

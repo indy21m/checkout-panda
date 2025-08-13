@@ -58,7 +58,7 @@ async function OrderConfirmation({
               Payment Received!
             </h1>
             <p className="text-gray-600 mb-6">
-              We're processing your order. You'll receive a confirmation email shortly.
+              We&apos;re processing your order. You&apos;ll receive a confirmation email shortly.
             </p>
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <p className="text-sm text-gray-500">Order ID</p>
@@ -152,18 +152,19 @@ async function OrderConfirmation({
 }
 
 // Main page component
-export default function SuccessPage({
+export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { 
+  searchParams: Promise<{ 
     payment_intent?: string
     payment_intent_client_secret?: string
     setup_intent?: string
     setup_intent_client_secret?: string
-  }
+  }>
 }) {
-  const paymentIntent = searchParams.payment_intent
-  const setupIntent = searchParams.setup_intent
+  const params = await searchParams
+  const paymentIntent = params.payment_intent
+  const setupIntent = params.setup_intent
   
   return (
     <Suspense fallback={<LoadingState />}>

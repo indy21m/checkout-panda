@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/config'
 import { db } from '@/server/db'
 import { orders, quotes, couponRedemptions, coupons } from '@/server/db/schema'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import type Stripe from 'stripe'
 
 export async function POST(req: Request) {
@@ -55,20 +55,28 @@ export async function POST(req: Request) {
         
         // Create order
         const [newOrder] = await db.insert(orders).values({
-          checkoutId: paymentIntent.metadata.checkoutId || undefined,
-          quoteId: quoteId || undefined,
+          checkoutId: paymentIntent.metadata.checkoutId ? paymentIntent.metadata.checkoutId : undefined,
+          quoteId: quoteId ? quoteId : undefined,
           customerId: paymentIntent.customer as string,
-          productId: paymentIntent.metadata.productId || undefined,
-          planId: paymentIntent.metadata.planId || undefined,
+          productId: paymentIntent.metadata.productId ? paymentIntent.metadata.productId : undefined,
+          planId: paymentIntent.metadata.planId ? paymentIntent.metadata.planId : undefined,
           stripePaymentIntentId: paymentIntent.id,
           customerEmail: paymentIntent.receipt_email || paymentIntent.metadata.email || '',
-          currency: paymentIntent.currency.toUpperCase(),
+          currency: paymentIntent.currency.toUpperCase() as 'USD' | 'EUR' | 'DKK',
           subtotal: quote?.subtotal || paymentIntent.amount,
           discount: quote?.discount || 0,
           tax: quote?.tax || 0,
           total: paymentIntent.amount,
           status: 'completed',
-          orderItems: quote?.lineItems || [],
+          orderItems: quote?.lineItems ? quote.lineItems
+            .filter(item => item.type !== 'discount' && item.type !== 'tax')
+            .map(item => ({
+              type: item.type as 'product' | 'plan' | 'bump',
+              id: paymentIntent.metadata.productId || paymentIntent.metadata.planId || 'unknown',
+              name: item.label,
+              amount: item.amount,
+              quantity: 1
+            })) : [],
           metadata: paymentIntent.metadata,
           completedAt: new Date(),
         }).returning()
@@ -84,13 +92,14 @@ export async function POST(req: Request) {
             await db.insert(couponRedemptions).values({
               couponId: coupon.id,
               stripePaymentIntentId: paymentIntent.id,
-              customerEmail: newOrder.customerEmail,
+              customerEmail: newOrder?.customerEmail || '',
               customerId: paymentIntent.customer as string,
               originalAmount: quote.subtotal,
-              discountApplied: quote.discount,
+              discountApplied: quote.discount || 0,
               finalAmount: paymentIntent.amount,
               productId: paymentIntent.metadata.productId || undefined,
-              productName: quote.lineItems?.find(i => i.type === 'product')?.label,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              productName: quote.lineItems?.find((i: any) => i.type === 'product')?.label,
             })
             
             // Increment redemption count
@@ -103,7 +112,7 @@ export async function POST(req: Request) {
           }
         }
         
-        console.log('Order created:', newOrder.id)
+        console.log('Order created:', newOrder?.id)
         break
       }
 
@@ -121,15 +130,15 @@ export async function POST(req: Request) {
           
           // Create order for subscription
           await db.insert(orders).values({
-            checkoutId: session.metadata?.checkoutId || undefined,
-            quoteId: session.metadata?.quoteId || undefined,
+            checkoutId: session.metadata?.checkoutId ? session.metadata.checkoutId : undefined,
+            quoteId: session.metadata?.quoteId ? session.metadata.quoteId : undefined,
             customerId: session.customer as string,
-            productId: session.metadata?.productId || undefined,
-            planId: session.metadata?.planId || undefined,
+            productId: session.metadata?.productId ? session.metadata.productId : undefined,
+            planId: session.metadata?.planId ? session.metadata.planId : undefined,
             stripeSubscriptionId: subscription.id,
             stripeInvoiceId: subscription.latest_invoice as string,
             customerEmail: session.customer_email || '',
-            currency: subscription.currency.toUpperCase(),
+            currency: subscription.currency.toUpperCase() as 'USD' | 'EUR' | 'DKK',
             subtotal: session.amount_subtotal || 0,
             discount: session.total_details?.amount_discount || 0,
             tax: session.total_details?.amount_tax || 0,
@@ -143,13 +152,14 @@ export async function POST(req: Request) {
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const invoice = event.data.object as any // Type assertion due to Stripe types
         
         // Check if this is a subscription invoice
         if (invoice.subscription) {
           // Update or create order for subscription invoice
           const existingOrder = await db.query.orders.findFirst({
-            where: eq(orders.stripeInvoiceId, invoice.id),
+            where: eq(orders.stripeInvoiceId, invoice.id as string),
           })
           
           if (!existingOrder) {
@@ -157,12 +167,14 @@ export async function POST(req: Request) {
               customerId: invoice.customer as string,
               stripeSubscriptionId: invoice.subscription as string,
               stripeInvoiceId: invoice.id,
-              stripePaymentIntentId: invoice.payment_intent as string,
+              stripePaymentIntentId: invoice.payment_intent as string || undefined,
               customerEmail: invoice.customer_email || '',
-              currency: invoice.currency.toUpperCase(),
+              currency: invoice.currency.toUpperCase() as 'USD' | 'EUR' | 'DKK',
               subtotal: invoice.subtotal,
-              discount: invoice.total_discount_amounts?.reduce((sum, d) => sum + d.amount, 0) || 0,
-              tax: invoice.total_tax_amounts?.reduce((sum, t) => sum + t.amount, 0) || 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              discount: invoice.total_discount_amounts?.reduce((sum: number, d: any) => sum + d.amount, 0) || 0,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              tax: invoice.total_tax_amounts?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0,
               total: invoice.total,
               status: 'completed',
               metadata: invoice.metadata || {},

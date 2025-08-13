@@ -20,10 +20,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { VATField } from '@/components/checkout/VATField'
-import { Lock, ShieldCheck, CreditCard, Tag, X, ChevronRight, Apple, Loader2, Building2 } from 'lucide-react'
+import { Lock, ShieldCheck, CreditCard, Tag, ChevronRight, Apple, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { api } from '@/lib/trpc/client'
 import { cn } from '@/lib/utils'
 import { formatMoney } from '@/lib/currency'
 import type { PaymentBlockData } from '@/components/builder/checkout-blocks'
@@ -54,23 +53,23 @@ interface StripePaymentBlockProps {
 
 export function StripePaymentBlock({
   data,
-  checkoutId,
+  checkoutId: _checkoutId,
   quote,
-  productId,
+  productId: _productId,
   planId,
-  orderBumpIds = [],
+  orderBumpIds: _orderBumpIds = [],
   amount,
   currency = 'USD',
   clientSecret,
   paymentIntentId,
   onEmailChange,
   onVATChange,
-  onCountryChange,
+  onCountryChange: _onCountryChange,
   onPaymentInitialize,
   onPaymentSuccess,
   onAnalyticsEvent,
   collectVAT = false,
-  customerCountry = 'US',
+  customerCountry: _customerCountry = 'US',
 }: StripePaymentBlockProps) {
   const stripe = useStripe()
   const elements = useElements()
@@ -87,7 +86,7 @@ export function StripePaymentBlock({
   const [canMakePayment, setCanMakePayment] = React.useState(false)
   const [isStripeLoading, setIsStripeLoading] = React.useState(true)
   const [hasInitialized, setHasInitialized] = React.useState(false)
-  const [vatValidation, setVatValidation] = React.useState<{
+  const [, setVatValidation] = React.useState<{
     valid: boolean
     reverseCharge?: boolean
     companyName?: string
@@ -397,7 +396,7 @@ export function StripePaymentBlock({
                   className="mt-1"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  We'll send your receipt here
+                  We&apos;ll send your receipt here
                 </p>
               </div>
             )}
