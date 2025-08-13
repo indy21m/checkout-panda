@@ -39,10 +39,12 @@ export interface ProductBlockData {
   imageUrl?: string
   badge?: string
   
-  // NEW: Authoritative fields for product-driven pricing
-  productId?: string         // Database ID of the product
+  // NEW: Authoritative fields for offer-driven pricing
+  productId?: string         // Legacy - Database ID of the product
+  offerId?: string           // New - Database ID of the offer (includes product + context pricing)
   planId?: string | null     // Selected plan/price ID (optional)
   useProductPricing?: boolean // Default true; if false, use manual price string
+  useOfferPricing?: boolean   // When true, use offer details for price/description
 }
 
 export interface BenefitsBlockData {
@@ -60,7 +62,8 @@ export interface OrderBumpBlockData {
   price: string
   comparePrice?: string
   isCheckedByDefault?: boolean
-  productId?: string  // Added for product-driven pricing
+  productId?: string  // Legacy - for backward compatibility
+  offerId?: string    // New - links to offer for pricing
 }
 
 export interface TestimonialBlockData {

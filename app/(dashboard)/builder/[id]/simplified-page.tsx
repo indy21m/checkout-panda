@@ -63,6 +63,7 @@ import {
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
 import { ProductSelectorModal } from '@/components/builder/product-selector-modal'
+import { OfferSelectorModal } from '@/components/builder/offer-selector-modal'
 import type { RouterOutputs } from '@/lib/trpc/api'
 
 // Column Drop Zone Component
@@ -424,21 +425,27 @@ function BlockEditor({
       const productData = block.data as ProductBlockData
       return (
         <div className="space-y-4">
-          {/* Product Selection */}
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          {/* Offer Selection */}
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-900">Product Source</span>
+              <span className="text-sm font-medium text-purple-900">Offer Source</span>
               <Button
                 variant="primary"
                 size="sm"
                 onClick={onSelectProduct}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               >
-                Select from Database
+                Select Offer
               </Button>
             </div>
-            <p className="text-xs text-blue-700">
-              Choose a product from your database to auto-fill details, or enter manually below.
+            <p className="text-xs text-purple-700">
+              Choose an offer to auto-fill product details with context-specific pricing.
             </p>
+            {productData.offerId && (
+              <p className="text-xs text-purple-600 mt-2 font-medium">
+                ✓ Using offer pricing
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Product Name</label>
@@ -1513,6 +1520,7 @@ export default function SimplifiedBuilderPage() {
   const [activeView, setActiveView] = useState<'desktop' | 'mobile'>('desktop')
   const [showThemeModal, setShowThemeModal] = useState(false)
   const [showProductSelector, setShowProductSelector] = useState(false)
+  const [showOfferSelector, setShowOfferSelector] = useState(false)
   const [selectedBlockForProduct, setSelectedBlockForProduct] = useState<string | null>(null)
   const [showABTestModal, setShowABTestModal] = useState(false)
   const [activeVariant, setActiveVariant] = useState<'A' | 'B'>('A')
@@ -1724,11 +1732,44 @@ export default function SimplifiedBuilderPage() {
       toast.success('Product imported successfully!')
     }
   }
+
+  // Handle offer selection from database
+  const handleOfferSelection = (offer: RouterOutputs['offer']['list'][0]) => {
+    if (selectedBlockForProduct) {
+      // Update the selected product block with offer data
+      const productData: ProductBlockData = {
+        name: offer.product?.name || offer.name,
+        description: offer.description || offer.product?.description || '',
+        price: `${getCurrencySymbol(offer.currency)}${(offer.price / 100).toFixed(2)}`,
+        comparePrice: offer.compareAtPrice 
+          ? `${getCurrencySymbol(offer.currency)}${(offer.compareAtPrice / 100).toFixed(2)}`
+          : undefined,
+        type: 'onetime',
+        features: offer.product?.features || [],
+        imageUrl: offer.imageUrl || offer.product?.thumbnail || undefined,
+        badge: offer.badgeText || undefined,
+        // Store offer ID for offer-driven pricing
+        offerId: offer.id,
+        productId: offer.productId,
+        useOfferPricing: true,
+        useProductPricing: false,
+      }
+      
+      updateBlock(selectedBlockForProduct, { data: productData })
+      
+      // Clear selection
+      setSelectedBlockForProduct(null)
+      setShowOfferSelector(false)
+      
+      // Show success message
+      toast.success('Offer imported successfully!')
+    }
+  }
   
   // Handle opening product selector for a specific block
   const openProductSelector = (blockId: string) => {
     setSelectedBlockForProduct(blockId)
-    setShowProductSelector(true)
+    setShowOfferSelector(true) // Changed to open offer selector instead
   }
   
   // Handle drag start
@@ -2212,6 +2253,17 @@ export default function SimplifiedBuilderPage() {
         }}
         onSelectProduct={handleProductSelection}
         selectedProductId={undefined}
+      />
+
+      {/* Offer Selector Modal */}
+      <OfferSelectorModal
+        isOpen={showOfferSelector}
+        onClose={() => {
+          setShowOfferSelector(false)
+          setSelectedBlockForProduct(null)
+        }}
+        onSelectOffer={handleOfferSelection}
+        contextFilter="standalone"
       />
       
       {/* Publish Success Modal */}

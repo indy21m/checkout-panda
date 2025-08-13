@@ -45,8 +45,8 @@ const couponSchema = z.object({
   maxRedemptionsPerCustomer: z.number().optional(),
   redeemableFrom: z.date().optional(),
   expiresAt: z.date().optional(),
-  productScope: z.enum(['all', 'specific']),
-  productIds: z.array(z.string()).optional(),
+  offerScope: z.enum(['all', 'specific']),
+  offerIds: z.array(z.string()).optional(),
 })
 
 type CouponFormData = z.infer<typeof couponSchema>
@@ -59,8 +59,8 @@ interface CouponEditorProps {
 
 export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps) {
   const [activeTab, setActiveTab] = useState('details')
-  const [searchProduct, setSearchProduct] = useState('')
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+  const [searchOffer, setSearchOffer] = useState('')
+  const [selectedOffers, setSelectedOffers] = useState<string[]>([])
   
   const utils = api.useUtils()
 
@@ -69,7 +69,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
     { enabled: !!couponId }
   )
 
-  const { data: products = [] } = api.product.list.useQuery({})
+  const { data: offers = [] } = api.offer.list.useQuery({ includeInactive: true })
 
   const form = useForm<CouponFormData>({
     resolver: zodResolver(couponSchema),
@@ -82,8 +82,8 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
       currency: 'USD',
       duration: 'once',
       maxRedemptionsPerCustomer: 1,
-      productScope: 'all',
-      productIds: [],
+      offerScope: 'all',
+      offerIds: [],
     },
   })
 
@@ -104,12 +104,13 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
         maxRedemptionsPerCustomer: coupon.maxRedemptionsPerCustomer || 1,
         redeemableFrom: coupon.redeemableFrom ? new Date(coupon.redeemableFrom) : undefined,
         expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt) : undefined,
-        productScope: coupon.productScope,
+        offerScope: coupon.offerScope || 'all',
       })
       
-      const productIds = coupon.couponProducts?.map(cp => cp.productId) || []
-      setSelectedProducts(productIds)
-      form.setValue('productIds', productIds)
+      // TODO: Update when coupon-offers relation is added to database
+      const offerIds: string[] = []
+      setSelectedOffers(offerIds)
+      form.setValue('offerIds', offerIds)
     } else {
       form.reset()
       setSelectedProducts([])
@@ -146,7 +147,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
       discountValue: data.discountType === 'fixed' 
         ? Math.round(data.discountValue * 100) 
         : data.discountValue,
-      productIds: selectedProducts,
+      offerIds: selectedOffers,
     }
 
     if (couponId) {
@@ -156,23 +157,24 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
     }
   }
 
-  const toggleProduct = (productId: string) => {
-    setSelectedProducts(prev => {
-      const updated = prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-      form.setValue('productIds', updated)
+  const toggleOffer = (offerId: string) => {
+    setSelectedOffers(prev => {
+      const updated = prev.includes(offerId)
+        ? prev.filter(id => id !== offerId)
+        : [...prev, offerId]
+      form.setValue('offerIds', updated)
       return updated
     })
   }
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase())
+  const filteredOffers = offers.filter(offer =>
+    offer.name.toLowerCase().includes(searchOffer.toLowerCase()) ||
+    offer.product?.name.toLowerCase().includes(searchOffer.toLowerCase())
   )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-full min-w-[600px] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent">
             {couponId ? 'Edit Coupon' : 'New Coupon'}
@@ -184,7 +186,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="limits">Limits</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="offers">Offers</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto px-1">
@@ -433,86 +435,94 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                 </div>
               </TabsContent>
 
-              <TabsContent value="products" className="space-y-6 mt-6">
+              <TabsContent value="offers" className="space-y-6 mt-6">
                 <div>
-                  <Label>Products</Label>
+                  <Label>Offers</Label>
                   <p className="text-sm text-gray-500 mt-1">
-                    Choose which products this coupon applies to.
+                    Choose which offers this coupon applies to.
                   </p>
                 </div>
 
-                {/* Product Scope */}
+                {/* Offer Scope */}
                 <RadioGroup
-                  value={form.watch('productScope')}
+                  value={form.watch('offerScope')}
                   onValueChange={(value: 'all' | 'specific') => {
-                    form.setValue('productScope', value)
+                    form.setValue('offerScope', value)
                     if (value === 'all') {
-                      setSelectedProducts([])
-                      form.setValue('productIds', [])
+                      setSelectedOffers([])
+                      form.setValue('offerIds', [])
                     }
                   }}
                 >
                   <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="all" id="all-products" />
-                    <Label htmlFor="all-products" className="flex-1 cursor-pointer">
-                      All products
+                    <RadioGroupItem value="all" id="all-offers" />
+                    <Label htmlFor="all-offers" className="flex-1 cursor-pointer">
+                      All offers
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="specific" id="specific-products" />
-                    <Label htmlFor="specific-products" className="flex-1 cursor-pointer">
-                      Specific products
+                    <RadioGroupItem value="specific" id="specific-offers" />
+                    <Label htmlFor="specific-offers" className="flex-1 cursor-pointer">
+                      Specific offers
                     </Label>
                   </div>
                 </RadioGroup>
 
-                {/* Product Search and Selection */}
-                {form.watch('productScope') === 'specific' && (
+                {/* Offer Search and Selection */}
+                {form.watch('offerScope') === 'specific' && (
                   <div className="space-y-4">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
-                        placeholder="Search for a product"
-                        value={searchProduct}
-                        onChange={(e) => setSearchProduct(e.target.value)}
+                        placeholder="Search for an offer"
+                        value={searchOffer}
+                        onChange={(e) => setSearchOffer(e.target.value)}
                         className="pl-10"
                       />
                     </div>
 
                     <div className="border rounded-lg max-h-64 overflow-y-auto">
-                      {filteredProducts.length === 0 ? (
+                      {filteredOffers.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
-                          {searchProduct ? 'No products found' : 'No products available'}
+                          {searchOffer ? 'No offers found' : 'No offers available'}
                         </div>
                       ) : (
                         <div className="divide-y">
-                          {filteredProducts.map((product) => (
-                            <div
-                              key={product.id}
-                              className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer"
-                              onClick={() => toggleProduct(product.id)}
-                            >
-                              <Checkbox
-                                checked={selectedProducts.includes(product.id)}
-                                onCheckedChange={() => toggleProduct(product.id)}
-                              />
-                              <Package className="w-4 h-4 text-gray-400" />
-                              <div className="flex-1">
-                                <p className="font-medium">{product.name}</p>
-                                <p className="text-sm text-gray-500">
-                                  ${(product.price / 100).toFixed(2)}
-                                </p>
+                          {filteredOffers.map((offer) => {
+                            const contextLabels = {
+                              standalone: 'Standalone',
+                              order_bump: 'Order Bump',
+                              upsell: 'Upsell',
+                              downsell: 'Downsell',
+                            }
+                            return (
+                              <div
+                                key={offer.id}
+                                className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer"
+                                onClick={() => toggleOffer(offer.id)}
+                              >
+                                <Checkbox
+                                  checked={selectedOffers.includes(offer.id)}
+                                  onCheckedChange={() => toggleOffer(offer.id)}
+                                />
+                                <Package className="w-4 h-4 text-gray-400" />
+                                <div className="flex-1">
+                                  <p className="font-medium">{offer.name}</p>
+                                  <p className="text-sm text-gray-500">
+                                    {offer.product?.name} • {contextLabels[offer.context]} • ${(offer.price / 100).toFixed(2)}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
                     </div>
 
-                    {selectedProducts.length > 0 && (
+                    {selectedOffers.length > 0 && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Info className="w-4 h-4" />
-                        <span>{selectedProducts.length} product(s) selected</span>
+                        <span>{selectedOffers.length} offer(s) selected</span>
                       </div>
                     )}
                   </div>

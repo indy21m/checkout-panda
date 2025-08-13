@@ -1,0 +1,447 @@
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
+import {
+  Plus,
+  Search,
+  Filter,
+  Package,
+  Tag,
+  TrendingUp,
+  ChevronDown,
+  MoreVertical,
+  Edit,
+  Copy,
+  Trash2,
+  Eye,
+  EyeOff,
+  DollarSign,
+  ShoppingCart,
+  Zap,
+  TrendingDown,
+} from 'lucide-react'
+import { api } from '@/lib/trpc/client'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { getCurrencySymbol } from '@/lib/currency'
+import type { RouterOutputs } from '@/lib/trpc/api'
+
+type Offer = RouterOutputs['offer']['list'][0]
+
+interface OffersListProps {
+  onCreateOffer: () => void
+  onEditOffer: (offer: Offer) => void
+}
+
+const contextIcons = {
+  standalone: Package,
+  order_bump: ShoppingCart,
+  upsell: TrendingUp,
+  downsell: TrendingDown,
+}
+
+const contextLabels = {
+  standalone: 'Standalone',
+  order_bump: 'Order Bump',
+  upsell: 'Upsell',
+  downsell: 'Downsell',
+}
+
+const contextColors = {
+  standalone: 'bg-blue-100 text-blue-800',
+  order_bump: 'bg-purple-100 text-purple-800',
+  upsell: 'bg-green-100 text-green-800',
+  downsell: 'bg-orange-100 text-orange-800',
+}
+
+export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [contextFilter, setContextFilter] = useState<string>('all')
+  const [productFilter, setProductFilter] = useState<string>('all')
+
+  const utils = api.useUtils()
+
+  const { data: offers = [], isLoading } = api.offer.list.useQuery({
+    includeInactive: true,
+  })
+
+  const { data: products = [] } = api.product.list.useQuery({})
+
+  const deleteOffer = api.offer.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Offer deleted successfully')
+      utils.offer.list.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete offer')
+    },
+  })
+
+  const duplicateOffer = api.offer.duplicate.useMutation({
+    onSuccess: () => {
+      toast.success('Offer duplicated successfully')
+      utils.offer.list.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to duplicate offer')
+    },
+  })
+
+  const updateOffer = api.offer.update.useMutation({
+    onSuccess: () => {
+      toast.success('Offer updated successfully')
+      utils.offer.list.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update offer')
+    },
+  })
+
+  const filteredOffers = offers.filter((offer) => {
+    const matchesSearch = 
+      offer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      offer.product?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      offer.description?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesContext = contextFilter === 'all' || offer.context === contextFilter
+    const matchesProduct = productFilter === 'all' || offer.productId === productFilter
+
+    return matchesSearch && matchesContext && matchesProduct
+  })
+
+  const groupedOffers = filteredOffers.reduce((acc, offer) => {
+    const productName = offer.product?.name || 'Unknown Product'
+    if (!acc[productName]) {
+      acc[productName] = []
+    }
+    acc[productName].push(offer)
+    return acc
+  }, {} as Record<string, Offer[]>)
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 300, damping: 30 },
+    },
+  }
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-8"
+    >
+      {/* Header */}
+      <motion.div variants={itemVariants}>
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
+              Offers
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Manage product pricing for different contexts
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onCreateOffer}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Create Offer
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div variants={itemVariants}>
+        <GlassmorphicCard className="p-4" variant="light">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <div className="relative flex-1 max-w-xl">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search offers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <Select value={contextFilter} onValueChange={setContextFilter}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="All Contexts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Contexts</SelectItem>
+                <SelectItem value="standalone">Standalone</SelectItem>
+                <SelectItem value="order_bump">Order Bump</SelectItem>
+                <SelectItem value="upsell">Upsell</SelectItem>
+                <SelectItem value="downsell">Downsell</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={productFilter} onValueChange={setProductFilter}>
+              <SelectTrigger className="w-[200px]">
+                <Package className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="All Products" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Products</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </GlassmorphicCard>
+      </motion.div>
+
+      {/* Offers List */}
+      {isLoading ? (
+        <motion.div variants={itemVariants} className="flex h-64 items-center justify-center">
+          <div className="text-center">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+            </div>
+            <p className="mt-4 text-gray-600">Loading offers...</p>
+          </div>
+        </motion.div>
+      ) : filteredOffers.length === 0 ? (
+        <motion.div variants={itemVariants}>
+          <GlassmorphicCard className="p-12" variant="light">
+            <div className="text-center">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-100 to-pink-100">
+                <Tag className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="mt-4 text-xl font-semibold">No offers found</h3>
+              <p className="mt-2 text-gray-600">
+                {searchTerm || contextFilter !== 'all' || productFilter !== 'all'
+                  ? 'Try adjusting your filters'
+                  : 'Create your first offer to get started'}
+              </p>
+              {!searchTerm && contextFilter === 'all' && productFilter === 'all' && (
+                <Button
+                  variant="primary"
+                  onClick={onCreateOffer}
+                  className="mt-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Offer
+                </Button>
+              )}
+            </div>
+          </GlassmorphicCard>
+        </motion.div>
+      ) : (
+        <motion.div variants={containerVariants} className="space-y-6">
+          {Object.entries(groupedOffers).map(([productName, productOffers]) => (
+            <motion.div key={productName} variants={itemVariants} className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-semibold text-gray-900">{productName}</h3>
+                <span className="text-sm text-gray-500">({productOffers.length} offers)</span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {productOffers.map((offer) => {
+                  const Icon = contextIcons[offer.context]
+                  const savings = offer.compareAtPrice 
+                    ? Math.round(((offer.compareAtPrice - offer.price) / offer.compareAtPrice) * 100)
+                    : 0
+
+                  return (
+                    <GlassmorphicCard
+                      key={offer.id}
+                      className="relative overflow-hidden p-6 transition-all hover:shadow-lg"
+                      variant="light"
+                    >
+                      {/* Status Badge */}
+                      <div className="absolute top-4 right-4">
+                        {offer.isActive ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                            <Eye className="h-3 w-3" />
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                            <EyeOff className="h-3 w-3" />
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Header */}
+                      <div className="mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className={cn(
+                            'flex h-10 w-10 items-center justify-center rounded-lg',
+                            contextColors[offer.context].replace('text-', 'bg-').replace('800', '100')
+                          )}>
+                            <Icon className={cn('h-5 w-5', contextColors[offer.context].replace('bg-', 'text-'))} />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{offer.name}</h4>
+                            <span className={cn(
+                              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium mt-1',
+                              contextColors[offer.context]
+                            )}>
+                              {contextLabels[offer.context]}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {offer.description && (
+                        <p className="mb-4 text-sm text-gray-600 line-clamp-2">
+                          {offer.description}
+                        </p>
+                      )}
+
+                      {/* Pricing */}
+                      <div className="mb-4 space-y-2">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold text-gray-900">
+                            {getCurrencySymbol(offer.currency)}
+                            {(offer.price / 100).toFixed(2)}
+                          </span>
+                          {offer.compareAtPrice && (
+                            <>
+                              <span className="text-sm text-gray-500 line-through">
+                                {getCurrencySymbol(offer.currency)}
+                                {(offer.compareAtPrice / 100).toFixed(2)}
+                              </span>
+                              <span className="text-sm font-medium text-green-600">
+                                Save {savings}%
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {offer.coupon && (
+                          <div className="flex items-center gap-1 text-sm text-purple-600">
+                            <Tag className="h-3 w-3" />
+                            <span>Coupon: {offer.coupon.code}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-3 gap-2 border-t pt-4 text-center">
+                        <div>
+                          <p className="text-xs text-gray-500">Views</p>
+                          <p className="font-semibold text-gray-900">{offer.views}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Conversions</p>
+                          <p className="font-semibold text-gray-900">{offer.conversions}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Revenue</p>
+                          <p className="font-semibold text-gray-900">
+                            {getCurrencySymbol(offer.currency)}
+                            {(offer.revenue / 100).toFixed(0)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-4 flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => onEditOffer(offer)}
+                        >
+                          <Edit className="mr-1 h-3 w-3" />
+                          Edit
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => updateOffer.mutate({
+                                id: offer.id,
+                                isActive: !offer.isActive,
+                              })}
+                            >
+                              {offer.isActive ? (
+                                <>
+                                  <EyeOff className="mr-2 h-4 w-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => duplicateOffer.mutate({ id: offer.id })}
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this offer?')) {
+                                  deleteOffer.mutate({ id: offer.id })
+                                }
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </GlassmorphicCard>
+                  )
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </motion.div>
+  )
+}

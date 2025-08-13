@@ -13,8 +13,6 @@ import {
   Filter,
   MoreVertical,
   Package,
-  DollarSign,
-  TrendingUp,
   Copy,
   Archive,
   Edit,
@@ -80,12 +78,6 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
       product.description?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const totalRevenue = products?.reduce((sum, p) => sum + (p.totalRevenue || 0), 0) || 0
-  const totalSales = products?.reduce((sum, p) => sum + (p.totalSales || 0), 0) || 0
-  const avgConversionRate = products?.length
-    ? products.reduce((sum, p) => sum + (p.conversionRate || 0), 0) / products.length / 100
-    : 0
-
   // const handleSelectAll = () => {
   //   if (selectedProducts.size === filteredProducts?.length) {
   //     setSelectedProducts(new Set())
@@ -134,72 +126,25 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
         </div>
       </motion.div>
 
-      {/* Stats Cards */}
-      <motion.div variants={containerVariants} className="grid gap-4 md:grid-cols-3">
-        <motion.div variants={itemVariants}>
-          <GlassmorphicCard className="p-6" variant="light">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="mt-2 text-3xl font-bold">${(totalRevenue / 100).toFixed(2)}</p>
-                <p className="mt-1 text-sm text-emerald-600">+12.5% from last month</p>
-              </div>
-              <div className="rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 p-3">
-                <DollarSign className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </GlassmorphicCard>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <GlassmorphicCard className="p-6" variant="light">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                <p className="mt-2 text-3xl font-bold">{totalSales}</p>
-                <p className="mt-1 text-sm text-blue-600">+8.2% from last month</p>
-              </div>
-              <div className="rounded-full bg-gradient-to-br from-blue-400 to-blue-600 p-3">
-                <Package className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </GlassmorphicCard>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <GlassmorphicCard className="p-6" variant="light">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Conversion</p>
-                <p className="mt-2 text-3xl font-bold">{(avgConversionRate * 100).toFixed(1)}%</p>
-                <p className="mt-1 text-sm text-purple-600">+2.1% from last month</p>
-              </div>
-              <div className="rounded-full bg-gradient-to-br from-purple-400 to-purple-600 p-3">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </GlassmorphicCard>
-        </motion.div>
-      </motion.div>
 
       {/* Controls Bar */}
       <motion.div variants={itemVariants}>
         <GlassmorphicCard className="p-4" variant="light">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 items-center gap-4">
-              <div className="relative max-w-md flex-1">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              <div className="relative flex-1 max-w-xl">
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 w-full"
                 />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="md">
+                  <Button variant="secondary" size="md" className="w-full sm:w-auto">
                     <Filter className="mr-2 h-4 w-4" />
                     Filter
                     <ChevronDown className="ml-1 h-3 w-3" />

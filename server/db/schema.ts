@@ -34,6 +34,7 @@ export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'DKK'])
 export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed'])
 export const couponDurationEnum = pgEnum('coupon_duration', ['forever', 'once', 'repeating'])
 export const productScopeEnum = pgEnum('product_scope', ['all', 'specific'])
+export const offerContextEnum = pgEnum('offer_context', ['standalone', 'order_bump', 'upsell', 'downsell'])
 
 // Users (from Clerk)
 export const users = pgTable('users', {
@@ -220,6 +221,74 @@ export const productAssets = pgTable('product_assets', {
 
   createdAt: timestamp('created_at').defaultNow(),
 })
+
+// Offers - Different pricing contexts for products
+export const offers = pgTable(
+  'offers',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    
+    // Basic details
+    name: text('name').notNull(),
+    description: text('description'),
+    
+    // Product and context
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    context: offerContextEnum('context').notNull(), // standalone, order_bump, upsell, downsell
+    
+    // Pricing
+    price: integer('price').notNull(), // in cents - the offer price
+    compareAtPrice: integer('compare_at_price'), // original price for showing discount
+    currency: currencyEnum('currency').default('USD').notNull(),
+    
+    // Optional coupon association
+    couponId: uuid('coupon_id').references(() => coupons.id, { onDelete: 'set null' }),
+    
+    // Display settings
+    headline: text('headline'), // e.g., "Save 30% today only!"
+    badgeText: text('badge_text'), // e.g., "LIMITED TIME"
+    badgeColor: text('badge_color'), // hex color
+    imageUrl: text('image_url'),
+    
+    // Order bump specific settings
+    bumpDescription: text('bump_description'), // Short description for order bump checkbox
+    
+    // Upsell/Downsell specific settings
+    redirectUrl: text('redirect_url'), // Where to redirect after accepting/declining
+    declineRedirectUrl: text('decline_redirect_url'), // Where to redirect on decline
+    
+    // Conditions
+    minQuantity: integer('min_quantity').default(1),
+    maxQuantity: integer('max_quantity'), // null = unlimited
+    
+    // Availability
+    availableFrom: timestamp('available_from'),
+    availableUntil: timestamp('available_until'),
+    maxRedemptions: integer('max_redemptions'), // null = unlimited
+    currentRedemptions: integer('current_redemptions').default(0),
+    
+    // Status
+    isActive: boolean('is_active').default(true),
+    
+    // Analytics
+    views: integer('views').default(0),
+    conversions: integer('conversions').default(0),
+    revenue: integer('revenue').default(0), // in cents
+    
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    productIdIndex: index('offers_product_id_idx').on(table.productId),
+    contextIndex: index('offers_context_idx').on(table.context),
+    userIdIndex: index('offers_user_id_idx').on(table.userId),
+  })
+)
 
 // Order Bumps
 export const orderBumps = pgTable('order_bumps', {
@@ -454,6 +523,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   products: many(products),
   funnels: many(funnels),
   coupons: many(coupons),
+  offers: many(offers),
 }))
 
 export const checkoutsRelations = relations(checkouts, ({ one, many }) => ({
@@ -484,6 +554,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   plans: many(productPlans),
   assets: many(productAssets),
   couponProducts: many(couponProducts),
+  offers: many(offers),
 }))
 
 export const productPlansRelations = relations(productPlans, ({ one, many }) => ({
@@ -513,6 +584,21 @@ export const orderBumpsRelations = relations(orderBumps, ({ one }) => ({
   product: one(products, {
     fields: [orderBumps.productId],
     references: [products.id],
+  }),
+}))
+
+export const offersRelations = relations(offers, ({ one }) => ({
+  user: one(users, {
+    fields: [offers.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [offers.productId],
+    references: [products.id],
+  }),
+  coupon: one(coupons, {
+    fields: [offers.couponId],
+    references: [coupons.id],
   }),
 }))
 
@@ -553,6 +639,7 @@ export const couponsRelations = relations(coupons, ({ one, many }) => ({
   }),
   couponProducts: many(couponProducts),
   redemptions: many(couponRedemptions),
+  offers: many(offers),
 }))
 
 export const couponProductsRelations = relations(couponProducts, ({ one }) => ({

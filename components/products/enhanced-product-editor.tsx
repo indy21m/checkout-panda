@@ -54,6 +54,7 @@ const productSchema = z.object({
   featured_description: z.string().optional(),
   type: z.enum(['digital', 'service', 'membership', 'bundle']),
   status: z.enum(['active', 'inactive', 'draft']),
+  price: z.number().min(0.01, 'Price must be at least $0.01').default(1),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -215,6 +216,7 @@ export function EnhancedProductEditor({
       featured_description: '',
       type: 'digital',
       status: 'draft',
+      price: 1,
     },
   })
 
@@ -231,6 +233,7 @@ export function EnhancedProductEditor({
         type: (product.type || 'digital') as 'digital' | 'service' | 'membership' | 'bundle',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: ((product as any).status || 'active') as 'active' | 'inactive' | 'draft',
+        price: product.price / 100, // Convert from cents to dollars
       })
       setFeatures(
         product.features
@@ -255,7 +258,7 @@ export function EnhancedProductEditor({
       status: data.status,
       features: features.map((f) => f.text).filter(Boolean),
       thumbnail: mediaUrl || undefined,
-      price: 0, // Price is managed separately in plans
+      price: Math.round(data.price * 100), // Convert dollars to cents
     }
 
     if (productId) {
@@ -443,6 +446,30 @@ export function EnhancedProductEditor({
                             <option value="inactive">Inactive</option>
                           </select>
                         </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="price">Base Price</Label>
+                        <div className="mt-1 relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                          <Input
+                            id="price"
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            {...form.register('price', { valueAsNumber: true })}
+                            placeholder="9.99"
+                            className="pl-8"
+                          />
+                        </div>
+                        {form.formState.errors.price && (
+                          <p className="mt-1 text-sm text-red-500">
+                            {form.formState.errors.price.message}
+                          </p>
+                        )}
+                        <p className="mt-1 text-sm text-gray-500">
+                          This is the standalone price. Different prices can be set for offers (order bumps, upsells, etc.)
+                        </p>
                       </div>
                     </TabsContent>
 

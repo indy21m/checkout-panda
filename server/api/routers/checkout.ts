@@ -8,7 +8,8 @@ import {
   products, 
   productPlans, 
   orderBumps,
-  coupons
+  coupons,
+  offers
 } from '@/server/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
@@ -292,6 +293,7 @@ export const checkoutRouter = createTRPCRouter({
         checkoutId: z.string().uuid(),
         productId: z.string().uuid().optional(),
         planId: z.string().uuid().optional(),
+        offerId: z.string().uuid().optional(), // New: support offer-based pricing
         orderBumpIds: z.array(z.string().uuid()).default([]),
         couponCode: z.string().optional(),
         customerCountry: z.string().default('US'),
@@ -361,6 +363,42 @@ export const checkoutRouter = createTRPCRouter({
           type: 'plan',
           label: `${plan.product.name} - ${plan.name}`,
           amount: plan.price,
+        })
+      } else if (input.offerId) {
+        // New: Use offer pricing if offerId is provided
+        const offer = await ctx.db.query.offers.findFirst({
+          where: eq(offers.id, input.offerId),
+          with: {
+            product: true,
+          },
+        })
+        
+        if (!offer) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Offer not found',
+          })
+        }
+        
+        // Check if offer is active and available
+        const now = new Date()
+        if (!offer.isActive ||
+            (offer.availableFrom && offer.availableFrom > now) ||
+            (offer.availableUntil && offer.availableUntil < now) ||
+            (offer.maxRedemptions && offer.currentRedemptions >= offer.maxRedemptions)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Offer is not available',
+          })
+        }
+        
+        subtotal = offer.price
+        currency = offer.currency
+        
+        lineItems.push({
+          type: 'product',
+          label: offer.product?.name || offer.name,
+          amount: offer.price,
         })
       } else if (input.productId) {
         const product = await ctx.db.query.products.findFirst({
