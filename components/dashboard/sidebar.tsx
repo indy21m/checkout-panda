@@ -44,6 +44,12 @@ const navItems: NavItem[] = [
     color: 'from-emerald-400 to-emerald-600',
   },
   {
+    title: 'Offers',
+    href: '/offers',
+    icon: Zap,
+    color: 'from-violet-400 to-violet-600',
+  },
+  {
     title: 'Coupons',
     href: '/coupons',
     icon: Tag,
