@@ -316,8 +316,8 @@ export function StripePaymentBlock({
     },
     fields: {
       billingDetails: {
-        email: data.showEmailField ? 'auto' : 'never',
-        name: data.showNameFields ? 'auto' : 'never',
+        email: 'auto', // Email is always collected
+        name: 'auto', // Name is always collected
         phone: data.showPhoneField ? 'auto' : 'never',
         address: data.showBillingAddress ? 'auto' : 'never',
       }
@@ -380,55 +380,53 @@ export function StripePaymentBlock({
         {/* Email & Name Fields */}
         {!clientSecret && (
           <div className="space-y-4">
-            {data.showEmailField && (
+            {/* Email field - always shown */}
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                onBlur={handleInitializePayment}
+                placeholder="john@example.com"
+                required
+                className="mt-1"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                We&apos;ll send your receipt here
+              </p>
+            </div>
+            
+            {/* Name fields - always shown */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
+                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
+                  First Name
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => handleEmailChange(e.target.value)}
-                  onBlur={handleInitializePayment}
-                  placeholder="john@example.com"
-                  required
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
                   className="mt-1"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  We&apos;ll send your receipt here
-                </p>
               </div>
-            )}
-            
-            {data.showNameFields && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                    First Name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="John"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Doe"
-                    className="mt-1"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
+                  Last Name
+                </Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                  className="mt-1"
+                />
               </div>
-            )}
+            </div>
             
             {/* VAT Field for EU customers */}
             {collectVAT && (
@@ -453,7 +451,7 @@ export function StripePaymentBlock({
         )}
         
         {/* Link Authentication (Stripe Link) */}
-        {clientSecret && data.showEmailField && (
+        {clientSecret && (
           <div>
             <LinkAuthenticationElement options={linkOptions} />
           </div>
@@ -480,7 +478,7 @@ export function StripePaymentBlock({
         )}
         
         {/* Coupon Code (if not using quotes) */}
-        {!quote && data.showCouponField && (
+        {!quote && data.enableCoupons && (
           <div className="bg-gray-50 rounded-lg p-4">
             <Label htmlFor="coupon" className="text-sm font-medium text-gray-700">
               Have a promo code?
