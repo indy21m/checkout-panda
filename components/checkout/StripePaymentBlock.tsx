@@ -516,7 +516,7 @@ export function StripePaymentBlock({
                 Coupon {quote.meta.couponCode} applied
               </span>
               <span className="text-sm text-green-600">
-                (-{formatMoney(quote.discount, quote.currency)})
+                (-{formatMoney(quote.discount || 0, quote.currency)})
               </span>
             </div>
           </div>
