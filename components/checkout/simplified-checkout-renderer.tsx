@@ -5,14 +5,18 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { 
   Check, Shield, Star, ChevronDown, ChevronUp,
-  CreditCard, Lock, ShieldCheck
+  CreditCard, Lock, ShieldCheck, Clock, Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StripeProvider } from '@/components/checkout/StripeProvider'
 import { StripePaymentBlock } from '@/components/checkout/StripePaymentBlock'
+import { OrderSummary } from '@/components/checkout/OrderSummary'
 import { api } from '@/lib/trpc/client'
+import { formatMoney } from '@/lib/currency'
+import { useDebounce } from '@/hooks/use-debounce'
+import { toast } from 'sonner'
 import type { 
   Block, 
   HeaderBlockData, 
@@ -25,6 +29,29 @@ import type {
   CountdownBlockData,
   PaymentBlockData
 } from '@/components/builder/checkout-blocks'
+import type { RouterOutputs } from '@/lib/trpc/api'
+
+// Centralized cart state for entire checkout
+interface CartState {
+  checkoutId: string
+  productId?: string
+  planId?: string
+  currency: string
+  orderBumps: Array<{
+    id: string
+    selected: boolean
+    productId?: string
+    amount: number
+    currency: string
+  }>
+  couponCode?: string
+  customerEmail?: string
+  quantity: number
+  // VAT fields
+  customerCountry?: string
+  vatNumber?: string
+  collectVAT?: boolean
+}
 
 interface SimplifiedCheckoutRendererProps {
   checkout: {
@@ -38,111 +65,325 @@ interface SimplifiedCheckoutRendererProps {
   }
 }
 
+type Quote = RouterOutputs['checkout']['quote']
+
+// Hook to manage cart and quotes
+function useCartAndQuote(initialCart: CartState) {
+  const [cart, setCart] = React.useState<CartState>(initialCart)
+  const [quote, setQuote] = React.useState<Quote | null>(null)
+  const [isQuoteLoading, setIsQuoteLoading] = React.useState(false)
+  
+  // Debounce cart changes by 500ms to avoid excessive API calls
+  const debouncedCart = useDebounce(cart, 500)
+  
+  // Quote query
+  const quoteQuery = api.checkout.quote.useQuery(
+    {
+      checkoutId: debouncedCart.checkoutId,
+      productId: debouncedCart.productId,
+      planId: debouncedCart.planId,
+      orderBumpIds: debouncedCart.orderBumps
+        .filter(b => b.selected)
+        .map(b => b.productId || b.id),
+      couponCode: debouncedCart.couponCode,
+      customerEmail: debouncedCart.customerEmail,
+      customerCountry: debouncedCart.customerCountry || 'US',
+      vatNumber: debouncedCart.vatNumber,
+      collectVAT: debouncedCart.collectVAT || false,
+      enableStripeTax: false, // Can be enabled via settings
+    },
+    {
+      enabled: !!debouncedCart.productId, // Only fetch quote if we have a product
+      onSuccess: (data) => {
+        setQuote(data)
+        setIsQuoteLoading(false)
+      },
+      onError: (error) => {
+        console.error('Quote error:', error)
+        toast.error('Failed to calculate price')
+        setIsQuoteLoading(false)
+      }
+    }
+  )
+  
+  // Set loading state when cart changes
+  React.useEffect(() => {
+    if (JSON.stringify(cart) !== JSON.stringify(debouncedCart)) {
+      setIsQuoteLoading(true)
+    }
+  }, [cart, debouncedCart])
+  
+  // Update functions
+  const updateCart = React.useCallback((updates: Partial<CartState>) => {
+    setCart(prev => ({ ...prev, ...updates }))
+  }, [])
+  
+  const toggleOrderBump = React.useCallback((bumpId: string) => {
+    setCart(prev => ({
+      ...prev,
+      orderBumps: prev.orderBumps.map(bump =>
+        bump.id === bumpId ? { ...bump, selected: !bump.selected } : bump
+      )
+    }))
+  }, [])
+  
+  return {
+    cart,
+    quote: quoteQuery.data || quote,
+    isQuoteLoading: isQuoteLoading || quoteQuery.isLoading,
+    updateCart,
+    toggleOrderBump,
+    refetchQuote: quoteQuery.refetch
+  }
+}
+
 export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRendererProps) {
   const blocks = checkout.pageData.blocks || []
   const visibleBlocks = blocks.filter(block => block.visible !== false)
   
-  // Separate blocks by column
-  const leftBlocks = visibleBlocks.filter(b => b.column === 'left' || !b.column)
-  const rightBlocks = visibleBlocks.filter(b => b.column === 'right')
-  
-  // State for order management
-  const [selectedOrderBumps, setSelectedOrderBumps] = React.useState<string[]>([])
-  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
-  const [totalAmount, setTotalAmount] = React.useState(0)
-  const [selectedProductId] = React.useState<string | null>(null)
-  const [selectedPlanId] = React.useState<string | null>(null)
-  const [isLoadingPayment, setIsLoadingPayment] = React.useState(false)
-  const [, setCustomerEmail] = React.useState('')
-  
-  // Find product and payment blocks to extract data
+  // Extract initial product and order bumps from blocks
   const productBlock = blocks.find(b => b.type === 'product')
-  // const paymentBlock = blocks.find(b => b.type === 'payment')
-  // const orderBumpBlocks = blocks.filter(b => b.type === 'orderBump')
+  const orderBumpBlocks = blocks.filter(b => b.type === 'orderBump')
+  const paymentBlock = blocks.find(b => b.type === 'payment')
   
-  // Create payment intent mutation
-  const createIntentMutation = api.payment.createCheckoutIntent.useMutation()
-  
-  // Extract product data
-  React.useEffect(() => {
-    if (productBlock) {
-      const productData = productBlock.data as ProductBlockData
-      // For now, we'll use a simple product ID (would need to be passed from builder)
-      // In production, this would come from the product selection in the builder
-      setTotalAmount(parseInt(productData.price.replace(/[^0-9]/g, '')) * 100) // Convert to cents
+  // Initialize cart state from blocks
+  const initialCart = React.useMemo<CartState>(() => {
+    const productData = productBlock?.data as ProductBlockData | undefined
+    
+    return {
+      checkoutId: checkout.id,
+      productId: productData?.productId,
+      planId: productData?.planId || undefined,
+      currency: 'USD', // Default, will be updated from product
+      orderBumps: orderBumpBlocks.map(block => {
+        const bumpData = block.data as OrderBumpBlockData
+        return {
+          id: block.id,
+          selected: bumpData.isCheckedByDefault || false,
+          productId: bumpData.productId,
+          amount: parseInt(bumpData.price.replace(/[^0-9]/g, '')) * 100, // Convert to cents
+          currency: 'USD'
+        }
+      }),
+      quantity: 1
     }
-  }, [productBlock])
+  }, [checkout.id, productBlock, orderBumpBlocks])
+  
+  // Use centralized cart and quote management
+  const { cart, quote, isQuoteLoading, updateCart, toggleOrderBump } = useCartAndQuote(initialCart)
+  
+  // Payment state
+  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
+  const [paymentIntent, setPaymentIntent] = React.useState<string | null>(null)
+  const [isInitializingPayment, setIsInitializingPayment] = React.useState(false)
+  
+  // Initialize payment mutation
+  const initializePaymentMutation = api.checkout.initializePayment.useMutation({
+    onSuccess: (data) => {
+      setClientSecret(data.clientSecret)
+      setPaymentIntent(data.paymentIntentId)
+      setIsInitializingPayment(false)
+    },
+    onError: (error) => {
+      console.error('Payment initialization error:', error)
+      toast.error('Failed to initialize payment')
+      setIsInitializingPayment(false)
+    }
+  })
   
   // Initialize payment when email is provided
   const initializePayment = React.useCallback(async (email: string) => {
-    if (!email || isLoadingPayment) return
+    if (!email || !quote || isInitializingPayment) return
     
-    setIsLoadingPayment(true)
-    setCustomerEmail(email)
+    setIsInitializingPayment(true)
+    updateCart({ customerEmail: email })
     
-    try {
-      const result = await createIntentMutation.mutateAsync({
-        checkoutId: checkout.id,
-        email,
-        productId: selectedProductId || undefined,
-        planId: selectedPlanId || undefined,
-        orderBumpIds: selectedOrderBumps,
-        enableTax: false, // Could be configured in payment block settings
-      })
-      
-      setClientSecret(result.clientSecret)
-      setTotalAmount(result.amount)
-    } catch (error) {
-      console.error('Failed to create payment intent:', error)
-    } finally {
-      setIsLoadingPayment(false)
-    }
-  }, [checkout.id, selectedProductId, selectedPlanId, selectedOrderBumps, createIntentMutation, isLoadingPayment])
+    await initializePaymentMutation.mutateAsync({
+      quoteId: quote.id,
+      customerEmail: email,
+      checkoutId: checkout.id
+    })
+  }, [quote, isInitializingPayment, updateCart, checkout.id, initializePaymentMutation])
   
-  const hasRightColumn = rightBlocks.length > 0
+  // Separate blocks by column for layout
+  const leftBlocks = visibleBlocks.filter(b => b.column === 'left' || (!b.column && b.type !== 'product'))
+  const rightBlocks = visibleBlocks.filter(b => b.column === 'right' || b.type === 'product')
+  
+  // Determine if we have a right column
+  const hasRightColumn = rightBlocks.length > 0 || !!quote
+  
+  // Check if this is a zero-total checkout
+  const isZeroTotal = quote?.total === 0
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Circle-style header if present */}
+      {blocks.find(b => b.type === 'header') && (
+        <BlockRenderer 
+          block={blocks.find(b => b.type === 'header')!}
+          cart={cart}
+          quote={quote}
+          updateCart={updateCart}
+          toggleOrderBump={toggleOrderBump}
+          initializePayment={initializePayment}
+          clientSecret={clientSecret}
+          checkout={checkout}
+        />
+      )}
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className={cn(
           "grid gap-8",
-          hasRightColumn ? "md:grid-cols-[1fr_400px]" : "md:grid-cols-1 max-w-3xl mx-auto"
+          hasRightColumn ? "lg:grid-cols-[1fr_420px]" : "lg:grid-cols-1 max-w-3xl mx-auto"
         )}>
-          {/* Main Column */}
+          {/* Main Column - Payment and Content */}
           <div className="space-y-6">
+            {/* Payment Section - Always First */}
+            {paymentBlock && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8"
+              >
+                {/* Show loading state while quote is loading */}
+                {isQuoteLoading && !quote && (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+                
+                {/* Show payment form when quote is ready */}
+                {quote && (
+                  <>
+                    {/* Zero-total flow - Skip payment collection */}
+                    {isZeroTotal ? (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Check className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          {quote.meta?.trialDays ? `Start Your ${quote.meta.trialDays}-Day Free Trial` : 'Complete Your Order'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          {quote.meta?.trialDays 
+                            ? 'No payment required. Cancel anytime during your trial.'
+                            : 'Your order total is free. Click below to complete.'}
+                        </p>
+                        <Button
+                          size="lg"
+                          onClick={() => {
+                            if (!cart.customerEmail) {
+                              toast.error('Please enter your email address')
+                              return
+                            }
+                            initializePayment(cart.customerEmail)
+                          }}
+                          disabled={!cart.customerEmail || isInitializingPayment}
+                          className="w-full sm:w-auto"
+                        >
+                          {isInitializingPayment ? 'Processing...' : 'Start Free Trial'}
+                        </Button>
+                      </div>
+                    ) : (
+                      // Regular payment flow with Stripe Elements
+                      <StripeProvider
+                        clientSecret={clientSecret || undefined}
+                        amount={quote.total}
+                        currency={quote.currency}
+                        mode={quote.meta?.planInterval ? 'subscription' : 'payment'}
+                        quoteId={quote.id}
+                      >
+                        <StripePaymentBlock
+                          data={paymentBlock.data as PaymentBlockData}
+                          checkoutId={checkout.id}
+                          quote={quote}
+                          productId={cart.productId}
+                          planId={cart.planId}
+                          orderBumpIds={cart.orderBumps.filter(b => b.selected).map(b => b.id)}
+                          amount={quote.total}
+                          currency={quote.currency}
+                          onEmailChange={(email) => updateCart({ customerEmail: email })}
+                          onPaymentInitialize={initializePayment}
+                          clientSecret={clientSecret}
+                          paymentIntentId={paymentIntent}
+                          onPaymentSuccess={(paymentIntentId) => {
+                            console.log('Payment successful:', paymentIntentId)
+                            // Redirect to success page
+                            window.location.href = `/checkout/success?payment_intent=${paymentIntentId}`
+                          }}
+                          onAnalyticsEvent={(event, data) => {
+                            console.log('Analytics event:', event, data)
+                          }}
+                        />
+                      </StripeProvider>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            )}
+            
+            {/* Order Bumps */}
+            {orderBumpBlocks.map((block) => (
+              <OrderBumpBlock
+                key={block.id}
+                block={block}
+                isSelected={cart.orderBumps.find(b => b.id === block.id)?.selected || false}
+                onToggle={() => toggleOrderBump(block.id)}
+              />
+            ))}
+            
+            {/* Other Left Column Content */}
             {leftBlocks.map((block) => (
               <BlockRenderer 
                 key={block.id} 
                 block={block}
-                checkout={checkout}
-                selectedOrderBumps={selectedOrderBumps}
-                setSelectedOrderBumps={setSelectedOrderBumps}
+                cart={cart}
+                quote={quote}
+                updateCart={updateCart}
+                toggleOrderBump={toggleOrderBump}
                 initializePayment={initializePayment}
                 clientSecret={clientSecret}
-                totalAmount={totalAmount}
-                selectedProductId={selectedProductId}
-                selectedPlanId={selectedPlanId}
+                checkout={checkout}
               />
             ))}
           </div>
           
-          {/* Right Column */}
+          {/* Right Column - Order Summary and Product */}
           {hasRightColumn && (
-            <div className="space-y-6">
-              {rightBlocks.map((block) => (
-                <BlockRenderer 
-                  key={block.id} 
-                  block={block}
-                  checkout={checkout}
-                  selectedOrderBumps={selectedOrderBumps}
-                  setSelectedOrderBumps={setSelectedOrderBumps}
-                  initializePayment={initializePayment}
-                  clientSecret={clientSecret}
-                  totalAmount={totalAmount}
-                  selectedProductId={selectedProductId}
-                  selectedPlanId={selectedPlanId}
+            <div className="space-y-6 lg:sticky lg:top-6 lg:h-fit">
+              {/* Order Summary - Circle Style */}
+              {quote && (
+                <OrderSummary 
+                  quote={quote}
+                  className="shadow-lg"
                 />
-              ))}
+              )}
+              
+              {/* Product Details */}
+              {productBlock && (
+                <ProductBlock
+                  block={productBlock}
+                  cart={cart}
+                  quote={quote}
+                />
+              )}
+              
+              {/* Other Right Column Content */}
+              {rightBlocks
+                .filter(b => b.type !== 'product')
+                .map((block) => (
+                  <BlockRenderer 
+                    key={block.id} 
+                    block={block}
+                    cart={cart}
+                    quote={quote}
+                    updateCart={updateCart}
+                    toggleOrderBump={toggleOrderBump}
+                    initializePayment={initializePayment}
+                    clientSecret={clientSecret}
+                    checkout={checkout}
+                  />
+                ))}
             </div>
           )}
         </div>
@@ -151,23 +392,27 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
   )
 }
 
-function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBumps: _setSelectedOrderBumps, initializePayment: _initializePayment, clientSecret, totalAmount, selectedProductId, selectedPlanId }: { 
+// Individual block renderers
+function BlockRenderer({ 
+  block, 
+  cart,
+  quote,
+  updateCart,
+  toggleOrderBump,
+  initializePayment,
+  clientSecret,
+  checkout
+}: { 
   block: Block
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  checkout?: any
-  selectedOrderBumps?: string[]
-  setSelectedOrderBumps?: (bumps: string[]) => void
-  initializePayment?: (email: string) => void
-  clientSecret?: string | null
-  totalAmount?: number
-  selectedProductId?: string | null
-  selectedPlanId?: string | null
+  cart: CartState
+  quote: Quote | null
+  updateCart: (updates: Partial<CartState>) => void
+  toggleOrderBump: (id: string) => void
+  initializePayment: (email: string) => void
+  clientSecret: string | null
+  checkout: any
 }) {
-  const applyStyles = (defaultClasses: string) => {
-    return cn(
-      defaultClasses
-    )
-  }
+  const applyStyles = (defaultClasses: string) => cn(defaultClasses)
   
   const getBlockStyles = (): React.CSSProperties => {
     const styles = block.styles || {}
@@ -190,54 +435,21 @@ function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBu
     case 'header':
       const headerData = block.data as HeaderBlockData
       return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={applyStyles("text-center py-8 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl")}
-          style={getBlockStyles()}
-        >
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            {headerData.title}
-          </h1>
-          <p className="text-lg md:text-xl opacity-90">
-            {headerData.subtitle}
-          </p>
-        </motion.div>
-      )
-    
-    case 'product':
-      const productData = block.data as ProductBlockData
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className={applyStyles("bg-white rounded-xl shadow-sm p-6")}
-          style={getBlockStyles()}
-        >
-          {productData.badge && (
-            <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full mb-4">
-              {productData.badge}
-            </span>
-          )}
-          <h2 className="text-2xl font-bold mb-2">{productData.name}</h2>
-          <p className="text-gray-600 mb-4">{productData.description}</p>
-          <div className="flex items-baseline gap-2 mb-6">
-            <span className="text-3xl font-bold text-blue-600">{productData.price}</span>
-            {productData.comparePrice && (
-              <span className="text-lg text-gray-400 line-through">{productData.comparePrice}</span>
-            )}
-            {productData.type === 'subscription' && <span className="text-gray-500">/month</span>}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h1 className="text-3xl md:text-5xl font-bold mb-4">
+                {headerData.title}
+              </h1>
+              <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
+                {headerData.subtitle}
+              </p>
+            </motion.div>
           </div>
-          <ul className="space-y-3">
-            {productData.features.map((feature, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-700">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.div>
+        </div>
       )
     
     case 'benefits':
@@ -247,10 +459,10 @@ function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBu
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={applyStyles("bg-gray-50 rounded-xl p-6")}
+          className={applyStyles("bg-white rounded-xl shadow-sm border border-gray-100 p-6")}
           style={getBlockStyles()}
         >
-          <h3 className="text-xl font-bold mb-4">{benefitsData.title}</h3>
+          <h3 className="text-xl font-bold mb-6">{benefitsData.title}</h3>
           <div className="space-y-4">
             {benefitsData.benefits.map((benefit, i) => (
               <div key={i} className="flex gap-4">
@@ -265,9 +477,6 @@ function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBu
         </motion.div>
       )
     
-    case 'orderBump':
-      return <OrderBumpBlock block={block} applyStyles={applyStyles} getBlockStyles={getBlockStyles} />
-    
     case 'testimonial':
       const testimonialData = block.data as TestimonialBlockData
       return (
@@ -275,13 +484,13 @@ function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBu
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className={applyStyles("bg-white rounded-xl border border-gray-200 p-6")}
+          className={applyStyles("bg-white rounded-xl shadow-sm border border-gray-100 p-6")}
           style={getBlockStyles()}
         >
           {testimonialData.testimonials.map((testimonial, i) => (
             <div key={i}>
               <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, j) => (
+                {Array.from({ length: 5 }).map((_, j) => (
                   <Star 
                     key={j} 
                     className={cn(
@@ -332,65 +541,108 @@ function BlockRenderer({ block, checkout, selectedOrderBumps, setSelectedOrderBu
     case 'countdown':
       return <CountdownBlock block={block} applyStyles={applyStyles} getBlockStyles={getBlockStyles} />
     
-    case 'payment':
-      const paymentData = block.data as PaymentBlockData
-      
-      // If we're using Stripe Elements, wrap in provider
-      if (paymentData.useStripeElements !== false) {
-        return (
-          <StripeProvider clientSecret={clientSecret || undefined} amount={totalAmount}>
-            <StripePaymentBlock
-              data={paymentData}
-              checkoutId={checkout.id}
-              productId={selectedProductId || undefined}
-              planId={selectedPlanId || undefined}
-              orderBumpIds={selectedOrderBumps}
-              amount={totalAmount || 0}
-              onPaymentSuccess={(paymentIntentId) => {
-                console.log('Payment successful:', paymentIntentId)
-              }}
-              onAnalyticsEvent={(event, data) => {
-                console.log('Analytics event:', event, data)
-              }}
-            />
-          </StripeProvider>
-        )
-      }
-      
-      // Fallback to old payment block (will be removed)
-      return <PaymentBlock data={paymentData} getBlockStyles={getBlockStyles} />
-    
     default:
       return null
   }
 }
 
+// Product Block Component
+function ProductBlock({ 
+  block, 
+  cart,
+  quote
+}: { 
+  block: Block
+  cart: CartState
+  quote: Quote | null
+}) {
+  const productData = block.data as ProductBlockData
+  const currency = quote?.currency || cart.currency
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+    >
+      {productData.badge && (
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full mb-4">
+          <Tag className="w-3 h-3" />
+          {productData.badge}
+        </span>
+      )}
+      <h2 className="text-2xl font-bold mb-2">{productData.name}</h2>
+      <p className="text-gray-600 mb-4">{productData.description}</p>
+      
+      {/* Use quote price if available, otherwise fallback to display price */}
+      <div className="flex items-baseline gap-2 mb-6">
+        {quote ? (
+          <>
+            <span className="text-3xl font-bold text-blue-600">
+              {formatMoney(quote.subtotal, currency)}
+            </span>
+            {productData.comparePrice && (
+              <span className="text-lg text-gray-400 line-through">{productData.comparePrice}</span>
+            )}
+            {quote.meta?.planInterval && (
+              <span className="text-gray-500">/{quote.meta.planInterval}</span>
+            )}
+          </>
+        ) : (
+          <>
+            <span className="text-3xl font-bold text-blue-600">{productData.price}</span>
+            {productData.comparePrice && (
+              <span className="text-lg text-gray-400 line-through">{productData.comparePrice}</span>
+            )}
+            {productData.type === 'subscription' && <span className="text-gray-500">/month</span>}
+          </>
+        )}
+      </div>
+      
+      <ul className="space-y-3">
+        {productData.features.map((feature, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+            <span className="text-gray-700">{feature}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  )
+}
+
 // Order Bump Block Component
 function OrderBumpBlock({ 
   block, 
-  applyStyles, 
-  getBlockStyles 
+  isSelected,
+  onToggle
 }: { 
   block: Block
-  applyStyles: (classes: string) => string
-  getBlockStyles: () => React.CSSProperties
+  isSelected: boolean
+  onToggle: () => void
 }) {
   const bumpData = block.data as OrderBumpBlockData
-  const [isChecked, setIsChecked] = React.useState(bumpData.isCheckedByDefault || false)
   
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.3 }}
-      className={applyStyles("border-2 border-yellow-400 bg-yellow-50 rounded-xl p-4")}
-      style={getBlockStyles()}
+      className={cn(
+        "border-2 rounded-xl p-4 cursor-pointer transition-all",
+        isSelected 
+          ? "border-green-500 bg-green-50" 
+          : "border-yellow-400 bg-yellow-50 hover:border-yellow-500"
+      )}
+      onClick={onToggle}
     >
       <div className="flex items-start gap-3">
         <input 
           type="checkbox" 
-          checked={isChecked}
-          onChange={(e) => setIsChecked(e.target.checked)}
+          checked={isSelected}
+          onChange={onToggle}
+          onClick={(e) => e.stopPropagation()}
           className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 cursor-pointer"
         />
         <div className="flex-1">
@@ -426,7 +678,7 @@ function FAQBlock({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className={applyStyles("bg-white rounded-xl p-6")}
+      className={applyStyles("bg-white rounded-xl shadow-sm border border-gray-100 p-6")}
       style={getBlockStyles()}
     >
       <h3 className="text-xl font-bold mb-4">{faqData.title}</h3>
@@ -497,306 +749,125 @@ function CountdownBlock({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.7 }}
-      className={applyStyles("bg-red-50 border border-red-200 rounded-xl p-4 text-center")}
+      className={applyStyles("bg-red-50 border border-red-200 rounded-xl p-6 text-center")}
       style={getBlockStyles()}
     >
-      <p className="font-semibold mb-3">{countdownData.title}</p>
-      <div className="flex justify-center gap-3">
-        {countdownData.showDays && (
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-2xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
-            <div className="text-xs text-gray-500">Days</div>
+      <h3 className="text-lg font-bold mb-2">{countdownData.title}</h3>
+      <div className="flex justify-center gap-4 mb-4">
+        {timeLeft.days > 0 && (
+          <div>
+            <div className="text-3xl font-bold text-red-600">{timeLeft.days}</div>
+            <div className="text-xs text-gray-600">DAYS</div>
           </div>
         )}
-        {countdownData.showHours && (
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-2xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
-            <div className="text-xs text-gray-500">Hours</div>
-          </div>
-        )}
-        {countdownData.showMinutes && (
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-2xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
-            <div className="text-xs text-gray-500">Mins</div>
-          </div>
-        )}
-        {countdownData.showSeconds && (
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-2xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
-            <div className="text-xs text-gray-500">Secs</div>
-          </div>
-        )}
+        <div>
+          <div className="text-3xl font-bold text-red-600">{timeLeft.hours}</div>
+          <div className="text-xs text-gray-600">HOURS</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-red-600">{timeLeft.minutes}</div>
+          <div className="text-xs text-gray-600">MINS</div>
+        </div>
+        <div>
+          <div className="text-3xl font-bold text-red-600">{timeLeft.seconds}</div>
+          <div className="text-xs text-gray-600">SECS</div>
+        </div>
       </div>
     </motion.div>
   )
 }
 
-// Professional Payment Block Component
-function PaymentBlock({ data, getBlockStyles }: { data: PaymentBlockData; getBlockStyles: () => React.CSSProperties }) {
-  const [email, setEmail] = React.useState('')
-  const [cardNumber, setCardNumber] = React.useState('')
-  const [expiry, setExpiry] = React.useState('')
-  const [cvc, setCvc] = React.useState('')
-  const [name, setName] = React.useState('')
-  const [billingAddress, setBillingAddress] = React.useState('')
-  const [phone, setPhone] = React.useState('')
-  const [company, setCompany] = React.useState('')
-  const [isProcessing, setIsProcessing] = React.useState(false)
-  const [cardType, setCardType] = React.useState<'visa' | 'mastercard' | 'amex' | null>(null)
-  
-  // Detect card type
-  React.useEffect(() => {
-    const cleaned = cardNumber.replace(/\s/g, '')
-    if (cleaned.startsWith('4')) {
-      setCardType('visa')
-    } else if (cleaned.startsWith('5')) {
-      setCardType('mastercard')
-    } else if (cleaned.startsWith('3')) {
-      setCardType('amex')
-    } else {
-      setCardType(null)
-    }
-  }, [cardNumber])
-  
-  // Format card number
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s/g, '')
-    const match = cleaned.match(/.{1,4}/g)
-    return match ? match.join(' ') : cleaned
-  }
-  
-  // Format expiry
-  const formatExpiry = (value: string) => {
-    const cleaned = value.replace(/\D/g, '')
-    if (cleaned.length >= 2) {
-      return cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4)
-    }
-    return cleaned
-  }
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsProcessing(true)
-    
-    // Simulate processing
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    // In a real app, this would submit to Stripe
-    console.log('Payment submitted')
-    setIsProcessing(false)
-  }
-  
-  
+// Legacy Payment Block (for backward compatibility)
+function PaymentBlock({ data, getBlockStyles }: { 
+  data: PaymentBlockData
+  getBlockStyles: () => React.CSSProperties 
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8 }}
-      className="bg-white rounded-xl shadow-lg p-6"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
       style={getBlockStyles()}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email */}
-        <div>
-          <Label htmlFor="email" className="text-sm font-medium">
-            Email Address
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="john@example.com"
-            required
-            className="mt-1"
-          />
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+        <Lock className="w-5 h-5" />
+        {data.title}
+      </h3>
+      
+      <form className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="firstName">First Name</Label>
+            <Input id="firstName" placeholder="John" />
+          </div>
+          <div>
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input id="lastName" placeholder="Doe" />
+          </div>
         </div>
         
-        {/* Name */}
         <div>
-          <Label htmlFor="name" className="text-sm font-medium">
-            Full Name
-          </Label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="John Doe"
-            required
-            className="mt-1"
-          />
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" placeholder="john@example.com" />
         </div>
         
-        {/* Card Information */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block">
-            Card Information
-          </Label>
-          <div className="space-y-3">
-            <div className="relative">
-              <Input
-                type="text"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value.slice(0, 19)))}
-                placeholder="1234 5678 9012 3456"
-                required
-                className="pr-12"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                {cardType === 'visa' && (
-                  <div className="w-8 h-5 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                    VISA
-                  </div>
-                )}
-                {cardType === 'mastercard' && (
-                  <div className="w-8 h-5 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">
-                    MC
-                  </div>
-                )}
-                {cardType === 'amex' && (
-                  <div className="w-8 h-5 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">
-                    AMEX
-                  </div>
-                )}
-                <CreditCard className="w-5 h-5 text-gray-400" />
+        {data.collectPhone && (
+          <div>
+            <Label htmlFor="phone">Phone</Label>
+            <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
+          </div>
+        )}
+        
+        {data.collectAddress && (
+          <>
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" placeholder="123 Main St" />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input id="city" placeholder="New York" />
+              </div>
+              <div>
+                <Label htmlFor="zip">ZIP Code</Label>
+                <Input id="zip" placeholder="10001" />
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                type="text"
-                value={expiry}
-                onChange={(e) => setExpiry(formatExpiry(e.target.value.slice(0, 5)))}
-                placeholder="MM/YY"
-                required
-              />
-              <Input
-                type="text"
-                value={cvc}
-                onChange={(e) => setCvc(e.target.value.slice(0, 4))}
-                placeholder="CVC"
-                required
-              />
+          </>
+        )}
+        
+        <div className="pt-4 border-t">
+          <div className="mb-4">
+            <Label htmlFor="card">Card Information</Label>
+            <Input 
+              id="card" 
+              placeholder="4242 4242 4242 4242" 
+              className="mb-2"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="MM / YY" />
+              <Input placeholder="CVC" />
             </div>
-          </div>
-        </div>
-        
-        {/* Billing Address */}
-        {data.showBillingAddress && (
-          <div>
-            <Label htmlFor="billing" className="text-sm font-medium">
-              Billing Address
-            </Label>
-            <Input
-              id="billing"
-              type="text"
-              value={billingAddress}
-              onChange={(e) => setBillingAddress(e.target.value)}
-              placeholder="123 Main St, City, State 12345"
-              className="mt-1"
-            />
-          </div>
-        )}
-        
-        {/* Phone */}
-        {data.showPhoneField && (
-          <div>
-            <Label htmlFor="phone" className="text-sm font-medium">
-              Phone Number
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 123-4567"
-              className="mt-1"
-            />
-          </div>
-        )}
-        
-        {/* Company */}
-        {data.showCompanyField && (
-          <div>
-            <Label htmlFor="company" className="text-sm font-medium">
-              Company Name
-            </Label>
-            <Input
-              id="company"
-              type="text"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="Acme Inc."
-              className="mt-1"
-            />
-          </div>
-        )}
-        
-        {/* Express Checkout Options */}
-        <div className="pt-4">
-          <div className="flex gap-3 mb-4">
-            <button
-              type="button"
-              className="flex-1 bg-black text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-900 transition-colors shadow-sm"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
-              <span>Pay</span>
-            </button>
-            <button
-              type="button"
-              className="flex-1 bg-white border border-gray-300 py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <span>Pay</span>
-            </button>
           </div>
           
-          <div className="relative mb-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-500">Or pay with card</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          variant="primary"
-          className="w-full py-3 text-lg font-semibold"
-          disabled={isProcessing}
-        >
-          {isProcessing ? (
-            <>Processing...</>
-          ) : (
-            <>{data.buttonText || 'Complete Purchase'}</>
-          )}
-        </Button>
-        
-        {/* Security Badge */}
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-          <Lock className="w-4 h-4" />
-          <span>{data.secureText || 'Your payment is secured with 256-bit SSL encryption'}</span>
-        </div>
-        
-        {/* Trust Badges */}
-        <div className="flex items-center justify-center gap-6 pt-2">
-          <ShieldCheck className="w-6 h-6 text-gray-400" />
-          <div className="text-xs text-gray-400">PCI DSS Compliant</div>
-          <div className="text-xs text-gray-400">Powered by Stripe</div>
+          <Button size="lg" className="w-full">
+            <CreditCard className="w-4 h-4 mr-2" />
+            {data.buttonText}
+          </Button>
         </div>
       </form>
+      
+      <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-1">
+          <Lock className="w-3 h-3" />
+          <span>Secure Checkout</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <ShieldCheck className="w-3 h-3" />
+          <span>SSL Encrypted</span>
+        </div>
+      </div>
     </motion.div>
   )
 }

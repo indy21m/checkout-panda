@@ -1,6 +1,12 @@
 // Currency types and utilities
+import crypto from 'crypto'
 
-export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'DKK'] as const
+export const SUPPORTED_CURRENCIES = [
+  'USD', 'EUR', 'GBP', 'DKK', 'SEK', 'NOK', 'CAD', 'AUD', 'JPY',
+  'CNY', 'INR', 'BRL', 'MXN', 'CHF', 'SGD', 'HKD', 'NZD', 'KRW',
+  'TRY', 'RUB', 'PLN', 'THB', 'MYR', 'PHP', 'IDR', 'CZK', 'HUF',
+  'ILS', 'AED', 'SAR', 'ZAR'
+] as const
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number]
 
 // Currency configuration
@@ -17,11 +23,47 @@ export const CURRENCY_CONFIG = {
     name: 'Euro',
     decimalPlaces: 2,
   },
+  GBP: {
+    symbol: '£',
+    locale: 'en-GB',
+    name: 'British Pound',
+    decimalPlaces: 2,
+  },
   DKK: {
     symbol: 'kr',
     locale: 'da-DK',
     name: 'Danish Krone',
     decimalPlaces: 2,
+  },
+  SEK: {
+    symbol: 'kr',
+    locale: 'sv-SE',
+    name: 'Swedish Krona',
+    decimalPlaces: 2,
+  },
+  NOK: {
+    symbol: 'kr',
+    locale: 'nb-NO',
+    name: 'Norwegian Krone',
+    decimalPlaces: 2,
+  },
+  CAD: {
+    symbol: '$',
+    locale: 'en-CA',
+    name: 'Canadian Dollar',
+    decimalPlaces: 2,
+  },
+  AUD: {
+    symbol: '$',
+    locale: 'en-AU',
+    name: 'Australian Dollar',
+    decimalPlaces: 2,
+  },
+  JPY: {
+    symbol: '¥',
+    locale: 'ja-JP',
+    name: 'Japanese Yen',
+    decimalPlaces: 0,
   },
 } as const
 
@@ -75,7 +117,7 @@ export function parsePriceToSmallestUnit(formattedPrice: string, currency: Curre
   const cleanedPrice = formattedPrice.replace(/[^\d.,\-]/g, '').replace(/\s/g, '')
 
   // Handle different decimal separators based on locale
-  const config = CURRENCY_CONFIG[currency]
+  const config = CURRENCY_CONFIG[currency as keyof typeof CURRENCY_CONFIG] || { locale: 'en-US' }
   let normalizedPrice = cleanedPrice
 
   if (config.locale.includes('de') || config.locale.includes('da')) {
@@ -88,4 +130,135 @@ export function parsePriceToSmallestUnit(formattedPrice: string, currency: Curre
 
   const numericValue = parseFloat(normalizedPrice)
   return Math.round(numericValue * 100)
+}
+
+/**
+ * Primary currency formatting function for the entire app
+ * @param amountInMinor - Amount in minor units (cents, øre, etc)
+ * @param currency - ISO 4217 currency code
+ * @param locale - Optional locale override
+ */
+export function formatMoney(
+  amountInMinor: number,
+  currency: string,
+  locale?: string
+): string {
+  const amount = amountInMinor / 100
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+/**
+ * Calculate percentage discount
+ */
+export function calculateDiscount(
+  originalAmount: number,
+  discountPercent: number
+): number {
+  return Math.round(originalAmount * (discountPercent / 100))
+}
+
+/**
+ * Apply fixed discount (capped at original amount)
+ */
+export function applyFixedDiscount(
+  originalAmount: number,
+  discountAmount: number
+): number {
+  return Math.max(0, originalAmount - discountAmount)
+}
+
+/**
+ * Validate currency consistency across items
+ */
+export function validateCurrencyConsistency(
+  items: Array<{ currency: string; amount: number }>
+): { valid: boolean; currency?: string; error?: string } {
+  if (items.length === 0) {
+    return { valid: true }
+  }
+  
+  const firstCurrency = items[0]?.currency
+  if (!firstCurrency) {
+    return { valid: false, error: 'No currency specified' }
+  }
+  
+  const inconsistent = items.find(item => item.currency !== firstCurrency)
+  if (inconsistent) {
+    return {
+      valid: false,
+      error: `Mixed currencies not allowed: ${firstCurrency} and ${inconsistent.currency}`,
+    }
+  }
+  
+  return { valid: true, currency: firstCurrency }
+}
+
+/**
+ * Cart state for hashing and idempotency
+ */
+export interface CartState {
+  productId?: string
+  planId?: string | null
+  orderBumpIds: string[]
+  couponCode?: string | null
+  customerCountry: string
+  customerEmail?: string
+  vatNumber?: string | null
+}
+
+/**
+ * Generate a deterministic hash key for cart state (for caching and idempotency)
+ */
+export function cartToKey(cart: CartState): string {
+  // Sort bumps for consistency
+  const sortedBumps = [...cart.orderBumpIds].sort()
+  
+  const normalized = {
+    productId: cart.productId || '',
+    planId: cart.planId || '',
+    bumps: sortedBumps.join(','),
+    coupon: (cart.couponCode || '').toUpperCase(),
+    country: cart.customerCountry,
+    email: cart.customerEmail || '',
+    vat: cart.vatNumber || '',
+  }
+  
+  // Create deterministic string
+  const str = JSON.stringify(normalized)
+  
+  // Generate hash
+  return crypto
+    .createHash('sha256')
+    .update(str)
+    .digest('hex')
+    .substring(0, 16) // Use first 16 chars for brevity
+}
+
+/**
+ * Generate a quote ID from cart state and timestamp
+ */
+export function generateQuoteId(cart: CartState): string {
+  const cartKey = cartToKey(cart)
+  const timestamp = Date.now()
+  return `quote_${cartKey}_${timestamp}`
+}
+
+/**
+ * Check if a quote is expired (default 10 minutes)
+ */
+export function isQuoteExpired(
+  createdAt: Date,
+  expirationMinutes = 10
+): boolean {
+  const now = Date.now()
+  const created = new Date(createdAt).getTime()
+  const expirationMs = expirationMinutes * 60 * 1000
+  
+  return now - created > expirationMs
 }

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { Button } from '@/components/ui/button'
+import { formatMoney } from '@/lib/currency'
 import {
   Plus,
   TrendingUp,
@@ -55,14 +56,14 @@ const itemVariants = {
 }
 
 export function DashboardContent({ checkouts, products, databaseError }: DashboardContentProps) {
-  const totalRevenue = checkouts.reduce((sum, c) => sum + (c.revenue || 0), 0) / 100
+  const totalRevenue = checkouts.reduce((sum, c) => sum + (c.revenue || 0), 0)
   const totalViews = checkouts.reduce((sum, c) => sum + (c.views || 0), 0)
   const publishedCheckouts = checkouts.filter((c) => c.status === 'published').length
 
   const stats = [
     {
       title: 'Total Revenue',
-      value: `$${totalRevenue.toFixed(2)}`,
+      value: formatMoney(totalRevenue, 'USD'), // Using USD as default for now
       subtitle: 'Lifetime revenue',
       icon: DollarSign,
       gradient: 'from-green-400 to-green-600',

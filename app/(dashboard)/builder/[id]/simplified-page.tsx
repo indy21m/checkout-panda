@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
+import { getCurrencySymbol, type Currency } from '@/lib/currency'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   DndContext, 
@@ -1701,12 +1702,16 @@ export default function SimplifiedBuilderPage() {
       const productData: ProductBlockData = {
         name: product.name,
         description: product.description || '',
-        price: `$${(product.price / 100).toFixed(2)}`,
+        price: `${getCurrencySymbol(product.currency as Currency)}${(product.price / 100).toFixed(2)}`,
         comparePrice: undefined, // Product type doesn't have this field
         type: product.isRecurring ? 'subscription' : 'onetime',
         features: product.features || [],
         imageUrl: product.thumbnail || undefined,
         badge: undefined, // Product type doesn't have this field
+        // NEW: Store product ID and enable product-driven pricing
+        productId: product.id,
+        planId: product.plans?.[0]?.id || null, // Use first plan if available
+        useProductPricing: true, // Enable product-driven pricing
       }
       
       updateBlock(selectedBlockForProduct, { data: productData })

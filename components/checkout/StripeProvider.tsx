@@ -15,6 +15,9 @@ interface StripeProviderProps {
   clientSecret?: string
   amount?: number
   currency?: string
+  mode?: 'payment' | 'subscription' | 'setup'
+  country?: string
+  quoteId?: string
 }
 
 // Circle-inspired appearance theme
@@ -107,8 +110,23 @@ export function StripeProvider({
   children, 
   clientSecret,
   amount,
-  currency = 'usd'
+  currency = 'USD',
+  mode = 'payment',
+  country = 'US',
+  quoteId
 }: StripeProviderProps) {
+  // Create a unique key for the Elements provider to force remount
+  const elementsKey = React.useMemo(() => {
+    return [
+      clientSecret || 'deferred',
+      amount || 0,
+      currency,
+      mode,
+      country,
+      quoteId || 'no-quote',
+    ].join(':')
+  }, [clientSecret, amount, currency, mode, country, quoteId])
+  
   const options: StripeElementsOptions = React.useMemo(() => {
     const baseOptions = {
       appearance,
@@ -123,24 +141,35 @@ export function StripeProvider({
       } as StripeElementsOptions
     }
 
-    // Otherwise, use amount-based mode (for dynamic payment methods)
-    if (amount) {
+    // For deferred mode (subscriptions or dynamic amounts)
+    if (mode === 'subscription' || mode === 'setup') {
+      return {
+        ...baseOptions,
+        mode: mode as 'subscription' | 'setup',
+        currency: currency.toLowerCase(),
+        amount: amount || undefined,
+        setup_future_usage: mode === 'subscription' ? 'off_session' : undefined,
+      } as StripeElementsOptions
+    }
+
+    // Payment mode with amount
+    if (amount && amount > 0) {
       return {
         ...baseOptions,
         mode: 'payment' as const,
         amount,
-        currency,
+        currency: currency.toLowerCase(),
       } as StripeElementsOptions
     }
 
-    // Default to payment mode with a placeholder amount
+    // Default to deferred payment mode
     return {
       ...baseOptions,
       mode: 'payment' as const,
       amount: 1000, // $10.00 placeholder
-      currency,
+      currency: currency.toLowerCase(),
     } as StripeElementsOptions
-  }, [clientSecret, amount, currency])
+  }, [clientSecret, amount, currency, mode])
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     console.error('Stripe publishable key is not configured')
@@ -152,7 +181,7 @@ export function StripeProvider({
   }
 
   return (
-    <Elements stripe={stripePromise} options={options}>
+    <Elements key={elementsKey} stripe={stripePromise} options={options}>
       {children}
     </Elements>
   )

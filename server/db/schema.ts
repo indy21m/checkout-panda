@@ -355,7 +355,7 @@ export const coupons = pgTable(
     // Discount configuration
     discountType: discountTypeEnum('discount_type').notNull(),
     discountValue: integer('discount_value').notNull(), // percentage (0-100) or cents
-    currency: currencyEnum('currency').default('USD').notNull(),
+    currency: currencyEnum('currency').default('USD').notNull(), // Required for fixed discounts
     
     // Duration settings
     duration: couponDurationEnum('duration').default('once').notNull(),
@@ -364,13 +364,19 @@ export const coupons = pgTable(
     // Redemption limits
     maxRedemptions: integer('max_redemptions'), // null = unlimited
     maxRedemptionsPerCustomer: integer('max_redemptions_per_customer').default(1),
+    limitPerCustomer: integer('limit_per_customer').default(1), // Times a single customer can use
+    
+    // Minimum requirements
+    minSubtotal: integer('min_subtotal'), // Minimum cart subtotal in cents
     
     // Validity period
-    redeemableFrom: timestamp('redeemable_from').defaultNow(),
+    startAt: timestamp('start_at'), // When coupon becomes active
+    redeemableFrom: timestamp('redeemable_from').defaultNow(), // Deprecated, use startAt
     expiresAt: timestamp('expires_at'),
     
     // Product scope
     productScope: productScopeEnum('product_scope').default('all').notNull(),
+    appliesTo: jsonb('applies_to').$type<string[]>().default([]), // Array of product/plan IDs
     
     // Analytics
     timesRedeemed: integer('times_redeemed').default(0),
@@ -572,5 +578,157 @@ export const couponRedemptionsRelations = relations(couponRedemptions, ({ one })
   checkoutSession: one(checkoutSessions, {
     fields: [couponRedemptions.checkoutSessionId],
     references: [checkoutSessions.id],
+  }),
+}))
+
+// Quotes Table - For tracking pricing calculations and idempotency
+export const quotes = pgTable('quotes', {
+  id: text('id').primaryKey(), // quote_<hash>_<timestamp>
+  checkoutId: uuid('checkout_id')
+    .notNull()
+    .references(() => checkouts.id),
+  
+  // Cart state hash for caching
+  cartHash: text('cart_hash').notNull(),
+  
+  // Customer info
+  customerEmail: text('customer_email'),
+  customerCountry: text('customer_country').notNull(),
+  vatNumber: text('vat_number'),
+  
+  // Product/Plan references
+  productId: uuid('product_id').references(() => products.id),
+  planId: uuid('plan_id').references(() => productPlans.id),
+  
+  // Pricing (all in minor units)
+  currency: currencyEnum('currency').notNull(),
+  subtotal: integer('subtotal').notNull(),
+  discount: integer('discount').default(0),
+  tax: integer('tax').default(0),
+  total: integer('total').notNull(),
+  
+  // Line items breakdown
+  lineItems: jsonb('line_items').$type<Array<{
+    type: 'product' | 'plan' | 'bump' | 'discount' | 'tax'
+    label: string
+    amount: number
+  }>>().default([]),
+  
+  // Metadata
+  meta: jsonb('meta').$type<{
+    planInterval?: 'month' | 'year' | 'week' | 'day'
+    trialDays?: number
+    reverseCharge?: boolean
+    couponCode?: string
+    orderBumpIds?: string[]
+  }>().default({}),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // Quote expiration
+})
+
+// Orders Table - For webhook-driven fulfillment
+export const orderStatusEnum = pgEnum('order_status', [
+  'pending',
+  'processing',
+  'completed',
+  'failed',
+  'refunded',
+  'cancelled',
+])
+
+export const orders = pgTable('orders', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  
+  // References
+  checkoutId: uuid('checkout_id').references(() => checkouts.id),
+  quoteId: text('quote_id').references(() => quotes.id),
+  customerId: text('customer_id'), // Stripe customer ID
+  productId: uuid('product_id').references(() => products.id),
+  planId: uuid('plan_id').references(() => productPlans.id),
+  
+  // Stripe references
+  stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
+  stripeSetupIntentId: text('stripe_setup_intent_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  stripeInvoiceId: text('stripe_invoice_id'),
+  
+  // Customer info
+  customerEmail: text('customer_email').notNull(),
+  customerName: text('customer_name'),
+  customerPhone: text('customer_phone'),
+  
+  // Billing address
+  billingAddress: jsonb('billing_address').$type<{
+    line1?: string
+    line2?: string
+    city?: string
+    state?: string
+    postal_code?: string
+    country?: string
+  }>().default({}),
+  
+  // Pricing (frozen at time of order)
+  currency: currencyEnum('currency').notNull(),
+  subtotal: integer('subtotal').notNull(),
+  discount: integer('discount').default(0),
+  tax: integer('tax').default(0),
+  total: integer('total').notNull(),
+  
+  // Order details
+  status: orderStatusEnum('status').default('pending').notNull(),
+  orderItems: jsonb('order_items').$type<Array<{
+    type: 'product' | 'plan' | 'bump'
+    id: string
+    name: string
+    amount: number
+    quantity: number
+  }>>().default([]),
+  
+  // Metadata
+  metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+  failedAt: timestamp('failed_at'),
+  refundedAt: timestamp('refunded_at'),
+})
+
+// Quotes Relations
+export const quotesRelations = relations(quotes, ({ one, many }) => ({
+  checkout: one(checkouts, {
+    fields: [quotes.checkoutId],
+    references: [checkouts.id],
+  }),
+  product: one(products, {
+    fields: [quotes.productId],
+    references: [products.id],
+  }),
+  plan: one(productPlans, {
+    fields: [quotes.planId],
+    references: [productPlans.id],
+  }),
+  orders: many(orders),
+}))
+
+// Orders Relations
+export const ordersRelations = relations(orders, ({ one }) => ({
+  checkout: one(checkouts, {
+    fields: [orders.checkoutId],
+    references: [checkouts.id],
+  }),
+  quote: one(quotes, {
+    fields: [orders.quoteId],
+    references: [quotes.id],
+  }),
+  product: one(products, {
+    fields: [orders.productId],
+    references: [products.id],
+  }),
+  plan: one(productPlans, {
+    fields: [orders.planId],
+    references: [productPlans.id],
   }),
 }))

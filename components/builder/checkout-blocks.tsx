@@ -29,14 +29,20 @@ export interface HeaderBlockData {
 }
 
 export interface ProductBlockData {
+  // Display fields (for preview and manual entry)
   name: string
   description: string
-  price: string
+  price: string  // Display only when useProductPricing=false
   comparePrice?: string
   type: 'onetime' | 'subscription' | 'payment-plan'
   features: string[]
   imageUrl?: string
   badge?: string
+  
+  // NEW: Authoritative fields for product-driven pricing
+  productId?: string         // Database ID of the product
+  planId?: string | null     // Selected plan/price ID (optional)
+  useProductPricing?: boolean // Default true; if false, use manual price string
 }
 
 export interface BenefitsBlockData {
