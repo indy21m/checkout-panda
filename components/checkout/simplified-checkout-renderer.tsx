@@ -4,12 +4,9 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { 
-  Check, Shield, Star, ChevronDown, ChevronUp,
-  CreditCard, Lock, ShieldCheck, Tag
+  Check, Shield, Star, ChevronDown, ChevronUp, Tag
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { StripeProvider } from '@/components/checkout/StripeProvider'
 import { StripePaymentBlock } from '@/components/checkout/StripePaymentBlock'
 import { OrderSummary } from '@/components/checkout/OrderSummary'
