@@ -138,8 +138,8 @@ export function StripePaymentBlock({
       },
       requestPayerName: true,
       requestPayerEmail: true,
-      requestPayerPhone: data.collectPhone,
-      requestShipping: data.collectAddress,
+      requestPayerPhone: data.showPhoneField,
+      requestShipping: data.showBillingAddress,
     })
     
     // Check if PaymentRequest is available
@@ -318,8 +318,8 @@ export function StripePaymentBlock({
       billingDetails: {
         email: data.showEmailField ? 'auto' : 'never',
         name: data.showNameFields ? 'auto' : 'never',
-        phone: data.collectPhone ? 'auto' : 'never',
-        address: data.collectAddress ? 'auto' : 'never',
+        phone: data.showPhoneField ? 'auto' : 'never',
+        address: data.showBillingAddress ? 'auto' : 'never',
       }
     },
     wallets: {
@@ -470,7 +470,7 @@ export function StripePaymentBlock({
         )}
         
         {/* Billing Address */}
-        {clientSecret && data.collectAddress && (
+        {clientSecret && data.showBillingAddress && (
           <div>
             <Label className="text-sm font-medium text-gray-700 mb-3 block">
               Billing Address
