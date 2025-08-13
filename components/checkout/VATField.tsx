@@ -34,34 +34,41 @@ export function VATField({
   className,
   required = false,
 }: VATFieldProps) {
-  const [isValidating, setIsValidating] = React.useState(false)
-  const [validationResult, setValidationResult] = React.useState<{
+  type ValidationResult = {
     valid: boolean
     companyName?: string
     companyAddress?: string
     reverseCharge?: boolean
     error?: string
-  } | null>(null)
+  }
+
+  const [isValidating, setIsValidating] = React.useState(false)
+  const [validationResult, setValidationResult] = React.useState<ValidationResult | null>(null)
   const [hasValidated, setHasValidated] = React.useState(false)
   
   // VAT validation query
-  const validateVAT = api.checkout.validateVAT.useMutation({
-    onSuccess: (data) => {
-      setValidationResult(data)
+  const validateVAT = api.checkout.validateVAT.useMutation()
+  
+  React.useEffect(() => {
+    // Handle mutation success
+    if (validateVAT.data) {
+      setValidationResult(validateVAT.data)
       setHasValidated(true)
-      onValidation?.(data)
-    },
-    onError: (error) => {
+      onValidation?.(validateVAT.data)
+    }
+    // Handle mutation error
+    if (validateVAT.error) {
       setValidationResult({
         valid: false,
-        error: error.message || 'Validation failed',
-      })
+        error: validateVAT.error.message || 'Validation failed',
+      } as ValidationResult)
       setHasValidated(true)
-    },
-    onSettled: () => {
+    }
+    // Handle mutation settled
+    if (validateVAT.isSuccess || validateVAT.isError) {
       setIsValidating(false)
-    },
-  })
+    }
+  }, [validateVAT.data, validateVAT.error, validateVAT.isSuccess, validateVAT.isError, onValidation])
   
   // Handle VAT number change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

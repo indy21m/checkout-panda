@@ -580,9 +580,9 @@ export function StripePaymentBlock({
         </div>
         
         {/* Terms */}
-        {data.termsText && (
+        {data.secureText && (
           <p className="text-xs text-center text-gray-500">
-            {data.termsText}
+            {data.secureText}
           </p>
         )}
       </form>

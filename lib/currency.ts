@@ -1,15 +1,11 @@
 // Currency types and utilities
 import crypto from 'crypto'
 
-export const SUPPORTED_CURRENCIES = [
-  'USD', 'EUR', 'GBP', 'DKK', 'SEK', 'NOK', 'CAD', 'AUD', 'JPY',
-  'CNY', 'INR', 'BRL', 'MXN', 'CHF', 'SGD', 'HKD', 'NZD', 'KRW',
-  'TRY', 'RUB', 'PLN', 'THB', 'MYR', 'PHP', 'IDR', 'CZK', 'HUF',
-  'ILS', 'AED', 'SAR', 'ZAR'
-] as const
+// Database only supports these currencies
+export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'DKK'] as const
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number]
 
-// Currency configuration
+// Currency configuration - only includes database-supported currencies
 export const CURRENCY_CONFIG = {
   USD: {
     symbol: '$',
@@ -23,47 +19,11 @@ export const CURRENCY_CONFIG = {
     name: 'Euro',
     decimalPlaces: 2,
   },
-  GBP: {
-    symbol: '£',
-    locale: 'en-GB',
-    name: 'British Pound',
-    decimalPlaces: 2,
-  },
   DKK: {
     symbol: 'kr',
     locale: 'da-DK',
     name: 'Danish Krone',
     decimalPlaces: 2,
-  },
-  SEK: {
-    symbol: 'kr',
-    locale: 'sv-SE',
-    name: 'Swedish Krona',
-    decimalPlaces: 2,
-  },
-  NOK: {
-    symbol: 'kr',
-    locale: 'nb-NO',
-    name: 'Norwegian Krone',
-    decimalPlaces: 2,
-  },
-  CAD: {
-    symbol: '$',
-    locale: 'en-CA',
-    name: 'Canadian Dollar',
-    decimalPlaces: 2,
-  },
-  AUD: {
-    symbol: '$',
-    locale: 'en-AU',
-    name: 'Australian Dollar',
-    decimalPlaces: 2,
-  },
-  JPY: {
-    symbol: '¥',
-    locale: 'ja-JP',
-    name: 'Japanese Yen',
-    decimalPlaces: 0,
   },
 } as const
 

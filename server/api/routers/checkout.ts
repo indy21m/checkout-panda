@@ -8,11 +8,9 @@ import {
   products, 
   productPlans, 
   orderBumps,
-  coupons,
-  couponProducts,
-  couponRedemptions 
+  coupons
 } from '@/server/db/schema'
-import { eq, and, desc, or, sql } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { 
   generateQuoteId, 
@@ -20,7 +18,6 @@ import {
   isQuoteExpired,
   validateCurrencyConsistency,
   calculateDiscount,
-  applyFixedDiscount,
   type CartState 
 } from '@/lib/currency'
 
@@ -336,7 +333,11 @@ export const checkoutRouter = createTRPCRouter({
       let currency = 'USD'
       let planInterval: 'month' | 'year' | 'week' | 'day' | undefined
       let trialDays = 0
-      const lineItems: Array<{ type: string; label: string; amount: number }> = []
+      const lineItems: Array<{ 
+        type: 'product' | 'plan' | 'bump' | 'discount' | 'tax'
+        label: string
+        amount: number 
+      }> = []
       
       if (input.planId) {
         const plan = await ctx.db.query.productPlans.findFirst({
@@ -446,7 +447,7 @@ export const checkoutRouter = createTRPCRouter({
             (!coupon.expiresAt || coupon.expiresAt >= now)
           
           const isUnderRedemptionLimit = 
-            !coupon.maxRedemptions || coupon.timesRedeemed < coupon.maxRedemptions
+            !coupon.maxRedemptions || (coupon.timesRedeemed || 0) < coupon.maxRedemptions
           
           const meetsMinimum = 
             !coupon.minSubtotal || subtotal >= coupon.minSubtotal
@@ -525,32 +526,34 @@ export const checkoutRouter = createTRPCRouter({
       const total = Math.max(0, subtotal - discount + tax)
       
       // Store quote
+      const quoteValues = {
+        id: quoteId,
+        checkoutId: input.checkoutId,
+        cartHash,
+        customerEmail: input.customerEmail || null,
+        customerCountry: input.customerCountry,
+        vatNumber: input.vatNumber || null,
+        productId: input.productId || null,
+        planId: input.planId || null,
+        currency: currency as 'USD' | 'EUR' | 'DKK',
+        subtotal,
+        discount,
+        tax,
+        total,
+        lineItems,
+        meta: {
+          planInterval,
+          trialDays,
+          reverseCharge,
+          couponCode: couponMeta.code,
+          orderBumpIds: input.orderBumpIds,
+        },
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      }
+      
       const [newQuote] = await ctx.db
         .insert(quotes)
-        .values({
-          id: quoteId,
-          checkoutId: input.checkoutId,
-          cartHash,
-          customerEmail: input.customerEmail,
-          customerCountry: input.customerCountry,
-          vatNumber: input.vatNumber,
-          productId: input.productId,
-          planId: input.planId,
-          currency,
-          subtotal,
-          discount,
-          tax,
-          total,
-          lineItems,
-          meta: {
-            planInterval,
-            trialDays,
-            reverseCharge,
-            couponCode: couponMeta.code,
-            orderBumpIds: input.orderBumpIds,
-          },
-          expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-        })
+        .values(quoteValues)
         .returning()
       
       return newQuote
@@ -747,7 +750,7 @@ export const checkoutRouter = createTRPCRouter({
             orderBumpIds: JSON.stringify(input.orderBumpIds),
           },
           // Enable tax if it was calculated
-          ...(quote.tax > 0 && {
+          ...((quote.tax || 0) > 0 && {
             automatic_tax: {
               enabled: true,
             },
@@ -973,7 +976,7 @@ export const checkoutRouter = createTRPCRouter({
         countryCode: z.string().length(2).optional(),
       })
     )
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const { validateVATNumber } = await import('@/lib/vat')
       
       const result = await validateVATNumber(input.vatNumber)

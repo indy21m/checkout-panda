@@ -7,7 +7,7 @@
 
 import { db } from '@/server/db'
 import { orders, checkoutSessions } from '@/server/db/schema'
-import { desc, isNotNull } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 
 async function verifyWebhookOrders() {
   console.log('========================================')
@@ -93,7 +93,7 @@ async function verifyWebhookOrders() {
   })
   
   const completedSessions = sessions.filter(s => s.completedAt)
-  const abandonedSessions = sessions.filter(s => !s.completedAt && s.createdAt < new Date(Date.now() - 24 * 60 * 60 * 1000))
+  const abandonedSessions = sessions.filter(s => !s.completedAt && s.createdAt && s.createdAt < new Date(Date.now() - 24 * 60 * 60 * 1000))
   
   console.log(`Total sessions: ${sessions.length}`)
   console.log(`Completed: ${completedSessions.length}`)

@@ -7,8 +7,7 @@
 
 import { stripe } from '@/lib/stripe/config'
 import { db } from '@/server/db'
-import { products, plans, coupons, checkouts, orders } from '@/server/db/schema'
-import { eq } from 'drizzle-orm'
+import { products, productPlans, coupons } from '@/server/db/schema'
 
 // Test configuration
 const TEST_CONFIG = {
@@ -46,43 +45,48 @@ async function createTestData() {
   log('Creating test data...')
   
   // Create test product
-  await db.insert(products).values({
-    id: TEST_CONFIG.TEST_PRODUCT_ID,
+  const [testProduct] = await db.insert(products).values({
     name: 'Test Product',
+    slug: 'test-product',
+    type: 'digital' as const,
     description: 'Product for testing checkout flows',
     price: 2999, // $29.99
-    currency: 'USD',
+    currency: 'USD' as const,
     stripeProductId: 'prod_test_123',
-    createdBy: 'test-user',
-  }).onConflictDoNothing()
+    userId: 'test-user',
+  }).returning()
   
   // Create test plan (subscription)
-  await db.insert(plans).values({
-    id: TEST_CONFIG.TEST_PLAN_ID,
-    productId: TEST_CONFIG.TEST_PRODUCT_ID,
+  await db.insert(productPlans).values({
+    productId: testProduct?.id || '',
     name: 'Monthly Plan',
+    tier: 'basic' as const,
     price: 999, // $9.99/month
-    currency: 'USD',
-    billingInterval: 'month',
+    currency: 'USD' as const,
+    billingInterval: 'month' as const,
     trialDays: 7,
     stripePriceId: 'price_test_123',
-  }).onConflictDoNothing()
+  }).returning()
   
   // Create test coupons
   await db.insert(coupons).values([
     {
+      name: 'Test 100% Coupon',
       code: 'TEST100',
       description: '100% off for testing',
-      discountType: 'percentage',
+      discountType: 'percentage' as const,
       discountValue: 100,
       isActive: true,
+      userId: 'test-user',
     },
     {
+      name: 'Test 50% Coupon',
       code: 'TEST50',
       description: '50% off for testing',
-      discountType: 'percentage',
+      discountType: 'percentage' as const,
       discountValue: 50,
       isActive: true,
+      userId: 'test-user',
     },
   ]).onConflictDoNothing()
   
@@ -302,7 +306,7 @@ async function runTests() {
     const status = result.success ? '✅ PASS' : '❌ FAIL'
     console.log(`${status} - ${test}`)
     if (!result.success && result.error) {
-      console.log(`  Error: ${result.error.message || result.error}`)
+      console.log(`  Error: ${typeof result.error === 'object' && 'message' in result.error ? result.error.message : result.error}`)
     }
   })
   
