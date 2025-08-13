@@ -32,6 +32,7 @@ import type { RouterOutputs } from '@/lib/trpc/api'
 interface CartState {
   checkoutId: string
   productId?: string
+  offerId?: string  // Add offerId support
   planId?: string
   currency: string
   orderBumps: Array<{
@@ -78,6 +79,7 @@ function useCartAndQuote(initialCart: CartState) {
     {
       checkoutId: debouncedCart.checkoutId,
       productId: debouncedCart.productId,
+      offerId: debouncedCart.offerId,  // Add offerId to query
       planId: debouncedCart.planId,
       orderBumpIds: debouncedCart.orderBumps
         .filter(b => b.selected)
@@ -90,7 +92,7 @@ function useCartAndQuote(initialCart: CartState) {
       enableStripeTax: false, // Can be enabled via settings
     },
     {
-      enabled: !!debouncedCart.productId, // Only fetch quote if we have a product
+      enabled: !!(debouncedCart.productId || debouncedCart.offerId), // Enable if we have product or offer
     }
   )
   
@@ -154,6 +156,7 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
     return {
       checkoutId: checkout.id,
       productId: productData?.productId,
+      offerId: productData?.offerId,  // Extract offerId from product block
       planId: productData?.planId || undefined,
       currency: 'USD', // Default, will be updated from product
       orderBumps: orderBumpBlocks.map(block => {
@@ -204,9 +207,14 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
     await initializePaymentMutation.mutateAsync({
       quoteId: quote.id,
       customerEmail: email,
-      checkoutId: checkout.id
+      checkoutId: checkout.id,
+      productId: cart.productId,
+      offerId: cart.offerId,  // Include offerId
+      planId: cart.planId,
+      orderBumpIds: cart.orderBumps.filter(b => b.selected).map(b => b.productId || b.id),
+      couponCode: cart.couponCode
     })
-  }, [quote, isInitializingPayment, updateCart, checkout.id, initializePaymentMutation])
+  }, [quote, isInitializingPayment, updateCart, checkout.id, cart, initializePaymentMutation])
   
   // Separate blocks by column for layout
   const leftBlocks = visibleBlocks.filter(b => b.column === 'left' || (!b.column && b.type !== 'product'))
@@ -301,6 +309,7 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
                           checkoutId={checkout.id}
                           quote={quote}
                           productId={cart.productId}
+                          offerId={cart.offerId}  // Pass offerId
                           planId={cart.planId}
                           orderBumpIds={cart.orderBumps.filter(b => b.selected).map(b => b.id)}
                           amount={quote.total}
@@ -553,7 +562,20 @@ function ProductBlock({
   quote: Quote | null
 }) {
   const productData = block.data as ProductBlockData
-  const currency = quote?.currency || cart.currency
+  
+  // Fetch offer data if offerId is present
+  const { data: offer } = api.offer.getById.useQuery(
+    { id: productData.offerId! },
+    { enabled: !!productData.offerId && productData.useOfferPricing }
+  )
+  
+  // Use offer data when available, otherwise fall back to productData
+  const displayName = offer?.name || productData.name
+  const displayDescription = offer?.description || productData.description
+  const displayBadge = offer?.badgeText || productData.badge
+  const displayFeatures = offer?.product?.features || productData.features
+  
+  const currency = quote?.currency || offer?.currency || cart.currency || 'USD'
   
   return (
     <motion.div
@@ -562,27 +584,42 @@ function ProductBlock({
       transition={{ delay: 0.1 }}
       className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
     >
-      {productData.badge && (
+      {displayBadge && (
         <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full mb-4">
           <Tag className="w-3 h-3" />
-          {productData.badge}
+          {displayBadge}
         </span>
       )}
-      <h2 className="text-2xl font-bold mb-2">{productData.name}</h2>
-      <p className="text-gray-600 mb-4">{productData.description}</p>
+      <h2 className="text-2xl font-bold mb-2">{displayName}</h2>
+      <p className="text-gray-600 mb-4">{displayDescription}</p>
       
-      {/* Use quote price if available, otherwise fallback to display price */}
+      {/* Use quote price if available, otherwise fallback to offer/display price */}
       <div className="flex items-baseline gap-2 mb-6">
         {quote ? (
           <>
             <span className="text-3xl font-bold text-blue-600">
               {formatMoney(quote.subtotal, currency)}
             </span>
-            {productData.comparePrice && (
-              <span className="text-lg text-gray-400 line-through">{productData.comparePrice}</span>
+            {(offer?.compareAtPrice || productData.comparePrice) && (
+              <span className="text-lg text-gray-400 line-through">
+                {offer?.compareAtPrice 
+                  ? formatMoney(offer.compareAtPrice, currency)
+                  : productData.comparePrice}
+              </span>
             )}
             {quote.meta?.planInterval && (
               <span className="text-gray-500">/{quote.meta.planInterval}</span>
+            )}
+          </>
+        ) : offer && productData.useOfferPricing ? (
+          <>
+            <span className="text-3xl font-bold text-blue-600">
+              {formatMoney(offer.price, currency)}
+            </span>
+            {offer.compareAtPrice && (
+              <span className="text-lg text-gray-400 line-through">
+                {formatMoney(offer.compareAtPrice, currency)}
+              </span>
             )}
           </>
         ) : (
@@ -597,7 +634,7 @@ function ProductBlock({
       </div>
       
       <ul className="space-y-3">
-        {productData.features.map((feature, i) => (
+        {displayFeatures.map((feature, i) => (
           <li key={i} className="flex items-start gap-3">
             <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
             <span className="text-gray-700">{feature}</span>
@@ -642,7 +679,7 @@ function OrderBumpBlock({
           className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 cursor-pointer"
         />
         <div className="flex-1">
-          <h4 className="font-bold text-lg mb-1">{bumpData.title}</h4>
+          <h4 className="font-bold text-lg mb-1">{bumpData.headline || bumpData.title}</h4>
           <p className="text-gray-700 mb-2">{bumpData.description}</p>
           <div className="flex items-baseline gap-2">
             <span className="font-bold text-green-600">{bumpData.price}</span>

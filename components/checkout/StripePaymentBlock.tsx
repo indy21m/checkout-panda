@@ -35,6 +35,7 @@ interface StripePaymentBlockProps {
   checkoutId: string
   quote?: Quote | null
   productId?: string
+  offerId?: string  // Add offerId
   planId?: string
   orderBumpIds?: string[]
   amount: number
