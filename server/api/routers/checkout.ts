@@ -607,6 +607,7 @@ export const checkoutRouter = createTRPCRouter({
         // Re-send cart params to verify quote is current
         checkoutId: z.string().uuid(),
         productId: z.string().uuid().optional(),
+        offerId: z.string().uuid().optional(),  // Add offerId support
         planId: z.string().uuid().optional(),
         orderBumpIds: z.array(z.string().uuid()).default([]),
         couponCode: z.string().optional(),
@@ -742,6 +743,7 @@ export const checkoutRouter = createTRPCRouter({
                 checkoutId: input.checkoutId,
                 quoteId: quote.id,
                 productId: input.productId || '',
+                offerId: input.offerId || '',
                 planId: input.planId || '',
                 couponCode: input.couponCode || '',
               },
@@ -783,6 +785,7 @@ export const checkoutRouter = createTRPCRouter({
             checkoutId: input.checkoutId,
             quoteId: quote.id,
             productId: input.productId || '',
+            offerId: input.offerId || '',
             planId: input.planId || '',
             couponCode: input.couponCode || '',
             orderBumpIds: JSON.stringify(input.orderBumpIds),

@@ -17,6 +17,7 @@ import {
   Search,
   Plus,
   Tag,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'

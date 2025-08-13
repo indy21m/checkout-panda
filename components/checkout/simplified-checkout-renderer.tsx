@@ -679,7 +679,7 @@ function OrderBumpBlock({
           className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 cursor-pointer"
         />
         <div className="flex-1">
-          <h4 className="font-bold text-lg mb-1">{bumpData.headline || bumpData.title}</h4>
+          <h4 className="font-bold text-lg mb-1">{bumpData.title}</h4>
           <p className="text-gray-700 mb-2">{bumpData.description}</p>
           <div className="flex items-baseline gap-2">
             <span className="font-bold text-green-600">{bumpData.price}</span>
