@@ -208,7 +208,8 @@ export function EnhancedProductEditor({
   })
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(productSchema) as any,
     defaultValues: {
       name: '',
       slug: '',

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
 import { offers, products, coupons } from '@/server/db/schema'
-import { eq, and, desc, asc, or, sql } from 'drizzle-orm'
+import { eq, and, desc, asc, or, sql, isNull, lte, gte } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { SUPPORTED_CURRENCIES } from '@/lib/currency'
 
@@ -334,14 +334,12 @@ export const offerRouter = createTRPCRouter({
           eq(offers.context, input.context),
           eq(offers.isActive, true),
           or(
-            eq(offers.availableFrom, null),
-            // @ts-ignore - date comparison
-            offers.availableFrom <= now
+            isNull(offers.availableFrom),
+            lte(offers.availableFrom, now)
           ),
           or(
-            eq(offers.availableUntil, null),
-            // @ts-ignore - date comparison
-            offers.availableUntil >= now
+            isNull(offers.availableUntil),
+            gte(offers.availableUntil, now)
           )
         ),
         with: {
@@ -354,7 +352,7 @@ export const offerRouter = createTRPCRouter({
       // Filter by redemption limits
       const availableOffers = activeOffers.filter((offer) => {
         if (!offer.maxRedemptions) return true
-        return offer.currentRedemptions < offer.maxRedemptions
+        return (offer.currentRedemptions || 0) < offer.maxRedemptions
       })
 
       return availableOffers

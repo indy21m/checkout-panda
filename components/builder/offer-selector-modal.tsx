@@ -15,7 +15,6 @@ import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { 
   Search, 
   Package, 
-  DollarSign, 
   Check, 
   Loader2,
   ShoppingCart,

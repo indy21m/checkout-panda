@@ -385,7 +385,7 @@ export const checkoutRouter = createTRPCRouter({
         if (!offer.isActive ||
             (offer.availableFrom && offer.availableFrom > now) ||
             (offer.availableUntil && offer.availableUntil < now) ||
-            (offer.maxRedemptions && offer.currentRedemptions >= offer.maxRedemptions)) {
+            (offer.maxRedemptions && (offer.currentRedemptions || 0) >= offer.maxRedemptions)) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Offer is not available',

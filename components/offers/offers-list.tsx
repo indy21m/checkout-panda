@@ -12,16 +12,13 @@ import {
   Package,
   Tag,
   TrendingUp,
-  ChevronDown,
   MoreVertical,
   Edit,
   Copy,
   Trash2,
   Eye,
   EyeOff,
-  DollarSign,
   ShoppingCart,
-  Zap,
   TrendingDown,
 } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
@@ -149,7 +146,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 30 },
+      transition: { type: 'spring' as const, stiffness: 300, damping: 30 },
     },
   }
 
@@ -372,7 +369,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                           <p className="text-xs text-gray-500">Revenue</p>
                           <p className="font-semibold text-gray-900">
                             {getCurrencySymbol(offer.currency)}
-                            {(offer.revenue / 100).toFixed(0)}
+                            {((offer.revenue || 0) / 100).toFixed(0)}
                           </p>
                         </div>
                       </div>

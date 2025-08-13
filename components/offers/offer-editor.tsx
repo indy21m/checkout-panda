@@ -31,10 +31,6 @@ import {
   CalendarIcon, 
   Package, 
   Tag, 
-  DollarSign, 
-  Settings,
-  Image,
-  Link,
   ShoppingCart,
   TrendingUp,
   TrendingDown,
@@ -121,7 +117,8 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
   const { data: coupons = [] } = api.coupon.list.useQuery({})
 
   const form = useForm<OfferFormData>({
-    resolver: zodResolver(offerSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(offerSchema) as any,
     defaultValues: {
       name: '',
       description: '',
@@ -156,7 +153,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
         availableFrom: offer.availableFrom ? new Date(offer.availableFrom) : undefined,
         availableUntil: offer.availableUntil ? new Date(offer.availableUntil) : undefined,
         maxRedemptions: offer.maxRedemptions || undefined,
-        isActive: offer.isActive,
+        isActive: offer.isActive ?? true,
       })
     } else {
       form.reset()
@@ -204,7 +201,6 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
 
   const selectedProduct = products.find(p => p.id === form.watch('productId'))
   const selectedContext = form.watch('context')
-  const ContextIcon = contextIcons[selectedContext]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -296,7 +292,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                         <button
                           key={value}
                           type="button"
-                          onClick={() => form.setValue('context', value as any)}
+                          onClick={() => form.setValue('context', value as 'standalone' | 'order_bump' | 'upsell' | 'downsell')}
                           className={cn(
                             'flex items-center gap-3 p-4 rounded-lg border-2 transition-all',
                             isSelected

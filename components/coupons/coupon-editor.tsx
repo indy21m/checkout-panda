@@ -104,7 +104,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
         maxRedemptionsPerCustomer: coupon.maxRedemptionsPerCustomer || 1,
         redeemableFrom: coupon.redeemableFrom ? new Date(coupon.redeemableFrom) : undefined,
         expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt) : undefined,
-        offerScope: coupon.offerScope || 'all',
+        offerScope: coupon.productScope || 'all',
       })
       
       // TODO: Update when coupon-offers relation is added to database
@@ -113,7 +113,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
       form.setValue('offerIds', offerIds)
     } else {
       form.reset()
-      setSelectedProducts([])
+      setSelectedOffers([])
     }
   }, [coupon, form])
 
