@@ -13,13 +13,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Package,
-  DollarSign,
   Image as ImageIcon,
-  Settings,
   Sparkles,
   Upload,
   X,
@@ -29,17 +26,26 @@ import {
   Gift,
   Star,
   TrendingUp,
+  TrendingDown,
   Plus,
   Trash2,
   GripVertical,
   Eye,
   EyeOff,
+  ShoppingCart,
+  Monitor,
+  Briefcase,
+  Users,
+  Layers,
+  Edit2,
+  ExternalLink,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
@@ -331,14 +337,10 @@ export function EnhancedProductEditor({
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="mb-6 grid w-full grid-cols-5">
+                <TabsList className="mb-6 grid w-full grid-cols-4">
                   <TabsTrigger value="details" className="flex items-center gap-2">
                     <Package className="h-4 w-4" />
                     Details
-                  </TabsTrigger>
-                  <TabsTrigger value="pricing" className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Pricing
                   </TabsTrigger>
                   <TabsTrigger value="features" className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4" />
@@ -348,9 +350,9 @@ export function EnhancedProductEditor({
                     <ImageIcon className="h-4 w-4" />
                     Media
                   </TabsTrigger>
-                  <TabsTrigger value="settings" className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Settings
+                  <TabsTrigger value="offers" className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Offers
                   </TabsTrigger>
                 </TabsList>
 
@@ -421,31 +423,83 @@ export function EnhancedProductEditor({
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-4">
                         <div>
-                          <Label htmlFor="type">Product Type</Label>
-                          <select
-                            id="type"
-                            {...form.register('type')}
-                            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-                          >
-                            <option value="digital">Digital Product</option>
-                            <option value="service">Service</option>
-                            <option value="membership">Membership</option>
-                            <option value="bundle">Bundle</option>
-                          </select>
+                          <Label>Product Type</Label>
+                          <div className="mt-2 grid grid-cols-4 gap-2">
+                            {[
+                              { value: 'digital', label: 'Digital', icon: Monitor },
+                              { value: 'service', label: 'Service', icon: Briefcase },
+                              { value: 'membership', label: 'Membership', icon: Users },
+                              { value: 'bundle', label: 'Bundle', icon: Layers },
+                            ].map((type) => {
+                              const Icon = type.icon
+                              const isSelected = form.watch('type') === type.value
+                              return (
+                                <button
+                                  key={type.value}
+                                  type="button"
+                                  onClick={() => form.setValue('type', type.value as 'digital' | 'service' | 'membership' | 'bundle')}
+                                  className={`
+                                    flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all
+                                    ${isSelected 
+                                      ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }
+                                  `}
+                                >
+                                  <Icon className={`h-5 w-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+                                  <span className="text-sm font-medium">{type.label}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
+                        
                         <div>
-                          <Label htmlFor="status">Status</Label>
-                          <select
-                            id="status"
-                            {...form.register('status')}
-                            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-                          >
-                            <option value="draft">Draft</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
+                          <Label>Status</Label>
+                          <div className="mt-2 flex gap-2">
+                            {[
+                              { value: 'draft', label: 'Draft', color: 'gray' },
+                              { value: 'active', label: 'Active', color: 'green' },
+                              { value: 'inactive', label: 'Inactive', color: 'red' },
+                            ].map((status) => {
+                              const isSelected = form.watch('status') === status.value
+                              return (
+                                <button
+                                  key={status.value}
+                                  type="button"
+                                  onClick={() => form.setValue('status', status.value as 'draft' | 'active' | 'inactive')}
+                                  className={`
+                                    flex-1 rounded-lg border-2 px-4 py-2 font-medium transition-all
+                                    ${isSelected 
+                                      ? status.color === 'green' 
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : status.color === 'red'
+                                        ? 'border-red-500 bg-red-50 text-red-700'
+                                        : 'border-gray-500 bg-gray-50 text-gray-700'
+                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }
+                                  `}
+                                >
+                                  <div className="flex items-center justify-center gap-2">
+                                    <div className={`
+                                      h-2 w-2 rounded-full
+                                      ${isSelected 
+                                        ? status.color === 'green' 
+                                          ? 'bg-green-500'
+                                          : status.color === 'red'
+                                          ? 'bg-red-500'
+                                          : 'bg-gray-500'
+                                        : 'bg-gray-300'
+                                      }
+                                    `} />
+                                    {status.label}
+                                  </div>
+                                </button>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                       
@@ -474,15 +528,6 @@ export function EnhancedProductEditor({
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="pricing" className="mt-0">
-                      <div className="py-8 text-center text-gray-500">
-                        <DollarSign className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                        <p>Pricing is managed in the Pricing Plans section</p>
-                        <Button variant="link" className="mt-2">
-                          Go to Pricing Plans →
-                        </Button>
-                      </div>
-                    </TabsContent>
 
                     <TabsContent value="features" className="mt-0 space-y-4">
                       <div className="mb-4 flex items-center justify-between">
@@ -567,39 +612,10 @@ export function EnhancedProductEditor({
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="settings" className="mt-0 space-y-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                          <div>
-                            <h4 className="font-medium">Feature on Homepage</h4>
-                            <p className="text-sm text-gray-500">
-                              Display this product prominently
-                            </p>
-                          </div>
-                          <Switch />
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                          <div>
-                            <h4 className="font-medium">Enable Reviews</h4>
-                            <p className="text-sm text-gray-500">
-                              Allow customers to leave reviews
-                            </p>
-                          </div>
-                          <Switch />
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                          <div>
-                            <h4 className="font-medium">Stock Tracking</h4>
-                            <p className="text-sm text-gray-500">
-                              Track inventory for physical products
-                            </p>
-                          </div>
-                          <Switch />
-                        </div>
-                      </div>
+                    <TabsContent value="offers" className="mt-0">
+                      <OffersTab productId={productId} />
                     </TabsContent>
+
                   </motion.div>
                 </AnimatePresence>
               </Tabs>
@@ -695,5 +711,169 @@ export function EnhancedProductEditor({
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// Offers Tab Component
+function OffersTab({ productId }: { productId?: string }) {
+  const router = useRouter()
+  const { data: offers, isLoading } = api.offer.list.useQuery(
+    { productId },
+    { enabled: !!productId }
+  )
+
+  const contextConfig = {
+    standalone: { icon: Package, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+    order_bump: { icon: ShoppingCart, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+    upsell: { icon: TrendingUp, color: 'bg-green-100 text-green-800 border-green-200' },
+    downsell: { icon: TrendingDown, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  }
+
+  if (!productId) {
+    return (
+      <div className="py-12 text-center">
+        <Zap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+        <p className="text-gray-500 mb-4">Save the product first to manage offers</p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="py-12 text-center">
+        <div className="inline-flex items-center gap-2 text-gray-500">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+          Loading offers...
+        </div>
+      </div>
+    )
+  }
+
+  const groupedOffers = offers?.reduce((acc, offer) => {
+    const context = offer.context
+    if (!acc[context]) acc[context] = []
+    acc[context]!.push(offer)
+    return acc
+  }, {} as Record<string, typeof offers>)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold">Product Offers</h3>
+          <p className="text-sm text-gray-500">
+            Different pricing for different contexts
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => router.push(`/offers?productId=${productId}`)}
+        >
+          <Plus className="mr-1 h-4 w-4" />
+          Create Offer
+        </Button>
+      </div>
+
+      {!offers || offers.length === 0 ? (
+        <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
+          <Zap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+          <p className="mb-4 text-gray-500">No offers created yet</p>
+          <p className="text-sm text-gray-400 mb-4">
+            Create offers to set different prices for order bumps, upsells, and downsells
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push(`/offers?productId=${productId}`)}
+          >
+            Create Your First Offer
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {(['standalone', 'order_bump', 'upsell', 'downsell'] as const).map(context => {
+            const contextOffers = groupedOffers?.[context] || []
+            const config = contextConfig[context]
+            const Icon = config.icon
+
+            return (
+              <div key={context} className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Icon className="h-4 w-4" />
+                  {context.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                  ).join(' ')}
+                  {contextOffers.length > 0 && (
+                    <span className="text-xs text-gray-500">({contextOffers.length})</span>
+                  )}
+                </div>
+                
+                {contextOffers.length === 0 ? (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+                    No {context.replace('_', ' ')} offers
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {contextOffers.map((offer) => (
+                      <div
+                        key={offer.id}
+                        className={`rounded-lg border p-3 ${config.color}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="font-medium">{offer.name}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-lg font-bold">
+                                  ${(offer.price / 100).toFixed(2)}
+                                </span>
+                                {offer.compareAtPrice && (
+                                  <span className="text-sm line-through opacity-60">
+                                    ${(offer.compareAtPrice / 100).toFixed(2)}
+                                  </span>
+                                )}
+                                {offer.isActive ? (
+                                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                                    Active
+                                  </span>
+                                ) : (
+                                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                    Inactive
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/offers?edit=${offer.id}`)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/offers`)}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
