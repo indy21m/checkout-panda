@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
@@ -30,8 +30,6 @@ import {
   Plus,
   Trash2,
   GripVertical,
-  Eye,
-  EyeOff,
   ShoppingCart,
   Monitor,
   Briefcase,
@@ -178,7 +176,6 @@ export function EnhancedProductEditor({
   const [activeTab, setActiveTab] = useState('details')
   const [features, setFeatures] = useState<Array<{ id: string; text: string; icon?: string }>>([])
   const [mediaUrl, setMediaUrl] = useState('')
-  const [previewMode, setPreviewMode] = useState(false)
   const utils = api.useUtils()
 
   // Fetch product data if editing
@@ -315,10 +312,8 @@ export function EnhancedProductEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden p-0">
-        <div className="flex h-full">
-          {/* Editor Section */}
-          <div className="flex-1 overflow-y-auto">
+      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0">
+        <div className="flex h-full flex-col">
             <DialogHeader className="p-6 pb-0">
               <div className="flex items-center justify-between">
                 <div>
@@ -329,14 +324,11 @@ export function EnhancedProductEditor({
                     Design a compelling product that converts visitors into customers
                   </DialogDescription>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setPreviewMode(!previewMode)}>
-                  {previewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
               </div>
             </DialogHeader>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col overflow-hidden p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden">
                 <TabsList className="mb-6 grid w-full grid-cols-4">
                   <TabsTrigger value="details" className="flex items-center gap-2">
                     <Package className="h-4 w-4" />
@@ -356,14 +348,7 @@ export function EnhancedProductEditor({
                   </TabsTrigger>
                 </TabsList>
 
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
+                <div className="flex-1 overflow-y-auto">
                     <TabsContent value="details" className="mt-0 space-y-6">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -596,15 +581,39 @@ export function EnhancedProductEditor({
                               </div>
                             </div>
                           ) : (
-                            <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center">
-                              <Upload className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                              <p className="mb-4 text-gray-500">Upload product image</p>
+                            <div className="space-y-4">
+                              <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
+                                <Upload className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+                                <p className="mb-2 text-lg font-medium text-gray-700">Upload product image</p>
+                                <p className="text-sm text-gray-500">Drag and drop or click to browse</p>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  className="mt-4"
+                                  onClick={() => {
+                                    // In a real app, this would open a file picker
+                                    const url = prompt('Enter image URL:')
+                                    if (url) setMediaUrl(url)
+                                  }}
+                                >
+                                  Choose File
+                                </Button>
+                              </div>
+                              <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                  <span className="w-full border-t border-gray-200" />
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                  <span className="bg-white px-4 text-gray-500">Or paste image URL</span>
+                                </div>
+                              </div>
                               <Input
                                 type="url"
-                                placeholder="Or paste image URL..."
+                                placeholder="https://example.com/image.jpg"
                                 value={mediaUrl}
                                 onChange={(e) => setMediaUrl(e.target.value)}
-                                className="mx-auto max-w-sm"
+                                className="w-full"
                               />
                             </div>
                           )}
@@ -616,12 +625,11 @@ export function EnhancedProductEditor({
                       <OffersTab productId={productId} />
                     </TabsContent>
 
-                  </motion.div>
-                </AnimatePresence>
+                </div>
               </Tabs>
 
               {/* Form Actions */}
-              <div className="mt-8 flex justify-end gap-3 border-t pt-6">
+              <div className="mt-auto flex justify-end gap-3 border-t bg-white pt-4">
                 <Button
                   type="button"
                   variant="ghost"
@@ -648,66 +656,6 @@ export function EnhancedProductEditor({
                 </Button>
               </div>
             </form>
-          </div>
-
-          {/* Preview Section */}
-          <AnimatePresence>
-            {previewMode && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 400, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden border-l bg-gray-50"
-              >
-                <div className="p-6">
-                  <h3 className="mb-4 font-semibold">Preview</h3>
-                  <div className="rounded-lg bg-white p-6 shadow-sm">
-                    {mediaUrl && (
-                      <img
-                        src={mediaUrl}
-                        alt="Preview"
-                        className="mb-4 h-48 w-full rounded-lg object-cover"
-                      />
-                    )}
-                    <h4 className="mb-2 text-xl font-bold">
-                      {form.watch('name') || 'Product Name'}
-                    </h4>
-                    <p className="mb-4 text-gray-600">
-                      {form.watch('description') || 'Product description will appear here...'}
-                    </p>
-
-                    {features.length > 0 && (
-                      <div className="space-y-2">
-                        {features
-                          .filter((f) => f.text)
-                          .map((feature) => {
-                            const icons = {
-                              check: Check,
-                              star: Star,
-                              zap: Zap,
-                              shield: Shield,
-                              gift: Gift,
-                              trending: TrendingUp,
-                            }
-                            const Icon = icons[feature.icon as keyof typeof icons] || Check
-
-                            return (
-                              <div key={feature.id} className="flex items-center gap-2 text-sm">
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
-                                  <Icon className="h-3 w-3 text-green-600" />
-                                </div>
-                                <span>{feature.text}</span>
-                              </div>
-                            )
-                          })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>

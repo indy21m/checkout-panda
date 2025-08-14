@@ -140,7 +140,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
         price: offer.price / 100, // Convert from cents to dollars
         compareAtPrice: offer.compareAtPrice ? offer.compareAtPrice / 100 : undefined,
         currency: offer.currency,
-        couponId: offer.couponId || undefined,
+        couponId: offer.couponId || 'none',
         headline: offer.headline || '',
         badgeText: offer.badgeText || '',
         badgeColor: offer.badgeColor || '',
@@ -189,7 +189,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
       ...data,
       price: Math.round(data.price * 100), // Convert dollars to cents
       compareAtPrice: data.compareAtPrice ? Math.round(data.compareAtPrice * 100) : undefined,
-      couponId: data.couponId || undefined,
+      couponId: data.couponId === 'none' ? undefined : data.couponId || undefined,
     }
 
     if (offerId) {
@@ -204,7 +204,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full min-w-[700px] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             {offerId ? 'Edit Offer' : 'Create New Offer'}
@@ -406,7 +406,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       <SelectValue placeholder="No coupon" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No coupon</SelectItem>
+                      <SelectItem value="none">No coupon</SelectItem>
                       {coupons.map((coupon) => (
                         <SelectItem key={coupon.id} value={coupon.id}>
                           <div className="flex items-center gap-2">
@@ -643,7 +643,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
             </div>
           </Tabs>
 
-          <div className="flex justify-end gap-3 pt-6 border-t">
+          <div className="mt-auto flex justify-end gap-3 border-t bg-white pt-4">
             <Button
               type="button"
               variant="outline"
