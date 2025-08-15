@@ -25,6 +25,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { 
@@ -449,6 +450,16 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
               </TabsContent>
 
               <TabsContent value="display" className="space-y-6 mt-6">
+                {/* Offer Image */}
+                <div>
+                  <ImageUpload
+                    value={form.watch('imageUrl')}
+                    onChange={(url) => form.setValue('imageUrl', url)}
+                    label="Offer Image (optional)"
+                    placeholder="Upload offer image"
+                  />
+                </div>
+
                 {/* Headline */}
                 <div>
                   <Label htmlFor="headline">

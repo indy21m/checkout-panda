@@ -18,8 +18,6 @@ import {
   Package,
   Image as ImageIcon,
   Sparkles,
-  Upload,
-  X,
   Check,
   Zap,
   Shield,
@@ -49,6 +47,7 @@ import { DndContext, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { ImageUpload } from '@/components/ui/image-upload'
 
 // Schema for product form
 const productSchema = z.object({
@@ -558,67 +557,12 @@ export function EnhancedProductEditor({
                     </TabsContent>
 
                     <TabsContent value="media" className="mt-0 space-y-6">
-                      <div>
-                        <Label>Product Image</Label>
-                        <div className="mt-2">
-                          {mediaUrl ? (
-                            <div className="group relative">
-                              <img
-                                src={mediaUrl}
-                                alt="Product"
-                                className="h-48 w-full rounded-lg object-cover"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => setMediaUrl('')}
-                                >
-                                  <X className="mr-1 h-4 w-4" />
-                                  Remove
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-                                <Upload className="mx-auto mb-4 h-16 w-16 text-gray-300" />
-                                <p className="mb-2 text-lg font-medium text-gray-700">Upload product image</p>
-                                <p className="text-sm text-gray-500">Drag and drop or click to browse</p>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  className="mt-4"
-                                  onClick={() => {
-                                    // In a real app, this would open a file picker
-                                    const url = prompt('Enter image URL:')
-                                    if (url) setMediaUrl(url)
-                                  }}
-                                >
-                                  Choose File
-                                </Button>
-                              </div>
-                              <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                  <span className="w-full border-t border-gray-200" />
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                  <span className="bg-white px-4 text-gray-500">Or paste image URL</span>
-                                </div>
-                              </div>
-                              <Input
-                                type="url"
-                                placeholder="https://example.com/image.jpg"
-                                value={mediaUrl}
-                                onChange={(e) => setMediaUrl(e.target.value)}
-                                className="w-full"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <ImageUpload
+                        value={mediaUrl}
+                        onChange={setMediaUrl}
+                        label="Product Image"
+                        placeholder="Upload product image"
+                      />
                     </TabsContent>
 
                     <TabsContent value="offers" className="mt-0">
