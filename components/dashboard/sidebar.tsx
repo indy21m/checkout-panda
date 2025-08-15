@@ -20,7 +20,6 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 import { GradientText } from '@/components/ui/gradient-text'
 
 interface NavItem {

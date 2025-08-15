@@ -25,7 +25,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ImageUpload } from '@/components/ui/image-upload'
+import { ImagePicker } from '@/components/ui/image-picker'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { 
@@ -452,11 +452,12 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
               <TabsContent value="display" className="space-y-6 mt-6">
                 {/* Offer Image */}
                 <div>
-                  <ImageUpload
+                  <ImagePicker
                     value={form.watch('imageUrl')}
                     onChange={(url) => form.setValue('imageUrl', url)}
-                    label="Offer Image (optional)"
-                    placeholder="Upload offer image"
+                    onRemove={() => form.setValue('imageUrl', '')}
+                    label="Offer Image"
+                    placeholder="Choose offer image"
                   />
                 </div>
 
@@ -499,19 +500,6 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                   </div>
                 </div>
 
-                {/* Image URL */}
-                <div>
-                  <Label htmlFor="imageUrl">
-                    Image URL <span className="text-gray-500">(optional)</span>
-                  </Label>
-                  <Input
-                    id="imageUrl"
-                    type="url"
-                    {...form.register('imageUrl')}
-                    placeholder="https://example.com/image.jpg"
-                    className="mt-2"
-                  />
-                </div>
 
                 {/* Order Bump Description */}
                 {selectedContext === 'order_bump' && (

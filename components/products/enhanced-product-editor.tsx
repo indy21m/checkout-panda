@@ -47,7 +47,7 @@ import { DndContext, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ImageUpload } from '@/components/ui/image-upload'
+import { ImagePicker } from '@/components/ui/image-picker'
 
 // Schema for product form
 const productSchema = z.object({
@@ -557,11 +557,11 @@ export function EnhancedProductEditor({
                     </TabsContent>
 
                     <TabsContent value="media" className="mt-0 space-y-6">
-                      <ImageUpload
+                      <ImagePicker
                         value={mediaUrl}
-                        onChange={setMediaUrl}
+                        onChange={(url) => setMediaUrl(url)}
                         label="Product Image"
-                        placeholder="Upload product image"
+                        placeholder="Choose product image"
                       />
                     </TabsContent>
 
