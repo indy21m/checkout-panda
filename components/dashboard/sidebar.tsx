@@ -190,18 +190,16 @@ export function Sidebar() {
                 exit={{ opacity: 0, height: 0 }}
                 className="px-6 pb-4"
               >
-                <GlassmorphicCard
-                  className="relative cursor-pointer"
-                  variant="light"
-                  blur="md"
+                <button
                   onClick={() => setShowSearch(true)}
+                  className="relative w-full rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <Search className="text-text-tertiary absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2" />
-                  <div className="text-text-tertiary py-3 pr-4 pl-12 text-sm">
+                  <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <div className="py-3 pr-4 pl-12 text-sm text-gray-500 text-left">
                     Search...{' '}
-                    <kbd className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs">⌘K</kbd>
+                    <kbd className="ml-2 rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs">⌘K</kbd>
                   </div>
-                </GlassmorphicCard>
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -369,21 +367,21 @@ export function Sidebar() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2"
             >
-              <GlassmorphicCard className="p-0" variant="light" blur="xl" shadow>
+              <div className="rounded-xl border border-gray-200 bg-white shadow-2xl">
                 <div className="relative">
-                  <Search className="text-text-tertiary absolute top-1/2 left-6 h-5 w-5 -translate-y-1/2" />
+                  <Search className="absolute top-1/2 left-6 h-5 w-5 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search products, checkouts, analytics..."
                     onKeyDown={(e) => e.key === 'Escape' && setShowSearch(false)}
-                    className="w-full bg-transparent py-6 pr-6 pl-16 text-lg focus:outline-none"
+                    className="w-full rounded-t-xl bg-transparent py-6 pr-6 pl-16 text-lg focus:outline-none"
                     autoFocus
                   />
                 </div>
-                <div className="border-t border-gray-200/50 p-4">
-                  <p className="text-text-tertiary text-sm">Type to search or press ESC to close</p>
+                <div className="border-t border-gray-200 bg-gray-50 rounded-b-xl p-4">
+                  <p className="text-sm text-gray-500">Type to search or press ESC to close</p>
                 </div>
-              </GlassmorphicCard>
+              </div>
             </motion.div>
           </>
         )}

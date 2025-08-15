@@ -131,8 +131,8 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
       <motion.div variants={itemVariants}>
         <GlassmorphicCard className="p-4" variant="light">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col sm:flex-row gap-3 flex-1">
-              <div className="relative flex-1 min-w-0 max-w-md">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search products..."
@@ -144,7 +144,7 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="md" className="w-full sm:w-auto flex-shrink-0">
+                  <Button variant="secondary" size="md" className="flex-shrink-0">
                     <Filter className="mr-2 h-4 w-4" />
                     <span>Filter</span>
                     <ChevronDown className="ml-1 h-3 w-3" />
