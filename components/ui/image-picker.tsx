@@ -514,47 +514,49 @@ export function ImagePicker({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="w-full max-w-md space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="mb-4 h-16 w-16 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                      <Link2 className="h-8 w-8 text-purple-600" />
+                <div className="w-full max-w-lg">
+                  <div className="text-center mb-8">
+                    <div className="mb-4 h-20 w-20 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                      <Link2 className="h-10 w-10 text-purple-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">Embed from URL</h3>
-                    <p className="text-sm text-gray-500 mt-1">Paste any image URL from the web</p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Embed from URL</h3>
+                    <p className="text-sm text-gray-500">Paste any image URL from the web to use it</p>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <Input
-                        id="image-url"
-                        type="url"
-                        placeholder="https://example.com/image.jpg"
-                        value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                        className="pr-24 h-12 rounded-lg border-gray-200 focus:border-purple-300 focus:ring-2 focus:ring-purple-100 transition-all"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleUrlSubmit}
-                        disabled={!urlInput.trim()}
-                        className="absolute right-1 top-1 h-10 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        Add
-                      </Button>
+                  <div className="space-y-6">
+                    <div>
+                      <Label htmlFor="image-url" className="text-sm font-medium text-gray-700 mb-2 block">
+                        Image URL
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="image-url"
+                          type="url"
+                          placeholder="https://example.com/image.jpg"
+                          value={urlInput}
+                          onChange={(e) => setUrlInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                          className="flex-1 h-11 rounded-lg border-gray-200 focus:border-purple-300 focus:ring-2 focus:ring-purple-100 transition-all"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleUrlSubmit}
+                          disabled={!urlInput.trim()}
+                          className="h-11 px-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Add Image
+                        </Button>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <div className="h-px flex-1 bg-gray-200" />
-                      <span>Supported formats</span>
-                      <div className="h-px flex-1 bg-gray-200" />
-                    </div>
-                    
-                    <div className="flex justify-center gap-3 text-xs text-gray-500">
-                      <span className="px-2 py-1 bg-gray-100 rounded">JPEG</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded">PNG</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded">GIF</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded">WebP</span>
+                    <div className="pt-4">
+                      <p className="text-xs text-gray-500 text-center mb-3">Supported formats</p>
+                      <div className="flex justify-center gap-2">
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">JPEG</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">PNG</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">GIF</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">WebP</span>
+                      </div>
                     </div>
                   </div>
                 </div>
