@@ -306,14 +306,14 @@ export function ImagePicker({
       {/* Image Picker Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl h-[80vh] p-0 overflow-hidden bg-white/95 backdrop-blur-xl border border-gray-200">
-          <DialogHeader className="px-6 pt-4 pb-3 border-b border-gray-100">
+          <DialogHeader className="px-4 py-3 border-b border-gray-100">
             <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Select Image
             </DialogTitle>
           </DialogHeader>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-6 mt-2 grid w-fit grid-cols-3 bg-gray-100/50 p-1 rounded-lg">
+            <TabsList className="mx-4 mt-1 grid w-fit grid-cols-3 bg-gray-100/50 p-1 rounded-lg">
               <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Upload className="h-4 w-4" />
                 Upload
@@ -329,7 +329,7 @@ export function ImagePicker({
             </TabsList>
 
             {/* Upload Tab */}
-            <TabsContent value="upload" className="flex-1 p-6">
+            <TabsContent value="upload" className="flex-1 p-4">
               <motion.div
                 className={cn(
                   'relative h-full rounded-xl border-2 border-dashed p-8 text-center transition-all flex flex-col items-center justify-center',
@@ -406,8 +406,8 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Unsplash Tab */}
-            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-6">
-              <div className="mb-6">
+            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-4">
+              <div className="mb-4">
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                   <Input
@@ -498,9 +498,9 @@ export function ImagePicker({
                     <div className="mb-4 h-20 w-20 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                       <Camera className="h-10 w-10 text-purple-600" />
                     </div>
-                    <p className="text-lg font-semibold text-gray-900 mb-2">Search Unsplash</p>
-                    <p className="text-sm text-gray-500 text-center max-w-md px-4">
-                      Access millions of free, high-quality photos from the Unsplash community
+                    <p className="text-lg font-semibold text-gray-900">Search Unsplash</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Access millions of free, high-quality photos
                     </p>
                   </motion.div>
                 )}
@@ -508,7 +508,7 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Embed Link Tab */}
-            <TabsContent value="embed" className="flex-1 p-6">
+            <TabsContent value="embed" className="flex-1 p-4">
               <motion.div 
                 className="h-full flex flex-col items-center justify-center"
                 initial={{ opacity: 0, y: 10 }}
