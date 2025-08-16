@@ -312,7 +312,7 @@ export function ImagePicker({
             </DialogTitle>
           </DialogHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-4 mt-3 mb-0 grid w-fit grid-cols-3 bg-gray-100/50 p-1 rounded-lg">
+            <TabsList className="mx-4 mt-2 grid w-fit grid-cols-3 bg-gray-100/50 p-1 rounded-lg">
               <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Upload className="h-4 w-4" />
                 Upload
@@ -327,7 +327,7 @@ export function ImagePicker({
               </TabsTrigger>
             </TabsList>
             {/* Upload Tab */}
-            <TabsContent value="upload" className="flex-1 p-5 mt-0">
+            <TabsContent value="upload" className="flex-1 p-4 mt-2">
               <motion.div
                 className={cn(
                   'relative h-full rounded-xl border-2 border-dashed p-8 text-center transition-all flex flex-col items-center justify-center',
@@ -404,7 +404,7 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Unsplash Tab */}
-            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-5 mt-0">
+            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-4 mt-2">
               <div className="mb-4">
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
@@ -506,7 +506,7 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Embed Link Tab */}
-            <TabsContent value="embed" className="flex-1 p-5 mt-0">
+            <TabsContent value="embed" className="flex-1 p-4 mt-2">
               <motion.div 
                 className="h-full flex flex-col items-center justify-center"
                 initial={{ opacity: 0, y: 10 }}
