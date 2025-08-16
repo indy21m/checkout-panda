@@ -306,28 +306,30 @@ export function ImagePicker({
       {/* Image Picker Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl h-[75vh] p-0 overflow-hidden bg-white/95 backdrop-blur-xl border border-gray-200">
-          <DialogHeader className="px-4 py-2 border-b border-gray-100">
-            <DialogTitle className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Select Image
-            </DialogTitle>
-          </DialogHeader>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="mx-4 mt-1 grid w-fit grid-cols-3 bg-gray-100/50 p-1 rounded-lg">
-              <TabsTrigger value="upload" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Upload className="h-4 w-4" />
-                Upload
-              </TabsTrigger>
-              <TabsTrigger value="unsplash" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Camera className="h-4 w-4" />
-                Unsplash
-              </TabsTrigger>
-              <TabsTrigger value="embed" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Link2 className="h-4 w-4" />
-                Embed
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <div className="border-b border-gray-100">
+              <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                <DialogTitle className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Select Image
+                </DialogTitle>
+              </div>
+              <TabsList className="ml-4 grid w-fit grid-cols-3 bg-transparent p-0 h-auto">
+                <TabsTrigger value="upload" className="flex items-center gap-1.5 px-4 pb-2 border-b-2 data-[state=active]:border-purple-500 data-[state=active]:text-purple-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-500 transition-all">
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="unsplash" className="flex items-center gap-1.5 px-4 pb-2 border-b-2 data-[state=active]:border-purple-500 data-[state=active]:text-purple-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-500 transition-all">
+                  <Camera className="h-4 w-4" />
+                  Unsplash
+                </TabsTrigger>
+                <TabsTrigger value="embed" className="flex items-center gap-1.5 px-4 pb-2 border-b-2 data-[state=active]:border-purple-500 data-[state=active]:text-purple-600 data-[state=inactive]:border-transparent data-[state=inactive]:text-gray-500 transition-all">
+                  <Link2 className="h-4 w-4" />
+                  Embed
+                </TabsTrigger>
+              </TabsList>
+            </div>
             {/* Upload Tab */}
-            <TabsContent value="upload" className="flex-1 p-4 mt-1">
+            <TabsContent value="upload" className="flex-1 p-4">
               <motion.div
                 className={cn(
                   'relative h-full rounded-xl border-2 border-dashed p-8 text-center transition-all flex flex-col items-center justify-center',
@@ -404,7 +406,7 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Unsplash Tab */}
-            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-4 mt-1">
+            <TabsContent value="unsplash" className="flex-1 flex flex-col overflow-hidden p-4">
               <div className="mb-4">
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
@@ -506,7 +508,7 @@ export function ImagePicker({
             </TabsContent>
 
             {/* Embed Link Tab */}
-            <TabsContent value="embed" className="flex-1 p-4 mt-1">
+            <TabsContent value="embed" className="flex-1 p-4">
               <motion.div 
                 className="h-full flex flex-col items-center justify-center"
                 initial={{ opacity: 0, y: 10 }}
