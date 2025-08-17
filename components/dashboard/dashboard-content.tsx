@@ -28,7 +28,6 @@ interface DashboardContentProps {
   products: Array<{
     id: string
     name: string
-    price: number
   }>
   databaseError: boolean
 }

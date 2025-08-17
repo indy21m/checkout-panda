@@ -23,7 +23,6 @@ export default async function DashboardPage() {
   interface DashboardProduct {
     id: string
     name: string
-    price: number
   }
 
   let checkouts: DashboardCheckout[] = []
@@ -39,7 +38,8 @@ export default async function DashboardPage() {
       api.product.list({ includeArchived: false }).catch(() => []),
     ])
     checkouts = results[0]
-    products = results[1]
+    const fetchedProducts = results[1]
+    products = fetchedProducts.map(p => ({ id: p.id, name: p.name }))
   } catch (error) {
     console.error('Dashboard data fetch error:', error)
     databaseError = true

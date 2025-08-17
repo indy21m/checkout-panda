@@ -367,8 +367,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                   )}
                   {selectedProduct && (
                     <p className="text-sm text-gray-500 mt-1">
-                      Original product price: {getCurrencySymbol(selectedProduct.currency)}
-                      {(selectedProduct.price / 100).toFixed(2)}
+                      Product: {selectedProduct.name}
                     </p>
                   )}
                 </div>
