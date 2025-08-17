@@ -514,13 +514,13 @@ export function ImagePicker({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="w-full max-w-lg">
+                <div className="w-full max-w-xl px-8">
                   <div className="text-center mb-8">
                     <div className="mb-4 h-20 w-20 mx-auto rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                       <Link2 className="h-10 w-10 text-purple-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Embed from URL</h3>
-                    <p className="text-sm text-gray-500">Paste any image URL from the web to use it</p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 whitespace-nowrap">Embed from URL</h3>
+                    <p className="text-sm text-gray-500 whitespace-nowrap">Paste any image URL from the web to use it</p>
                   </div>
                   
                   <div className="space-y-6">
@@ -550,12 +550,12 @@ export function ImagePicker({
                     </div>
                     
                     <div className="pt-4">
-                      <p className="text-xs text-gray-500 text-center mb-3">Supported formats</p>
+                      <p className="text-xs text-gray-500 text-center mb-3 whitespace-nowrap">Supported formats</p>
                       <div className="flex justify-center gap-2">
-                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">JPEG</span>
-                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">PNG</span>
-                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">GIF</span>
-                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">WebP</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">JPEG</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">PNG</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">GIF</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium whitespace-nowrap">WebP</span>
                       </div>
                     </div>
                   </div>
