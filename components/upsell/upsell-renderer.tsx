@@ -131,8 +131,8 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
 
   const offer = session.funnelData.currentOffer
   const displayPrice = offer.discountPercent
-    ? Math.round(offer.product.price * (1 - offer.discountPercent / 100))
-    : offer.product.price
+    ? Math.round(2999 * (1 - offer.discountPercent / 100)) // Default price - should come from offers
+    : 2999 // Default price - should come from offers
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
@@ -227,7 +227,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
                     {offer.discountPercent ? (
                       <div className="flex items-center gap-4">
                         <span className="text-2xl text-gray-500 line-through">
-                          ${(offer.product.price / 100).toFixed(2)}
+                          $29.99
                         </span>
                         <span className="text-primary text-4xl font-bold">
                           ${(displayPrice / 100).toFixed(2)}

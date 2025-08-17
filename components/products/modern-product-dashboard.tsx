@@ -314,7 +314,7 @@ function ProductCard({
   onArchive: () => void
 }) {
   const lowestPrice =
-    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : product.price
+    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : 0
 
   return (
     <GlassmorphicCard
@@ -389,7 +389,7 @@ function ProductCard({
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-primary text-2xl font-bold">
-              {getCurrencySymbol(product.currency || 'USD')}
+              {getCurrencySymbol('USD')}
               {(lowestPrice / 100).toFixed(2)}
             </span>
             {product.isRecurring && product.interval && (
@@ -406,7 +406,7 @@ function ProductCard({
           <div>
             <p className="text-sm text-gray-600">Revenue</p>
             <p className="font-semibold">
-              {getCurrencySymbol(product.currency || 'USD')}
+              {getCurrencySymbol('USD')}
               {((product.totalRevenue || 0) / 100).toFixed(0)}
             </p>
           </div>
@@ -456,7 +456,7 @@ function ProductListItem({
   onArchive: () => void
 }) {
   const lowestPrice =
-    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : product.price
+    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : 0
 
   return (
     <GlassmorphicCard
@@ -522,14 +522,14 @@ function ProductListItem({
           <div className="text-center">
             <p className="text-sm text-gray-600">Price</p>
             <p className="text-primary font-semibold">
-              {getCurrencySymbol(product.currency || 'USD')}
+              {getCurrencySymbol('USD')}
               {(lowestPrice / 100).toFixed(2)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Revenue</p>
             <p className="font-semibold">
-              {getCurrencySymbol(product.currency || 'USD')}
+              {getCurrencySymbol('USD')}
               {((product.totalRevenue || 0) / 100).toFixed(0)}
             </p>
           </div>

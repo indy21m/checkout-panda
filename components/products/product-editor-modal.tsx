@@ -125,8 +125,8 @@ export function ProductEditorModal({ isOpen, onClose, product }: ProductEditorMo
         thumbnail: product.thumbnail || '',
         color: product.color || '',
         features: product.features || [],
-        price: (product.price / 100).toFixed(2),
-        currency: product.currency || 'USD',
+        price: '0',
+        currency: 'USD',
       })
       setFeatures(product.features || [])
 

@@ -94,7 +94,7 @@ export default async function NewCheckoutPage() {
                     <SelectContent>
                       {products.map((product) => (
                         <SelectItem key={product.id} value={product.id}>
-                          {product.name} - ${(product.price / 100).toFixed(2)}
+                          {product.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

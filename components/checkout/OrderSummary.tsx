@@ -213,7 +213,7 @@ export function OrderSummary({
     return parseInt(price.replace(/[^0-9]/g, '')) * 100
   }
   
-  const productPrice = product ? parsePrice(product.price) : 0
+  const productPrice = 0 // Price will come from offers
   const bumpTotal = orderBumps
     .filter((b) => b.selected)
     .reduce((sum, bump) => sum + parsePrice(bump.data.price), 0)

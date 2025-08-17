@@ -170,8 +170,8 @@ export function ProductSelectorModal({
                                 {/* Product Details */}
                                 <div className="mt-2 flex items-center gap-4 text-sm">
                                   <span className="flex items-center gap-1 text-gray-500">
-                                    <DollarSign className="h-3 w-3" />$
-                                    {(product.price / 100).toFixed(2)}
+                                    <DollarSign className="h-3 w-3" />
+                                    Offers Available
                                   </span>
                                   {product.type && (
                                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 capitalize">

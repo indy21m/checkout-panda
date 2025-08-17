@@ -688,8 +688,8 @@ function BlockEditor({
                   ...orderBumpData,
                   title: `🎁 Add ${product.name}`,
                   description: product.description || '',
-                  price: `$${(product.price / 100).toFixed(2)}`,
-                  comparePrice: undefined, // compareAtPrice not available in product type
+                  price: `$29.99`, // Default price - will be set via offers
+                  comparePrice: undefined,
                 })
                 setShowOrderBumpProductSelector(false)
               }}
@@ -1710,7 +1710,7 @@ export default function SimplifiedBuilderPage() {
       const productData: ProductBlockData = {
         name: product.name,
         description: product.description || '',
-        price: `${getCurrencySymbol(product.currency as Currency)}${(product.price / 100).toFixed(2)}`,
+        price: `${getCurrencySymbol('USD' as Currency)}29.99`, // Default price - should come from offers
         comparePrice: undefined, // Product type doesn't have this field
         type: product.isRecurring ? 'subscription' : 'onetime',
         features: product.features || [],

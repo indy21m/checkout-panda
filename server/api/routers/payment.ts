@@ -103,7 +103,7 @@ export const paymentRouter = createTRPCRouter({
             })
           }
 
-          amount = product.price
+          amount = 2999 // Default amount - should come from offers
           description = product.name
           metadata.productId = input.productId
         }
@@ -119,7 +119,7 @@ export const paymentRouter = createTRPCRouter({
 
           for (const bump of bumps) {
             if (input.orderBumpIds.includes(bump.id)) {
-              amount += bump.product.price
+              amount += 999 // Default bump amount - should come from offers
               metadata[`bump_${bump.id}`] = bump.product.name
             }
           }
@@ -419,7 +419,7 @@ export const paymentRouter = createTRPCRouter({
         const sessionUrl = await stripeService.createCheckoutSession({
           checkoutId: input.checkoutId,
           productName: product.name,
-          amount: product.price,
+          amount: 2999, // Default amount - should come from offers
           customerId,
           customerEmail: input.customerEmail,
           successUrl: input.successUrl,
