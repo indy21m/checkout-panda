@@ -7,18 +7,18 @@ export default function SignUpPage() {
       <SignUp
         appearance={{
           elements: {
-            rootBox: 'w-full min-w-[350px]',
-            card: 'bg-transparent shadow-none p-0 w-full min-w-[350px]',
-            headerTitle: 'text-2xl font-bold text-center whitespace-normal',
-            headerSubtitle: 'text-text-secondary text-center whitespace-normal',
+            rootBox: 'w-full',
+            card: 'bg-white shadow-xl rounded-xl p-8',
+            headerTitle: 'text-2xl font-bold text-center',
+            headerSubtitle: 'text-text-secondary text-center',
             socialButtonsBlockButton:
-              'bg-background border border-border hover:bg-background-secondary transition-colors w-full',
+              'bg-background border border-border hover:bg-background-secondary transition-colors',
             socialButtonsBlockButtonText: 'text-text font-medium',
             dividerLine: 'bg-border',
             dividerText: 'text-text-tertiary bg-background px-2',
-            formFieldLabel: 'text-text-secondary text-sm font-medium block w-full',
-            formFieldInput: 'form-input w-full min-w-0',
-            formButtonPrimary: 'bg-primary hover:bg-primary-hover text-white font-medium w-full',
+            formFieldLabel: 'text-text-secondary text-sm font-medium',
+            formFieldInput: 'form-input',
+            formButtonPrimary: 'bg-primary hover:bg-primary-hover text-white font-medium',
             footerActionLink: 'text-primary hover:text-primary-hover',
             identityPreviewEditButton: 'text-primary hover:text-primary-hover',
             formFieldSuccessText: 'text-success',

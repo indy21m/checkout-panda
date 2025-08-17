@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
-import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
 
 interface AuthLayoutProps {
   children: React.ReactNode
@@ -11,7 +10,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4 min-w-[400px]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-8">
       {/* Background gradient */}
       <div className="from-background via-background-secondary/30 to-background absolute inset-0 bg-gradient-to-br" />
 
@@ -44,7 +43,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-md min-w-[400px]">
+      <div className="relative z-10 w-full max-w-lg">
         {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -60,13 +59,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </Link>
         </motion.div>
 
-        {/* Auth Card */}
+        {/* Auth Form - No wrapper card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <GlassmorphicCard className="p-8 w-full">{children}</GlassmorphicCard>
+          {children}
         </motion.div>
 
         {/* Footer */}

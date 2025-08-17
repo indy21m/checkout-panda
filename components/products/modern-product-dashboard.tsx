@@ -387,17 +387,27 @@ function ProductCard({
 
         {/* Pricing */}
         <div className="mb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-primary text-2xl font-bold">
-              {getCurrencySymbol('USD')}
-              {(lowestPrice / 100).toFixed(2)}
-            </span>
-            {product.isRecurring && product.interval && (
-              <span className="text-sm text-gray-500">/{product.interval}</span>
-            )}
-          </div>
-          {product.plans.length > 1 && (
-            <p className="text-sm text-gray-600">{product.plans.length} pricing plans</p>
+          {product.plans && product.plans.length > 0 ? (
+            <>
+              <div className="flex items-baseline gap-2">
+                <span className="text-primary text-2xl font-bold">
+                  From {getCurrencySymbol('USD')}
+                  {(lowestPrice / 100).toFixed(2)}
+                </span>
+                {product.isRecurring && product.interval && (
+                  <span className="text-sm text-gray-500">/{product.interval}</span>
+                )}
+              </div>
+              {product.plans.length > 1 && (
+                <p className="text-sm text-gray-600">{product.plans.length} pricing plans</p>
+              )}
+            </>
+          ) : (
+            <div className="text-gray-500">
+              <span className="text-sm">Set pricing via</span>
+              <br />
+              <span className="text-primary font-semibold">Offers</span>
+            </div>
           )}
         </div>
 
@@ -521,10 +531,14 @@ function ProductListItem({
         <div className="flex gap-8">
           <div className="text-center">
             <p className="text-sm text-gray-600">Price</p>
-            <p className="text-primary font-semibold">
-              {getCurrencySymbol('USD')}
-              {(lowestPrice / 100).toFixed(2)}
-            </p>
+            {product.plans && product.plans.length > 0 ? (
+              <p className="text-primary font-semibold">
+                {getCurrencySymbol('USD')}
+                {(lowestPrice / 100).toFixed(2)}
+              </p>
+            ) : (
+              <p className="text-gray-500 text-sm">Via Offers</p>
+            )}
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Revenue</p>

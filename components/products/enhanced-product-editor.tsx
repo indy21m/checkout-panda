@@ -307,7 +307,7 @@ export function EnhancedProductEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0 relative">
+      <DialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0">
         <div className="flex h-full flex-col">
             <DialogHeader className="p-6 pb-0">
               <div className="flex items-center justify-between">
