@@ -53,11 +53,10 @@ import { ImagePicker } from '@/components/ui/image-picker'
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   slug: z.string().min(1, 'URL slug is required'),
+  subtitle: z.string().optional(),
   description: z.string().optional(),
-  featured_description: z.string().optional(),
   type: z.enum(['digital', 'service', 'membership', 'bundle']),
   status: z.enum(['active', 'inactive', 'draft']),
-  price: z.number().min(0.01, 'Price must be at least $0.01').default(1),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -215,11 +214,10 @@ export function EnhancedProductEditor({
     defaultValues: {
       name: '',
       slug: '',
+      subtitle: '',
       description: '',
-      featured_description: '',
       type: 'digital',
       status: 'draft',
-      price: 1,
     },
   })
 
@@ -230,13 +228,12 @@ export function EnhancedProductEditor({
         name: product.name,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         slug: (product as any).slug || product.name.toLowerCase().replace(/\s+/g, '-'),
-        description: product.description || '',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        featured_description: (product as any).featured_description || '',
+        subtitle: (product as any).subtitle || '',
+        description: product.description || '',
         type: (product.type || 'digital') as 'digital' | 'service' | 'membership' | 'bundle',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: ((product as any).status || 'active') as 'active' | 'inactive' | 'draft',
-        price: product.price / 100, // Convert from cents to dollars
       })
       setFeatures(
         product.features
@@ -255,13 +252,12 @@ export function EnhancedProductEditor({
     const productData = {
       name: data.name,
       slug: data.slug,
+      subtitle: data.subtitle,
       description: data.description,
-      featured_description: data.featured_description,
       type: data.type as 'digital' | 'service' | 'membership' | 'bundle',
       status: data.status,
       features: features.map((f) => f.text).filter(Boolean),
       thumbnail: mediaUrl || undefined,
-      price: Math.round(data.price * 100), // Convert dollars to cents
     }
 
     if (productId) {
@@ -311,7 +307,7 @@ export function EnhancedProductEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0">
+      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0 relative">
         <div className="flex h-full flex-col">
             <DialogHeader className="p-6 pb-0">
               <div className="flex items-center justify-between">
@@ -347,7 +343,7 @@ export function EnhancedProductEditor({
                   </TabsTrigger>
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto pb-20">
                     <TabsContent value="details" className="mt-0 space-y-6">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -385,25 +381,30 @@ export function EnhancedProductEditor({
                       </div>
 
                       <div>
+                        <Label htmlFor="subtitle">
+                          Subtitle <span className="text-gray-500 text-sm">(optional)</span>
+                        </Label>
+                        <Input
+                          id="subtitle"
+                          {...form.register('subtitle')}
+                          placeholder="e.g., Your complete guide to Danish real estate"
+                          className="mt-1"
+                        />
+                        <p className="mt-1 text-sm text-gray-500">
+                          A short tagline that appears below the product name
+                        </p>
+                      </div>
+
+                      <div>
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                           id="description"
                           {...form.register('description')}
-                          placeholder="Describe your product..."
-                          className="mt-1 min-h-[100px]"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="featured_description">Featured Description</Label>
-                        <Textarea
-                          id="featured_description"
-                          {...form.register('featured_description')}
-                          placeholder="A compelling description for the checkout page..."
-                          className="mt-1 min-h-[80px]"
+                          placeholder="A compelling description that sells your product..."
+                          className="mt-1 min-h-[120px]"
                         />
                         <p className="mt-1 text-sm text-gray-500">
-                          This appears prominently on the checkout page
+                          This appears on the checkout page to convince buyers
                         </p>
                       </div>
 
@@ -486,30 +487,6 @@ export function EnhancedProductEditor({
                           </div>
                         </div>
                       </div>
-                      
-                      <div>
-                        <Label htmlFor="price">Base Price</Label>
-                        <div className="mt-1 relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                          <Input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            {...form.register('price', { valueAsNumber: true })}
-                            placeholder="9.99"
-                            className="pl-8"
-                          />
-                        </div>
-                        {form.formState.errors.price && (
-                          <p className="mt-1 text-sm text-red-500">
-                            {form.formState.errors.price.message}
-                          </p>
-                        )}
-                        <p className="mt-1 text-sm text-gray-500">
-                          This is the standalone price. Different prices can be set for offers (order bumps, upsells, etc.)
-                        </p>
-                      </div>
                     </TabsContent>
 
 
@@ -572,8 +549,8 @@ export function EnhancedProductEditor({
                 </div>
               </Tabs>
 
-              {/* Form Actions */}
-              <div className="mt-auto flex justify-end gap-3 border-t bg-white pt-4">
+              {/* Floating Form Actions */}
+              <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center gap-3 border-t bg-white/95 backdrop-blur px-6 py-4">
                 <Button
                   type="button"
                   variant="ghost"
@@ -582,7 +559,11 @@ export function EnhancedProductEditor({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createProduct.isPending || updateProduct.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={createProduct.isPending || updateProduct.isPending}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg"
+                >
                   {createProduct.isPending || updateProduct.isPending ? (
                     <>
                       <motion.div

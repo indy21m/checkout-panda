@@ -71,20 +71,13 @@ export const productRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1, 'Product name is required'),
         slug: z.string().optional(), // Will be auto-generated if not provided
+        subtitle: z.string().optional(),
         description: z.string().optional(),
-        featured_description: z.string().optional(),
         type: z.enum(['digital', 'service', 'membership', 'bundle']).default('digital'),
         status: z.enum(['active', 'inactive', 'draft']).optional().default('active'),
         thumbnail: z.string().optional(),
         color: z.string().optional(),
         features: z.array(z.string()).optional().default([]),
-
-        // Legacy pricing (for backward compatibility)
-        price: z.number().positive('Price must be positive').int('Price must be in cents'),
-        currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
-        isRecurring: z.boolean().default(false),
-        interval: z.enum(['month', 'year', 'week', 'day']).optional(),
-        intervalCount: z.number().int().positive().default(1).optional(),
 
         // New pricing plans
         plans: z
@@ -107,13 +100,6 @@ export const productRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Validate recurring product settings
-      if (input.isRecurring && !input.interval) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Interval is required for recurring products',
-        })
-      }
 
       const { plans: planData, ...productData } = input
 
@@ -132,8 +118,6 @@ export const productRouter = createTRPCRouter({
           userId: ctx.userId,
           ...productData,
           slug,
-          interval: input.isRecurring ? input.interval : null,
-          intervalCount: input.isRecurring ? input.intervalCount : null,
         })
         .returning()
 
@@ -175,18 +159,13 @@ export const productRouter = createTRPCRouter({
         id: z.string().uuid(),
         name: z.string().min(1).optional(),
         slug: z.string().optional(),
+        subtitle: z.string().optional(),
         description: z.string().optional(),
-        featured_description: z.string().optional(),
         type: z.enum(['digital', 'service', 'membership', 'bundle']).optional(),
         status: z.enum(['active', 'inactive', 'draft']).optional(),
         thumbnail: z.string().optional(),
         color: z.string().optional(),
         features: z.array(z.string()).optional(),
-        price: z.number().positive().int().optional(),
-        currency: z.enum(SUPPORTED_CURRENCIES).optional(),
-        isRecurring: z.boolean().optional(),
-        interval: z.enum(['month', 'year', 'week', 'day']).optional(),
-        intervalCount: z.number().int().positive().optional(),
         isActive: z.boolean().optional(),
       })
     )
@@ -205,13 +184,6 @@ export const productRouter = createTRPCRouter({
         })
       }
 
-      // Validate recurring settings if updating
-      if (updateData.isRecurring === true && !updateData.interval && !existingProduct.interval) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Interval is required for recurring products',
-        })
-      }
 
       const [updatedProduct] = await ctx.db
         .update(products)

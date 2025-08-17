@@ -108,8 +108,8 @@ export const products = pgTable(
       .references(() => users.id),
     name: text('name').notNull(),
     slug: text('slug').notNull().unique(),
-    description: text('description'),
-    featured_description: text('featured_description'),
+    subtitle: text('subtitle'), // Short tagline
+    description: text('description'), // Main description shown on checkout
     type: productTypeEnum('type').default('digital'),
     status: productStatusEnum('status').default('draft'),
 
@@ -117,9 +117,7 @@ export const products = pgTable(
     thumbnail: text('thumbnail'), // URL or gradient spec
     color: text('color'), // For gradient backgrounds
 
-    // Pricing (deprecated in favor of plans)
-    price: integer('price').notNull(), // in cents - kept for backward compatibility
-    currency: currencyEnum('currency').default('USD').notNull(),
+    // Stripe IDs (for integration)
     stripeProductId: text('stripe_product_id'),
     stripePriceId: text('stripe_price_id'),
 
