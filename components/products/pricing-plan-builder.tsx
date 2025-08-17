@@ -365,7 +365,7 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
                       <div className="mb-6">
                         <div className="flex items-baseline gap-1">
                           <span className="text-3xl font-bold">
-                            {getCurrencySymbol(plan.currency || product?.currency || 'USD')}
+                            {getCurrencySymbol(plan.currency || 'USD')}
                             {(plan.price / 100).toFixed(2)}
                           </span>
                           {plan.isRecurring && (
@@ -374,7 +374,7 @@ export function PricingPlanBuilder({ productId }: PricingPlanBuilderProps) {
                         </div>
                         {plan.compareAtPrice && (
                           <p className="text-sm text-gray-500 line-through">
-                            {getCurrencySymbol(plan.currency || product?.currency || 'USD')}
+                            {getCurrencySymbol(plan.currency || 'USD')}
                             {(plan.compareAtPrice / 100).toFixed(2)}
                           </p>
                         )}
