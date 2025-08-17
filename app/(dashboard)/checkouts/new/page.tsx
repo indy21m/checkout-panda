@@ -22,12 +22,13 @@ export default async function NewCheckoutPage() {
     redirect('/sign-in')
   }
 
-  let products: Array<{ id: string; name: string; price: number }> = []
+  let products: Array<{ id: string; name: string }> = []
   let hasProducts = false
 
   try {
     const api = await createApi()
-    products = await api.product.list({ includeArchived: false })
+    const fetchedProducts = await api.product.list({ includeArchived: false })
+    products = fetchedProducts.map(p => ({ id: p.id, name: p.name }))
     hasProducts = products.length > 0
   } catch (error) {
     console.error('Failed to fetch products:', error)
