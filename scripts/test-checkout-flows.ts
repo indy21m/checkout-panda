@@ -50,8 +50,6 @@ async function createTestData() {
     slug: 'test-product',
     type: 'digital' as const,
     description: 'Product for testing checkout flows',
-    price: 2999, // $29.99
-    currency: 'USD' as const,
     stripeProductId: 'prod_test_123',
     userId: 'test-user',
   }).returning()
