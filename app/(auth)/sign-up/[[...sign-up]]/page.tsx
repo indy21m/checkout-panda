@@ -7,18 +7,18 @@ export default function SignUpPage() {
       <SignUp
         appearance={{
           elements: {
-            rootBox: 'w-full max-w-md mx-auto',
-            card: 'bg-transparent shadow-none p-0 w-full',
-            headerTitle: 'text-2xl font-bold text-center w-full',
-            headerSubtitle: 'text-text-secondary text-center w-full',
+            rootBox: 'w-full min-w-[350px]',
+            card: 'bg-transparent shadow-none p-0 w-full min-w-[350px]',
+            headerTitle: 'text-2xl font-bold text-center whitespace-normal',
+            headerSubtitle: 'text-text-secondary text-center whitespace-normal',
             socialButtonsBlockButton:
-              'bg-background border border-border hover:bg-background-secondary transition-colors',
+              'bg-background border border-border hover:bg-background-secondary transition-colors w-full',
             socialButtonsBlockButtonText: 'text-text font-medium',
             dividerLine: 'bg-border',
             dividerText: 'text-text-tertiary bg-background px-2',
-            formFieldLabel: 'text-text-secondary text-sm font-medium',
-            formFieldInput: 'form-input w-full',
-            formButtonPrimary: 'bg-primary hover:bg-primary-hover text-white font-medium',
+            formFieldLabel: 'text-text-secondary text-sm font-medium block w-full',
+            formFieldInput: 'form-input w-full min-w-0',
+            formButtonPrimary: 'bg-primary hover:bg-primary-hover text-white font-medium w-full',
             footerActionLink: 'text-primary hover:text-primary-hover',
             identityPreviewEditButton: 'text-primary hover:text-primary-hover',
             formFieldSuccessText: 'text-success',
