@@ -252,6 +252,19 @@ export const offers = pgTable(
     // Optional coupon association
     couponId: uuid('coupon_id').references(() => coupons.id, { onDelete: 'set null' }),
 
+    // Subscription and billing settings
+    offerType: text('offer_type').default('one_time'), // 'one_time', 'subscription', 'payment_plan'
+    isRecurring: boolean('is_recurring').default(false),
+    billingCycle: text('billing_cycle'), // 'monthly', 'quarterly', 'yearly', 'custom'
+    billingInterval: integer('billing_interval'), // for custom intervals
+    billingIntervalUnit: text('billing_interval_unit'), // 'day', 'week', 'month', 'year'
+
+    // Trial settings
+    trialEnabled: boolean('trial_enabled').default(false),
+    trialType: text('trial_type'), // 'free', 'paid'
+    trialDays: integer('trial_days'),
+    trialPrice: integer('trial_price'), // in cents for paid trials
+
     // Display settings
     headline: text('headline'), // e.g., "Save 30% today only!"
     badgeText: text('badge_text'), // e.g., "LIMITED TIME"

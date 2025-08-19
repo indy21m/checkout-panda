@@ -77,22 +77,31 @@ export const offerRouter = createTRPCRouter({
         currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
         couponId: z.string().uuid().optional(),
 
+        // Offer type and subscription settings
+        offerType: z.enum(['one_time', 'subscription', 'payment_plan']).optional(),
+        isRecurring: z.boolean().optional(),
+        billingCycle: z.enum(['monthly', 'quarterly', 'yearly', 'custom']).optional(),
+        billingInterval: z.number().int().positive().optional(),
+        billingIntervalUnit: z.enum(['day', 'week', 'month', 'year']).optional(),
+
+        // Trial settings
+        trialEnabled: z.boolean().optional(),
+        trialType: z.enum(['free', 'paid']).optional(),
+        trialDays: z.number().int().positive().optional(),
+        trialPrice: z.number().int().min(0).optional(), // in cents
+
         // Display settings
         headline: z.string().optional(),
         badgeText: z.string().optional(),
         badgeColor: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        imageUrl: z.string().url().optional().or(z.literal('')),
 
         // Order bump specific
         bumpDescription: z.string().optional(),
 
         // Upsell/Downsell specific
-        redirectUrl: z.string().url().optional(),
-        declineRedirectUrl: z.string().url().optional(),
-
-        // Conditions
-        minQuantity: z.number().int().positive().default(1),
-        maxQuantity: z.number().int().positive().optional(),
+        redirectUrl: z.string().url().optional().or(z.literal('')),
+        declineRedirectUrl: z.string().url().optional().or(z.literal('')),
 
         // Availability
         availableFrom: z.date().optional(),
@@ -173,22 +182,31 @@ export const offerRouter = createTRPCRouter({
         currency: z.enum(SUPPORTED_CURRENCIES).optional(),
         couponId: z.string().uuid().nullable().optional(),
 
+        // Offer type and subscription settings
+        offerType: z.enum(['one_time', 'subscription', 'payment_plan']).optional(),
+        isRecurring: z.boolean().optional(),
+        billingCycle: z.enum(['monthly', 'quarterly', 'yearly', 'custom']).optional(),
+        billingInterval: z.number().int().positive().optional(),
+        billingIntervalUnit: z.enum(['day', 'week', 'month', 'year']).optional(),
+
+        // Trial settings
+        trialEnabled: z.boolean().optional(),
+        trialType: z.enum(['free', 'paid']).optional(),
+        trialDays: z.number().int().positive().optional(),
+        trialPrice: z.number().int().min(0).optional(),
+
         // Display settings
         headline: z.string().optional(),
         badgeText: z.string().optional(),
         badgeColor: z.string().optional(),
-        imageUrl: z.string().url().optional(),
+        imageUrl: z.string().url().optional().or(z.literal('')),
 
         // Order bump specific
         bumpDescription: z.string().optional(),
 
         // Upsell/Downsell specific
-        redirectUrl: z.string().url().optional(),
-        declineRedirectUrl: z.string().url().optional(),
-
-        // Conditions
-        minQuantity: z.number().int().positive().optional(),
-        maxQuantity: z.number().int().positive().optional(),
+        redirectUrl: z.string().url().optional().or(z.literal('')),
+        declineRedirectUrl: z.string().url().optional().or(z.literal('')),
 
         // Availability
         availableFrom: z.date().optional(),

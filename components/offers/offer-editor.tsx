@@ -23,7 +23,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ImagePicker } from '@/components/ui/image-picker'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { CalendarIcon, Package, Tag, ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react'
+import {
+  CalendarIcon,
+  Package,
+  Tag,
+  ShoppingCart,
+  TrendingUp,
+  TrendingDown,
+  CreditCard,
+  RefreshCw,
+  Layers,
+  Clock,
+  Gift,
+  DollarSign,
+  Zap,
+} from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
 import { getCurrencySymbol } from '@/lib/currency'
@@ -33,10 +47,27 @@ const offerSchema = z.object({
   description: z.string().optional(),
   productId: z.string().min(1, 'Please select a product'),
   context: z.enum(['standalone', 'order_bump', 'upsell', 'downsell']),
+
+  // Offer type
+  offerType: z.enum(['one_time', 'subscription', 'payment_plan']).default('one_time'),
+
+  // Pricing
   price: z.number().positive('Price must be positive'),
   compareAtPrice: z.number().positive().optional(),
   currency: z.enum(['USD', 'EUR', 'DKK']),
   couponId: z.string().optional(),
+
+  // Subscription settings
+  isRecurring: z.boolean().default(false),
+  billingCycle: z.enum(['monthly', 'quarterly', 'yearly', 'custom']).optional(),
+  billingInterval: z.number().int().positive().optional(), // for custom intervals
+  billingIntervalUnit: z.enum(['day', 'week', 'month', 'year']).optional(),
+
+  // Trial settings
+  trialEnabled: z.boolean().default(false),
+  trialType: z.enum(['free', 'paid']).optional(),
+  trialDays: z.number().int().positive().optional(),
+  trialPrice: z.number().min(0).optional(), // in dollars, will convert to cents
 
   // Display settings
   headline: z.string().optional(),
@@ -50,10 +81,6 @@ const offerSchema = z.object({
   // Upsell/Downsell specific
   redirectUrl: z.string().optional(),
   declineRedirectUrl: z.string().optional(),
-
-  // Conditions
-  minQuantity: z.number().int().positive().default(1),
-  maxQuantity: z.number().int().positive().optional(),
 
   // Availability
   availableFrom: z.date().optional(),
@@ -110,9 +137,11 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
       description: '',
       productId: '',
       context: 'standalone',
+      offerType: 'one_time',
       price: 1,
       currency: 'USD',
-      minQuantity: 1,
+      isRecurring: false,
+      trialEnabled: false,
       isActive: true,
     },
   })
@@ -135,8 +164,6 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
         bumpDescription: offer.bumpDescription || '',
         redirectUrl: offer.redirectUrl || '',
         declineRedirectUrl: offer.declineRedirectUrl || '',
-        minQuantity: offer.minQuantity || 1,
-        maxQuantity: offer.maxQuantity || undefined,
         availableFrom: offer.availableFrom ? new Date(offer.availableFrom) : undefined,
         availableUntil: offer.availableUntil ? new Date(offer.availableUntil) : undefined,
         maxRedemptions: offer.maxRedemptions || undefined,
@@ -173,11 +200,42 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
 
   const onSubmit = (data: OfferFormData) => {
     console.log('Form submitted with data:', data)
-    const submitData = {
+
+    // Clean up empty strings for optional URL fields
+    const cleanedData = {
       ...data,
+      imageUrl: data.imageUrl?.trim() || undefined,
+      redirectUrl: data.redirectUrl?.trim() || undefined,
+      declineRedirectUrl: data.declineRedirectUrl?.trim() || undefined,
+      headline: data.headline?.trim() || undefined,
+      badgeText: data.badgeText?.trim() || undefined,
+      badgeColor: data.badgeColor?.trim() || undefined,
+      bumpDescription: data.bumpDescription?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+    }
+
+    const submitData = {
+      ...cleanedData,
       price: Math.round(data.price * 100), // Convert dollars to cents
       compareAtPrice: data.compareAtPrice ? Math.round(data.compareAtPrice * 100) : undefined,
       couponId: data.couponId === 'none' ? undefined : data.couponId || undefined,
+      // Convert trial price to cents if present
+      trialPrice: data.trialPrice ? Math.round(data.trialPrice * 100) : undefined,
+      // Only include subscription fields if it's a subscription
+      isRecurring: data.offerType === 'subscription',
+      billingCycle: data.offerType === 'subscription' ? data.billingCycle : undefined,
+      billingInterval:
+        data.offerType === 'subscription' && data.billingCycle === 'custom'
+          ? data.billingInterval
+          : undefined,
+      billingIntervalUnit:
+        data.offerType === 'subscription' && data.billingCycle === 'custom'
+          ? data.billingIntervalUnit
+          : undefined,
+      // Only include trial fields if trial is enabled
+      trialEnabled: data.offerType === 'subscription' ? data.trialEnabled : false,
+      trialType: data.trialEnabled ? data.trialType : undefined,
+      trialDays: data.trialEnabled ? data.trialDays : undefined,
     }
 
     if (offerId) {
@@ -332,6 +390,251 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
               </TabsContent>
 
               <TabsContent value="pricing" className="mt-6 space-y-6">
+                {/* Offer Type Selection */}
+                <div>
+                  <Label className="mb-3 block text-base font-semibold">Offer Type</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        form.setValue('offerType', 'one_time', { shouldValidate: true })
+                        form.setValue('isRecurring', false)
+                      }}
+                      className={cn(
+                        'relative rounded-lg border-2 p-4 text-left transition-all',
+                        form.watch('offerType') === 'one_time'
+                          ? 'border-purple-500 bg-purple-50/50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      )}
+                    >
+                      <CreditCard className="mb-2 h-5 w-5 text-purple-600" />
+                      <div className="font-medium">One-time</div>
+                      <div className="mt-1 text-xs text-gray-600">Single payment</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        form.setValue('offerType', 'subscription', { shouldValidate: true })
+                        form.setValue('isRecurring', true)
+                        if (!form.watch('billingCycle')) {
+                          form.setValue('billingCycle', 'monthly')
+                        }
+                      }}
+                      className={cn(
+                        'relative rounded-lg border-2 p-4 text-left transition-all',
+                        form.watch('offerType') === 'subscription'
+                          ? 'border-purple-500 bg-purple-50/50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      )}
+                    >
+                      <RefreshCw className="mb-2 h-5 w-5 text-purple-600" />
+                      <div className="font-medium">Subscription</div>
+                      <div className="mt-1 text-xs text-gray-600">Recurring billing</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        form.setValue('offerType', 'payment_plan', { shouldValidate: true })
+                      }
+                      className={cn(
+                        'relative cursor-not-allowed rounded-lg border-2 p-4 text-left opacity-50 transition-all',
+                        'border-gray-200'
+                      )}
+                      disabled
+                    >
+                      <Layers className="mb-2 h-5 w-5 text-gray-400" />
+                      <div className="font-medium text-gray-400">Payment Plan</div>
+                      <div className="mt-1 text-xs text-gray-400">Coming soon</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subscription Settings */}
+                {form.watch('offerType') === 'subscription' && (
+                  <div className="space-y-4 rounded-lg border border-purple-200 bg-purple-50/30 p-4">
+                    <div>
+                      <Label className="text-sm font-medium">Billing Cycle</Label>
+                      <div className="mt-2 grid grid-cols-4 gap-2">
+                        {[
+                          { value: 'monthly', label: 'Monthly' },
+                          { value: 'quarterly', label: 'Quarterly' },
+                          { value: 'yearly', label: 'Yearly' },
+                          { value: 'custom', label: 'Custom' },
+                        ].map((cycle) => (
+                          <button
+                            key={cycle.value}
+                            type="button"
+                            onClick={() =>
+                              form.setValue('billingCycle', cycle.value as 'monthly' | 'quarterly' | 'yearly' | 'custom', {
+                                shouldValidate: true,
+                              })
+                            }
+                            className={cn(
+                              'rounded-md px-3 py-2 text-sm font-medium transition-all',
+                              form.watch('billingCycle') === cycle.value
+                                ? 'bg-purple-600 text-white'
+                                : 'border bg-white text-gray-700 hover:bg-gray-50'
+                            )}
+                          >
+                            {cycle.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Trial Configuration */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="flex items-center gap-2 text-sm font-medium">
+                          <Gift className="h-4 w-4 text-purple-600" />
+                          Enable Trial Period
+                        </Label>
+                        <Switch
+                          checked={form.watch('trialEnabled') || false}
+                          onCheckedChange={(checked) => {
+                            form.setValue('trialEnabled', checked)
+                            if (checked && !form.watch('trialType')) {
+                              form.setValue('trialType', 'free')
+                              form.setValue('trialDays', 7)
+                            }
+                          }}
+                        />
+                      </div>
+
+                      {form.watch('trialEnabled') && (
+                        <div className="space-y-3 pl-6">
+                          {/* Trial Type Cards */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                form.setValue('trialType', 'free')
+                                form.setValue('trialPrice', undefined)
+                              }}
+                              className={cn(
+                                'rounded-lg border p-3 text-left transition-all',
+                                form.watch('trialType') === 'free'
+                                  ? 'border-green-500 bg-green-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              )}
+                            >
+                              <div className="flex items-start gap-2">
+                                <Gift className="mt-0.5 h-4 w-4 text-green-600" />
+                                <div>
+                                  <div className="text-sm font-medium">Free Trial</div>
+                                  <div className="mt-0.5 text-xs text-gray-600">
+                                    $0 during trial
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                form.setValue('trialType', 'paid')
+                                if (!form.watch('trialPrice')) {
+                                  form.setValue('trialPrice', 1)
+                                }
+                              }}
+                              className={cn(
+                                'rounded-lg border p-3 text-left transition-all',
+                                form.watch('trialType') === 'paid'
+                                  ? 'border-green-500 bg-green-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              )}
+                            >
+                              <div className="flex items-start gap-2">
+                                <DollarSign className="mt-0.5 h-4 w-4 text-green-600" />
+                                <div>
+                                  <div className="text-sm font-medium">Paid Trial</div>
+                                  <div className="mt-0.5 text-xs text-gray-600">Reduced price</div>
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+
+                          {/* Trial Duration */}
+                          <div>
+                            <Label className="text-xs text-gray-600">Trial Duration (days)</Label>
+                            <div className="mt-1 flex items-center gap-2">
+                              <Input
+                                type="number"
+                                {...form.register('trialDays', { valueAsNumber: true })}
+                                className="w-20"
+                                min={1}
+                                max={90}
+                              />
+                              <div className="flex gap-1">
+                                {[3, 7, 14, 30].map((days) => (
+                                  <button
+                                    key={days}
+                                    type="button"
+                                    onClick={() => form.setValue('trialDays', days)}
+                                    className={cn(
+                                      'rounded px-2 py-1 text-xs',
+                                      form.watch('trialDays') === days
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    )}
+                                  >
+                                    {days}d
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Trial Price (for paid trials) */}
+                          {form.watch('trialType') === 'paid' && (
+                            <div>
+                              <Label className="text-xs text-gray-600">Trial Price</Label>
+                              <div className="relative mt-1">
+                                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-gray-500">
+                                  {getCurrencySymbol(form.watch('currency'))}
+                                </span>
+                                <Input
+                                  type="number"
+                                  {...form.register('trialPrice', { valueAsNumber: true })}
+                                  className="w-32 pl-8"
+                                  min={0.01}
+                                  step={0.01}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Trial Preview */}
+                          <div className="rounded-lg border border-purple-200 bg-white p-3">
+                            <div className="flex items-center gap-2 text-xs">
+                              <Clock className="h-3 w-3 text-purple-600" />
+                              <span className="text-gray-600">Customer journey:</span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-1 text-xs">
+                              <span className="rounded bg-green-100 px-2 py-1 text-green-700">
+                                Day 0:{' '}
+                                {form.watch('trialType') === 'free'
+                                  ? 'Free'
+                                  : `${getCurrencySymbol(form.watch('currency'))}${form.watch('trialPrice')}`}{' '}
+                                trial starts
+                              </span>
+                              <Zap className="h-3 w-3 text-gray-400" />
+                              <span className="rounded bg-purple-100 px-2 py-1 text-purple-700">
+                                Day {form.watch('trialDays') || 7}:{' '}
+                                {getCurrencySymbol(form.watch('currency'))}
+                                {form.watch('price')}/
+                                {form.watch('billingCycle')?.replace('ly', '')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Currency */}
                 <div>
                   <Label>Currency</Label>
@@ -427,34 +730,6 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-
-                {/* Quantity Limits */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="minQuantity">Minimum Quantity</Label>
-                    <Input
-                      id="minQuantity"
-                      type="number"
-                      {...form.register('minQuantity', { valueAsNumber: true })}
-                      placeholder="1"
-                      className="mt-2"
-                      min={1}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="maxQuantity">
-                      Maximum Quantity <span className="text-gray-500">(optional)</span>
-                    </Label>
-                    <Input
-                      id="maxQuantity"
-                      type="number"
-                      {...form.register('maxQuantity', { valueAsNumber: true })}
-                      placeholder="Unlimited"
-                      className="mt-2"
-                      min={1}
-                    />
-                  </div>
                 </div>
               </TabsContent>
 
