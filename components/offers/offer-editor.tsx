@@ -827,9 +827,9 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     Apply Coupon <span className="text-gray-500">(optional)</span>
                   </Label>
                   <Select
-                    value={form.watch('couponId') || ''}
+                    value={form.watch('couponId') || 'none'}
                     onValueChange={(value) =>
-                      form.setValue('couponId', value || undefined, { shouldValidate: true })
+                      form.setValue('couponId', value === 'none' ? undefined : value, { shouldValidate: true })
                     }
                   >
                     <SelectTrigger className="mt-2">
