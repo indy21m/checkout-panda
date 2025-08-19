@@ -13,14 +13,14 @@ import { products, productPlans, coupons } from '@/server/db/schema'
 const TEST_CONFIG = {
   // Test Stripe keys (use test mode keys)
   STRIPE_TEST_CUSTOMER: 'cus_test_123',
-  
+
   // Test products
   TEST_PRODUCT_ID: 'test-product-001',
   TEST_PLAN_ID: 'test-plan-001',
-  
+
   // Test checkout
   TEST_CHECKOUT_ID: 'test-checkout-001',
-  
+
   // Test scenarios
   scenarios: [
     'regular_payment',
@@ -43,58 +43,67 @@ async function log(message: string, data?: any) {
 
 async function createTestData() {
   log('Creating test data...')
-  
+
   // Create test product
-  const [testProduct] = await db.insert(products).values({
-    name: 'Test Product',
-    slug: 'test-product',
-    type: 'digital' as const,
-    description: 'Product for testing checkout flows',
-    stripeProductId: 'prod_test_123',
-    userId: 'test-user',
-  }).returning()
-  
+  const [testProduct] = await db
+    .insert(products)
+    .values({
+      name: 'Test Product',
+      slug: 'test-product',
+      type: 'digital' as const,
+      description: 'Product for testing checkout flows',
+      stripeProductId: 'prod_test_123',
+      userId: 'test-user',
+    })
+    .returning()
+
   // Create test plan (subscription)
-  await db.insert(productPlans).values({
-    productId: testProduct?.id || '',
-    name: 'Monthly Plan',
-    tier: 'basic' as const,
-    price: 999, // $9.99/month
-    currency: 'USD' as const,
-    billingInterval: 'month' as const,
-    trialDays: 7,
-    stripePriceId: 'price_test_123',
-  }).returning()
-  
+  await db
+    .insert(productPlans)
+    .values({
+      productId: testProduct?.id || '',
+      name: 'Monthly Plan',
+      tier: 'basic' as const,
+      price: 999, // $9.99/month
+      currency: 'USD' as const,
+      billingInterval: 'month' as const,
+      trialDays: 7,
+      stripePriceId: 'price_test_123',
+    })
+    .returning()
+
   // Create test coupons
-  await db.insert(coupons).values([
-    {
-      name: 'Test 100% Coupon',
-      code: 'TEST100',
-      description: '100% off for testing',
-      discountType: 'percentage' as const,
-      discountValue: 100,
-      isActive: true,
-      userId: 'test-user',
-    },
-    {
-      name: 'Test 50% Coupon',
-      code: 'TEST50',
-      description: '50% off for testing',
-      discountType: 'percentage' as const,
-      discountValue: 50,
-      isActive: true,
-      userId: 'test-user',
-    },
-  ]).onConflictDoNothing()
-  
+  await db
+    .insert(coupons)
+    .values([
+      {
+        name: 'Test 100% Coupon',
+        code: 'TEST100',
+        description: '100% off for testing',
+        discountType: 'percentage' as const,
+        discountValue: 100,
+        isActive: true,
+        userId: 'test-user',
+      },
+      {
+        name: 'Test 50% Coupon',
+        code: 'TEST50',
+        description: '50% off for testing',
+        discountType: 'percentage' as const,
+        discountValue: 50,
+        isActive: true,
+        userId: 'test-user',
+      },
+    ])
+    .onConflictDoNothing()
+
   log('Test data created')
 }
 
 // Test scenarios
 async function testRegularPayment() {
   log('Testing regular payment flow...')
-  
+
   try {
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -106,16 +115,16 @@ async function testRegularPayment() {
         quoteId: 'quote_test_123',
       },
     })
-    
+
     log('Payment intent created:', {
       id: paymentIntent.id,
       amount: paymentIntent.amount,
       status: paymentIntent.status,
     })
-    
+
     // Simulate payment confirmation
     // In real scenario, this happens on client side
-    
+
     return { success: true, paymentIntentId: paymentIntent.id }
   } catch (error) {
     log('Regular payment test failed:', error)
@@ -125,7 +134,7 @@ async function testRegularPayment() {
 
 async function testSubscription() {
   log('Testing subscription flow...')
-  
+
   try {
     // Create subscription
     const subscription = await stripe.subscriptions.create({
@@ -138,13 +147,13 @@ async function testSubscription() {
         quoteId: 'quote_test_sub_123',
       },
     })
-    
+
     log('Subscription created:', {
       id: subscription.id,
       status: subscription.status,
       trial_end: new Date(subscription.trial_end! * 1000).toISOString(),
     })
-    
+
     return { success: true, subscriptionId: subscription.id }
   } catch (error) {
     log('Subscription test failed:', error)
@@ -154,7 +163,7 @@ async function testSubscription() {
 
 async function testZeroTotalTrial() {
   log('Testing zero-total trial flow...')
-  
+
   try {
     // Create setup intent for trial (no payment required)
     const setupIntent = await stripe.setupIntents.create({
@@ -166,12 +175,12 @@ async function testZeroTotalTrial() {
         trialDays: '7',
       },
     })
-    
+
     log('Setup intent created for trial:', {
       id: setupIntent.id,
       status: setupIntent.status,
     })
-    
+
     return { success: true, setupIntentId: setupIntent.id }
   } catch (error) {
     log('Zero-total trial test failed:', error)
@@ -181,7 +190,7 @@ async function testZeroTotalTrial() {
 
 async function testZeroTotalCoupon() {
   log('Testing zero-total with 100% coupon...')
-  
+
   try {
     // Create payment intent with zero amount
     const paymentIntent = await stripe.paymentIntents.create({
@@ -194,15 +203,15 @@ async function testZeroTotalCoupon() {
         originalAmount: '2999',
       },
     })
-    
+
     log('Zero-amount payment intent created:', {
       id: paymentIntent.id,
       amount: paymentIntent.amount,
       status: paymentIntent.status,
     })
-    
+
     // Stripe should auto-confirm zero-amount intents
-    
+
     return { success: true, paymentIntentId: paymentIntent.id }
   } catch (error) {
     log('Zero-total coupon test failed:', error)
@@ -212,7 +221,7 @@ async function testZeroTotalCoupon() {
 
 async function testVATReverseCharge() {
   log('Testing VAT reverse charge flow...')
-  
+
   try {
     // Simulate EU B2B transaction
     const paymentIntent = await stripe.paymentIntents.create({
@@ -226,13 +235,13 @@ async function testVATReverseCharge() {
         customerCountry: 'DE',
       },
     })
-    
+
     log('VAT reverse charge payment intent created:', {
       id: paymentIntent.id,
       amount: paymentIntent.amount,
       metadata: paymentIntent.metadata,
     })
-    
+
     return { success: true, paymentIntentId: paymentIntent.id }
   } catch (error) {
     log('VAT reverse charge test failed:', error)
@@ -242,27 +251,27 @@ async function testVATReverseCharge() {
 
 async function testWebhookFulfillment() {
   log('Testing webhook fulfillment...')
-  
+
   try {
     // Check if orders are created via webhooks
     const recentOrders = await db.query.orders.findMany({
       limit: 5,
       orderBy: (orders, { desc }) => [desc(orders.createdAt)],
     })
-    
+
     log('Recent orders:', {
       count: recentOrders.length,
-      orders: recentOrders.map(o => ({
+      orders: recentOrders.map((o) => ({
         id: o.id,
         status: o.status,
         stripePaymentIntentId: o.stripePaymentIntentId,
         createdViaWebhook: !!o.stripePaymentIntentId,
       })),
     })
-    
-    const webhookOrders = recentOrders.filter(o => o.stripePaymentIntentId)
-    
-    return { 
+
+    const webhookOrders = recentOrders.filter((o) => o.stripePaymentIntentId)
+
+    return {
       success: webhookOrders.length > 0,
       webhookOrderCount: webhookOrders.length,
       totalOrderCount: recentOrders.length,
@@ -279,11 +288,11 @@ async function runTests() {
   console.log('   CHECKOUT FLOW TEST SUITE')
   console.log('========================================')
   console.log()
-  
+
   // Setup
   await createTestData()
   console.log()
-  
+
   // Run tests
   const results = {
     regularPayment: await testRegularPayment(),
@@ -293,32 +302,34 @@ async function runTests() {
     vatReverseCharge: await testVATReverseCharge(),
     webhookFulfillment: await testWebhookFulfillment(),
   }
-  
+
   // Summary
   console.log()
   console.log('========================================')
   console.log('   TEST RESULTS')
   console.log('========================================')
-  
+
   Object.entries(results).forEach(([test, result]) => {
     const status = result.success ? '✅ PASS' : '❌ FAIL'
     console.log(`${status} - ${test}`)
     if (!result.success && result.error) {
-      console.log(`  Error: ${typeof result.error === 'object' && 'message' in result.error ? result.error.message : result.error}`)
+      console.log(
+        `  Error: ${typeof result.error === 'object' && 'message' in result.error ? result.error.message : result.error}`
+      )
     }
   })
-  
+
   const totalTests = Object.keys(results).length
-  const passedTests = Object.values(results).filter(r => r.success).length
-  
+  const passedTests = Object.values(results).filter((r) => r.success).length
+
   console.log()
   console.log(`Total: ${passedTests}/${totalTests} tests passed`)
   console.log()
-  
+
   // Cleanup note
   console.log('Note: Test data created with IDs prefixed with "test-"')
   console.log('You may want to clean up test data after verification')
-  
+
   process.exit(passedTests === totalTests ? 0 : 1)
 }
 

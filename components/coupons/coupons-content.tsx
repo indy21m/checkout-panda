@@ -29,10 +29,7 @@ export default function CouponsContent() {
   return (
     <div className="min-h-screen w-full">
       <div className="mx-auto w-full max-w-[1400px] p-8">
-        <CouponsList
-          onCreateCoupon={handleCreateCoupon}
-          onEditCoupon={handleEditCoupon}
-        />
+        <CouponsList onCreateCoupon={handleCreateCoupon} onEditCoupon={handleEditCoupon} />
 
         <CouponEditor
           open={isEditorOpen}

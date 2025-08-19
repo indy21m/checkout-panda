@@ -98,13 +98,9 @@ export function parsePriceToSmallestUnit(formattedPrice: string, currency: Curre
  * @param currency - ISO 4217 currency code
  * @param locale - Optional locale override
  */
-export function formatMoney(
-  amountInMinor: number,
-  currency: string,
-  locale?: string
-): string {
+export function formatMoney(amountInMinor: number, currency: string, locale?: string): string {
   const amount = amountInMinor / 100
-  
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency.toUpperCase(),
@@ -116,46 +112,42 @@ export function formatMoney(
 /**
  * Calculate percentage discount
  */
-export function calculateDiscount(
-  originalAmount: number,
-  discountPercent: number
-): number {
+export function calculateDiscount(originalAmount: number, discountPercent: number): number {
   return Math.round(originalAmount * (discountPercent / 100))
 }
 
 /**
  * Apply fixed discount (capped at original amount)
  */
-export function applyFixedDiscount(
-  originalAmount: number,
-  discountAmount: number
-): number {
+export function applyFixedDiscount(originalAmount: number, discountAmount: number): number {
   return Math.max(0, originalAmount - discountAmount)
 }
 
 /**
  * Validate currency consistency across items
  */
-export function validateCurrencyConsistency(
-  items: Array<{ currency: string; amount: number }>
-): { valid: boolean; currency?: string; error?: string } {
+export function validateCurrencyConsistency(items: Array<{ currency: string; amount: number }>): {
+  valid: boolean
+  currency?: string
+  error?: string
+} {
   if (items.length === 0) {
     return { valid: true }
   }
-  
+
   const firstCurrency = items[0]?.currency
   if (!firstCurrency) {
     return { valid: false, error: 'No currency specified' }
   }
-  
-  const inconsistent = items.find(item => item.currency !== firstCurrency)
+
+  const inconsistent = items.find((item) => item.currency !== firstCurrency)
   if (inconsistent) {
     return {
       valid: false,
       error: `Mixed currencies not allowed: ${firstCurrency} and ${inconsistent.currency}`,
     }
   }
-  
+
   return { valid: true, currency: firstCurrency }
 }
 
@@ -178,7 +170,7 @@ export interface CartState {
 export function cartToKey(cart: CartState): string {
   // Sort bumps for consistency
   const sortedBumps = [...cart.orderBumpIds].sort()
-  
+
   const normalized = {
     productId: cart.productId || '',
     planId: cart.planId || '',
@@ -188,16 +180,12 @@ export function cartToKey(cart: CartState): string {
     email: cart.customerEmail || '',
     vat: cart.vatNumber || '',
   }
-  
+
   // Create deterministic string
   const str = JSON.stringify(normalized)
-  
+
   // Generate hash
-  return crypto
-    .createHash('sha256')
-    .update(str)
-    .digest('hex')
-    .substring(0, 16) // Use first 16 chars for brevity
+  return crypto.createHash('sha256').update(str).digest('hex').substring(0, 16) // Use first 16 chars for brevity
 }
 
 /**
@@ -212,13 +200,10 @@ export function generateQuoteId(cart: CartState): string {
 /**
  * Check if a quote is expired (default 10 minutes)
  */
-export function isQuoteExpired(
-  createdAt: Date,
-  expirationMinutes = 10
-): boolean {
+export function isQuoteExpired(createdAt: Date, expirationMinutes = 10): boolean {
   const now = Date.now()
   const created = new Date(createdAt).getTime()
   const expirationMs = expirationMinutes * 60 * 1000
-  
+
   return now - created > expirationMs
 }

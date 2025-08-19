@@ -2,19 +2,19 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-  useStripe, 
+import {
+  useStripe,
   useElements,
   LinkAuthenticationElement,
   PaymentElement,
   AddressElement,
-  PaymentRequestButtonElement
+  PaymentRequestButtonElement,
 } from '@stripe/react-stripe-js'
-import type { 
+import type {
   StripePaymentElementOptions,
   StripeAddressElementOptions,
   StripeLinkAuthenticationElementOptions,
-  PaymentRequest
+  PaymentRequest,
 } from '@stripe/stripe-js'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,7 @@ interface StripePaymentBlockProps {
   checkoutId: string
   quote?: Quote | null
   productId?: string
-  offerId?: string  // Add offerId
+  offerId?: string // Add offerId
   planId?: string
   orderBumpIds?: string[]
   amount: number
@@ -75,7 +75,7 @@ export function StripePaymentBlock({
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
-  
+
   // Form state
   const [email, setEmail] = React.useState('')
   const [firstName, setFirstName] = React.useState('')
@@ -92,44 +92,47 @@ export function StripePaymentBlock({
     reverseCharge?: boolean
     companyName?: string
   } | null>(null)
-  
+
   // Coupon state (if not using quotes)
   const [couponCode, setCouponCode] = React.useState('')
   const [isApplyingCoupon, setIsApplyingCoupon] = React.useState(false)
-  
+
   // Track when Stripe Elements are ready
   React.useEffect(() => {
     if (stripe && elements) {
       setIsStripeLoading(false)
     }
   }, [stripe, elements])
-  
+
   // Handle email change
-  const handleEmailChange = React.useCallback((value: string) => {
-    setEmail(value)
-    onEmailChange?.(value)
-  }, [onEmailChange])
-  
+  const handleEmailChange = React.useCallback(
+    (value: string) => {
+      setEmail(value)
+      onEmailChange?.(value)
+    },
+    [onEmailChange]
+  )
+
   // Initialize payment when email is complete
   const handleInitializePayment = React.useCallback(() => {
     if (!email || hasInitialized || clientSecret) return
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       toast.error('Please enter a valid email address')
       return
     }
-    
+
     setHasInitialized(true)
     onPaymentInitialize?.(email)
     onAnalyticsEvent?.('payment_initialize', { email, amount, currency })
   }, [email, hasInitialized, clientSecret, onPaymentInitialize, onAnalyticsEvent, amount, currency])
-  
+
   // Initialize payment request for Apple Pay / Google Pay
   React.useEffect(() => {
     if (!stripe || !amount || amount === 0) return
-    
+
     const pr = stripe.paymentRequest({
       country: 'US', // Should be dynamic based on user location
       currency: currency.toLowerCase(),
@@ -142,7 +145,7 @@ export function StripePaymentBlock({
       requestPayerPhone: data.showPhoneField,
       requestShipping: data.showBillingAddress,
     })
-    
+
     // Check if PaymentRequest is available
     pr.canMakePayment().then((result) => {
       if (result) {
@@ -150,11 +153,11 @@ export function StripePaymentBlock({
         setCanMakePayment(true)
       }
     })
-    
+
     // Handle payment method selection
     pr.on('paymentmethod', async (event) => {
       setIsProcessing(true)
-      
+
       // Initialize payment if not already done
       if (!clientSecret && !hasInitialized) {
         const customerEmail = event.payerEmail || email
@@ -163,85 +166,98 @@ export function StripePaymentBlock({
           onPaymentInitialize?.(customerEmail)
         }
       }
-      
+
       // Wait for client secret
       let retries = 0
       while (!clientSecret && retries < 20) {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise((resolve) => setTimeout(resolve, 500))
         retries++
       }
-      
+
       if (!clientSecret) {
         event.complete('fail')
         toast.error('Failed to initialize payment')
         setIsProcessing(false)
         return
       }
-      
+
       // Confirm payment
       const { error: confirmError } = await stripe.confirmCardPayment(
         clientSecret,
         { payment_method: event.paymentMethod.id },
         { handleActions: false }
       )
-      
+
       if (confirmError) {
         event.complete('fail')
         toast.error(confirmError.message || 'Payment failed')
-        onAnalyticsEvent?.('payment_failed', { 
+        onAnalyticsEvent?.('payment_failed', {
           error: confirmError.message,
-          method: 'payment_request'
+          method: 'payment_request',
         })
       } else {
         event.complete('success')
-        onAnalyticsEvent?.('payment_success', { 
+        onAnalyticsEvent?.('payment_success', {
           method: 'payment_request',
-          paymentIntentId
+          paymentIntentId,
         })
         if (paymentIntentId) {
           onPaymentSuccess?.(paymentIntentId)
         }
       }
-      
+
       setIsProcessing(false)
     })
-    
+
     return () => {
       pr.abort()
     }
-  }, [stripe, amount, currency, data, clientSecret, hasInitialized, email, handleEmailChange, onPaymentInitialize, onPaymentSuccess, onAnalyticsEvent, paymentIntentId])
-  
+  }, [
+    stripe,
+    amount,
+    currency,
+    data,
+    clientSecret,
+    hasInitialized,
+    email,
+    handleEmailChange,
+    onPaymentInitialize,
+    onPaymentSuccess,
+    onAnalyticsEvent,
+    paymentIntentId,
+  ])
+
   // Handle payment submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    
+
     if (!stripe || !elements) {
       toast.error('Payment system not ready')
       return
     }
-    
+
     // Initialize payment if needed
     if (!clientSecret) {
       handleInitializePayment()
       toast.info('Initializing payment...')
       return
     }
-    
+
     setIsProcessing(true)
     setErrorMessage(null)
     onAnalyticsEvent?.('payment_attempt', { amount, currency })
-    
+
     try {
       // Submit payment
       const { error: submitError } = await elements.submit()
-      
+
       if (submitError) {
         setErrorMessage(submitError.message || 'An error occurred')
         setIsProcessing(false)
         onAnalyticsEvent?.('payment_error', { error: submitError.message })
         return
       }
-      
+
       // Confirm payment
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
@@ -257,17 +273,17 @@ export function StripePaymentBlock({
         },
         redirect: 'if_required',
       })
-      
+
       if (confirmError) {
         setErrorMessage(confirmError.message || 'Payment failed')
         onAnalyticsEvent?.('payment_failed', { error: confirmError.message })
       } else if (paymentIntent) {
-        onAnalyticsEvent?.('payment_success', { 
+        onAnalyticsEvent?.('payment_success', {
           paymentIntentId: paymentIntent.id,
           amount: paymentIntent.amount,
-          currency: paymentIntent.currency
+          currency: paymentIntent.currency,
         })
-        
+
         // Redirect to success page
         if (onPaymentSuccess) {
           onPaymentSuccess(paymentIntent.id)
@@ -283,17 +299,17 @@ export function StripePaymentBlock({
       setIsProcessing(false)
     }
   }
-  
+
   // Apply coupon to quote
   const handleApplyCoupon = React.useCallback(async () => {
     if (!couponCode.trim() || !quote) {
       toast.error('Please enter a coupon code')
       return
     }
-    
+
     setIsApplyingCoupon(true)
     onAnalyticsEvent?.('coupon_attempt', { code: couponCode })
-    
+
     try {
       // Here you would call an API to apply the coupon to the quote
       // For now, we'll just show a message
@@ -305,7 +321,7 @@ export function StripePaymentBlock({
       setIsApplyingCoupon(false)
     }
   }, [couponCode, quote, onAnalyticsEvent])
-  
+
   // Payment element options
   const paymentElementOptions: StripePaymentElementOptions = {
     layout: 'tabs',
@@ -313,7 +329,7 @@ export function StripePaymentBlock({
       billingDetails: {
         email,
         name: `${firstName} ${lastName}`.trim() || undefined,
-      }
+      },
     },
     fields: {
       billingDetails: {
@@ -321,61 +337,58 @@ export function StripePaymentBlock({
         name: 'auto', // Name is always collected
         phone: data.showPhoneField ? 'auto' : 'never',
         address: data.showBillingAddress ? 'auto' : 'never',
-      }
+      },
     },
     wallets: {
       applePay: 'auto',
       googlePay: 'auto',
     },
   }
-  
+
   // Link authentication options
   const linkOptions: StripeLinkAuthenticationElementOptions = {
     defaultValues: {
       email,
-    }
+    },
   }
-  
+
   // Address element options
   const addressOptions: StripeAddressElementOptions = {
     mode: 'billing',
     defaultValues: {
       name: `${firstName} ${lastName}`.trim() || undefined,
-    }
+    },
   }
-  
+
   // Determine if we're in subscription mode
   const isSubscription = quote?.meta?.planInterval || planId
-  
+
   return (
     <div className="space-y-6">
       {/* Circle-style Header */}
       <div className="text-center lg:text-left">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="mb-2 text-2xl font-bold text-gray-900">
           {isSubscription ? 'Start Your Subscription' : 'Complete Your Purchase'}
         </h2>
         <p className="text-gray-600">
-          {isSubscription 
-            ? quote?.meta?.trialDays 
+          {isSubscription
+            ? quote?.meta?.trialDays
               ? `Try free for ${quote.meta.trialDays} days, then ${formatMoney(amount, currency)} per ${quote.meta.planInterval}`
               : `${formatMoney(amount, currency)} per ${quote?.meta?.planInterval || 'month'}`
             : `Secure checkout powered by Stripe`}
         </p>
       </div>
-      
+
       {/* Express Checkout - Apple Pay / Google Pay */}
       {canMakePayment && paymentRequest && (
-        <div className="pb-6 border-b border-gray-200">
+        <div className="border-b border-gray-200 pb-6">
           <div className="mb-3">
-            <p className="text-sm text-gray-600 text-center">Express checkout</p>
+            <p className="text-center text-sm text-gray-600">Express checkout</p>
           </div>
-          <PaymentRequestButtonElement 
-            options={{ paymentRequest }}
-            className="w-full"
-          />
+          <PaymentRequestButtonElement options={{ paymentRequest }} className="w-full" />
         </div>
       )}
-      
+
       {/* Main Payment Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email & Name Fields */}
@@ -396,11 +409,9 @@ export function StripePaymentBlock({
                 required
                 className="mt-1"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                We&apos;ll send your receipt here
-              </p>
+              <p className="mt-1 text-xs text-gray-500">We&apos;ll send your receipt here</p>
             </div>
-            
+
             {/* Name fields - always shown */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -428,7 +439,7 @@ export function StripePaymentBlock({
                 />
               </div>
             </div>
-            
+
             {/* VAT Field for EU customers */}
             {collectVAT && (
               <VATField
@@ -450,37 +461,33 @@ export function StripePaymentBlock({
             )}
           </div>
         )}
-        
+
         {/* Link Authentication (Stripe Link) */}
         {clientSecret && (
           <div>
             <LinkAuthenticationElement options={linkOptions} />
           </div>
         )}
-        
+
         {/* Payment Element */}
         {clientSecret && (
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-3 block">
-              Payment Method
-            </Label>
+            <Label className="mb-3 block text-sm font-medium text-gray-700">Payment Method</Label>
             <PaymentElement options={paymentElementOptions} />
           </div>
         )}
-        
+
         {/* Billing Address */}
         {clientSecret && data.showBillingAddress && (
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-3 block">
-              Billing Address
-            </Label>
+            <Label className="mb-3 block text-sm font-medium text-gray-700">Billing Address</Label>
             <AddressElement options={addressOptions} />
           </div>
         )}
-        
+
         {/* Coupon Code (if not using quotes) */}
         {!quote && data.enableCoupons && (
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="rounded-lg bg-gray-50 p-4">
             <Label htmlFor="coupon" className="text-sm font-medium text-gray-700">
               Have a promo code?
             </Label>
@@ -498,21 +505,17 @@ export function StripePaymentBlock({
                 onClick={handleApplyCoupon}
                 disabled={isApplyingCoupon || !couponCode}
               >
-                {isApplyingCoupon ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Apply'
-                )}
+                {isApplyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
               </Button>
             </div>
           </div>
         )}
-        
+
         {/* Applied Coupon Display */}
         {quote?.meta?.couponCode && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3">
             <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-green-600" />
+              <Tag className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium text-green-800">
                 Coupon {quote.meta.couponCode} applied
               </span>
@@ -522,70 +525,66 @@ export function StripePaymentBlock({
             </div>
           </div>
         )}
-        
+
         {/* Error Message */}
         {errorMessage && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700"
+            className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
           >
             {errorMessage}
           </motion.div>
         )}
-        
+
         {/* Submit Button */}
         <Button
           type="submit"
           size="lg"
           disabled={!stripe || isProcessing || isStripeLoading || (!clientSecret && !email)}
           className={cn(
-            "w-full relative",
-            "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800",
-            "text-white font-semibold",
-            "shadow-lg hover:shadow-xl transition-all duration-200"
+            'relative w-full',
+            'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800',
+            'font-semibold text-white',
+            'shadow-lg transition-all duration-200 hover:shadow-xl'
           )}
         >
           {isProcessing ? (
             <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Processing...
             </>
           ) : !clientSecret && email ? (
             <>
-              <ChevronRight className="w-5 h-5 mr-2" />
+              <ChevronRight className="mr-2 h-5 w-5" />
               Continue to Payment
             </>
           ) : (
             <>
-              <CreditCard className="w-5 h-5 mr-2" />
+              <CreditCard className="mr-2 h-5 w-5" />
               {data.buttonText || `Pay ${formatMoney(amount, currency)}`}
             </>
           )}
         </Button>
-        
+
         {/* Security Badges */}
-        <div className="pt-4 flex items-center justify-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center justify-center gap-4 pt-4 text-xs text-gray-500">
           <div className="flex items-center gap-1">
-            <Lock className="w-3 h-3" />
+            <Lock className="h-3 w-3" />
             <span>SSL Encrypted</span>
           </div>
           <div className="flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3" />
+            <ShieldCheck className="h-3 w-3" />
             <span>PCI Compliant</span>
           </div>
           <div className="flex items-center gap-1">
-            <Apple className="w-3 h-3" />
+            <Apple className="h-3 w-3" />
             <span>Apple Pay Ready</span>
           </div>
         </div>
-        
+
         {/* Terms */}
-        {data.secureText && (
-          <p className="text-xs text-center text-gray-500">
-            {data.secureText}
-          </p>
-        )}
+        {data.secureText && <p className="text-center text-xs text-gray-500">{data.secureText}</p>}
       </form>
     </div>
   )

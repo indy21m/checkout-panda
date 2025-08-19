@@ -76,29 +76,29 @@ export const offerRouter = createTRPCRouter({
         compareAtPrice: z.number().positive().int().optional(),
         currency: z.enum(SUPPORTED_CURRENCIES).default('USD'),
         couponId: z.string().uuid().optional(),
-        
+
         // Display settings
         headline: z.string().optional(),
         badgeText: z.string().optional(),
         badgeColor: z.string().optional(),
         imageUrl: z.string().url().optional(),
-        
+
         // Order bump specific
         bumpDescription: z.string().optional(),
-        
+
         // Upsell/Downsell specific
         redirectUrl: z.string().url().optional(),
         declineRedirectUrl: z.string().url().optional(),
-        
+
         // Conditions
         minQuantity: z.number().int().positive().default(1),
         maxQuantity: z.number().int().positive().optional(),
-        
+
         // Availability
         availableFrom: z.date().optional(),
         availableUntil: z.date().optional(),
         maxRedemptions: z.number().int().positive().optional(),
-        
+
         isActive: z.boolean().default(true),
       })
     )
@@ -172,29 +172,29 @@ export const offerRouter = createTRPCRouter({
         compareAtPrice: z.number().positive().int().optional(),
         currency: z.enum(SUPPORTED_CURRENCIES).optional(),
         couponId: z.string().uuid().nullable().optional(),
-        
+
         // Display settings
         headline: z.string().optional(),
         badgeText: z.string().optional(),
         badgeColor: z.string().optional(),
         imageUrl: z.string().url().optional(),
-        
+
         // Order bump specific
         bumpDescription: z.string().optional(),
-        
+
         // Upsell/Downsell specific
         redirectUrl: z.string().url().optional(),
         declineRedirectUrl: z.string().url().optional(),
-        
+
         // Conditions
         minQuantity: z.number().int().positive().optional(),
         maxQuantity: z.number().int().positive().optional(),
-        
+
         // Availability
         availableFrom: z.date().optional(),
         availableUntil: z.date().optional(),
         maxRedemptions: z.number().int().positive().optional(),
-        
+
         isActive: z.boolean().optional(),
       })
     )
@@ -264,9 +264,7 @@ export const offerRouter = createTRPCRouter({
         })
       }
 
-      await ctx.db
-        .delete(offers)
-        .where(and(eq(offers.id, input.id), eq(offers.userId, ctx.userId)))
+      await ctx.db.delete(offers).where(and(eq(offers.id, input.id), eq(offers.userId, ctx.userId)))
 
       return { success: true }
     }),
@@ -333,14 +331,8 @@ export const offerRouter = createTRPCRouter({
           eq(offers.productId, input.productId),
           eq(offers.context, input.context),
           eq(offers.isActive, true),
-          or(
-            isNull(offers.availableFrom),
-            lte(offers.availableFrom, now)
-          ),
-          or(
-            isNull(offers.availableUntil),
-            gte(offers.availableUntil, now)
-          )
+          or(isNull(offers.availableFrom), lte(offers.availableFrom, now)),
+          or(isNull(offers.availableUntil), gte(offers.availableUntil, now))
         ),
         with: {
           product: true,

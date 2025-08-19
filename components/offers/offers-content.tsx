@@ -29,10 +29,7 @@ export default function OffersContent() {
   return (
     <div className="min-h-screen w-full">
       <div className="mx-auto w-full max-w-[1400px] p-8">
-        <OffersList
-          onCreateOffer={handleCreateOffer}
-          onEditOffer={handleEditOffer}
-        />
+        <OffersList onCreateOffer={handleCreateOffer} onEditOffer={handleEditOffer} />
 
         <OfferEditor
           open={isEditorOpen}

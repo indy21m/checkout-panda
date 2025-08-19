@@ -28,7 +28,7 @@ export default async function NewCheckoutPage() {
   try {
     const api = await createApi()
     const fetchedProducts = await api.product.list({ includeArchived: false })
-    products = fetchedProducts.map(p => ({ id: p.id, name: p.name }))
+    products = fetchedProducts.map((p) => ({ id: p.id, name: p.name }))
     hasProducts = products.length > 0
   } catch (error) {
     console.error('Failed to fetch products:', error)

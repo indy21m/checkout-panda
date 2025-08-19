@@ -2,12 +2,7 @@ import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/api/trpc'
 import { db } from '@/server/db'
 import { eq, and, or, sql, desc, asc } from 'drizzle-orm'
-import {
-  coupons,
-  couponProducts,
-  couponRedemptions,
-  productPlans,
-} from '@/server/db/schema'
+import { coupons, couponProducts, couponRedemptions, productPlans } from '@/server/db/schema'
 import { TRPCError } from '@trpc/server'
 
 export const couponRouter = createTRPCRouter({
@@ -239,8 +234,8 @@ export const couponRouter = createTRPCRouter({
         input.sortBy === 'code'
           ? coupons.code
           : input.sortBy === 'timesRedeemed'
-          ? coupons.timesRedeemed
-          : coupons.createdAt
+            ? coupons.timesRedeemed
+            : coupons.createdAt
 
       query = query.orderBy(input.sortOrder === 'asc' ? asc(sortColumn) : desc(sortColumn))
 

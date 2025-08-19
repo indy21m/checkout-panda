@@ -20,7 +20,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
 
     // Check if it's the new simplified format (blocks array directly)
     const isSimplifiedFormat = Array.isArray(checkout.pageData?.blocks)
-    
+
     if (isSimplifiedFormat) {
       // Transform blocks to match expected type
       const transformedCheckout = {
@@ -29,20 +29,22 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
         slug: checkout.slug,
         pageData: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          blocks: (checkout.pageData.blocks as any[]).map((block): Block => ({
-            id: block.id,
-            type: block.type,
-            data: block.data,
-            visible: block.visible !== undefined ? block.visible : true,
-            column: block.column || 'left',
-            styles: block.styles || {}
-          })),
-          settings: checkout.pageData.settings
-        }
+          blocks: (checkout.pageData.blocks as any[]).map(
+            (block): Block => ({
+              id: block.id,
+              type: block.type,
+              data: block.data,
+              visible: block.visible !== undefined ? block.visible : true,
+              column: block.column || 'left',
+              styles: block.styles || {},
+            })
+          ),
+          settings: checkout.pageData.settings,
+        },
       }
       return <SimplifiedCheckoutRenderer checkout={transformedCheckout} />
     }
-    
+
     // For old format checkouts, we'll need to handle differently or migrate
     return <div>This checkout uses an old format. Please recreate it in the builder.</div>
   } catch {

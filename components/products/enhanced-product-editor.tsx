@@ -307,280 +307,293 @@ export function EnhancedProductEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden p-0">
+      <DialogContent className="fixed top-[50%] left-[50%] h-[80vh] max-h-[900px] w-full max-w-4xl translate-x-[-50%] translate-y-[-50%] overflow-hidden p-0">
         <div className="flex h-full flex-col">
-            <DialogHeader className="p-6 pb-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <DialogTitle className="text-2xl font-bold">
-                    {productId ? 'Edit Product' : 'Create New Product'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Design a compelling product that converts visitors into customers
-                  </DialogDescription>
-                </div>
+          <DialogHeader className="p-6 pb-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl font-bold">
+                  {productId ? 'Edit Product' : 'Create New Product'}
+                </DialogTitle>
+                <DialogDescription>
+                  Design a compelling product that converts visitors into customers
+                </DialogDescription>
               </div>
-            </DialogHeader>
+            </div>
+          </DialogHeader>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col overflow-hidden p-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col overflow-hidden">
-                <TabsList className="mb-6 grid w-full grid-cols-4">
-                  <TabsTrigger value="details" className="flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger value="features" className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    Features
-                  </TabsTrigger>
-                  <TabsTrigger value="media" className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    Media
-                  </TabsTrigger>
-                  <TabsTrigger value="offers" className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    Offers
-                  </TabsTrigger>
-                </TabsList>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-1 flex-col overflow-hidden p-6"
+          >
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <TabsList className="mb-6 grid w-full grid-cols-4">
+                <TabsTrigger value="details" className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Details
+                </TabsTrigger>
+                <TabsTrigger value="features" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Features
+                </TabsTrigger>
+                <TabsTrigger value="media" className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Media
+                </TabsTrigger>
+                <TabsTrigger value="offers" className="flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Offers
+                </TabsTrigger>
+              </TabsList>
 
-                <div className="flex-1 overflow-y-auto pb-20">
-                    <TabsContent value="details" className="mt-0 space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="name">Product Name</Label>
-                          <Input
-                            id="name"
-                            {...form.register('name')}
-                            placeholder="e.g., Premium Course Bundle"
-                            className="mt-1"
-                          />
-                          {form.formState.errors.name && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {form.formState.errors.name.message}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <Label htmlFor="slug">URL Slug</Label>
-                          <div className="mt-1 flex gap-2">
-                            <Input
-                              id="slug"
-                              {...form.register('slug')}
-                              placeholder="premium-course-bundle"
-                            />
-                            <Button type="button" variant="secondary" onClick={generateSlug}>
-                              Generate
-                            </Button>
-                          </div>
-                          {form.formState.errors.slug && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {form.formState.errors.slug.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="subtitle">
-                          Subtitle <span className="text-gray-500 text-sm">(optional)</span>
-                        </Label>
+              <div className="flex-1 overflow-y-auto pb-20">
+                <TabsContent value="details" className="mt-0 space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Product Name</Label>
+                      <Input
+                        id="name"
+                        {...form.register('name')}
+                        placeholder="e.g., Premium Course Bundle"
+                        className="mt-1"
+                      />
+                      {form.formState.errors.name && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {form.formState.errors.name.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="slug">URL Slug</Label>
+                      <div className="mt-1 flex gap-2">
                         <Input
-                          id="subtitle"
-                          {...form.register('subtitle')}
-                          placeholder="e.g., Your complete guide to Danish real estate"
-                          className="mt-1"
+                          id="slug"
+                          {...form.register('slug')}
+                          placeholder="premium-course-bundle"
                         />
-                        <p className="mt-1 text-sm text-gray-500">
-                          A short tagline that appears below the product name
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          {...form.register('description')}
-                          placeholder="A compelling description that sells your product..."
-                          className="mt-1 min-h-[120px]"
-                        />
-                        <p className="mt-1 text-sm text-gray-500">
-                          This appears on the checkout page to convince buyers
-                        </p>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Product Type</Label>
-                          <div className="mt-2 grid grid-cols-4 gap-2">
-                            {[
-                              { value: 'digital', label: 'Digital', icon: Monitor },
-                              { value: 'service', label: 'Service', icon: Briefcase },
-                              { value: 'membership', label: 'Membership', icon: Users },
-                              { value: 'bundle', label: 'Bundle', icon: Layers },
-                            ].map((type) => {
-                              const Icon = type.icon
-                              const isSelected = form.watch('type') === type.value
-                              return (
-                                <button
-                                  key={type.value}
-                                  type="button"
-                                  onClick={() => form.setValue('type', type.value as 'digital' | 'service' | 'membership' | 'bundle')}
-                                  className={`
-                                    flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all
-                                    ${isSelected 
-                                      ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }
-                                  `}
-                                >
-                                  <Icon className={`h-5 w-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
-                                  <span className="text-sm font-medium">{type.label}</span>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <Label>Status</Label>
-                          <div className="mt-2 flex gap-2">
-                            {[
-                              { value: 'draft', label: 'Draft', color: 'gray' },
-                              { value: 'active', label: 'Active', color: 'green' },
-                              { value: 'inactive', label: 'Inactive', color: 'red' },
-                            ].map((status) => {
-                              const isSelected = form.watch('status') === status.value
-                              return (
-                                <button
-                                  key={status.value}
-                                  type="button"
-                                  onClick={() => form.setValue('status', status.value as 'draft' | 'active' | 'inactive')}
-                                  className={`
-                                    flex-1 rounded-lg border-2 px-4 py-2 font-medium transition-all
-                                    ${isSelected 
-                                      ? status.color === 'green' 
-                                        ? 'border-green-500 bg-green-50 text-green-700'
-                                        : status.color === 'red'
-                                        ? 'border-red-500 bg-red-50 text-red-700'
-                                        : 'border-gray-500 bg-gray-50 text-gray-700'
-                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }
-                                  `}
-                                >
-                                  <div className="flex items-center justify-center gap-2">
-                                    <div className={`
-                                      h-2 w-2 rounded-full
-                                      ${isSelected 
-                                        ? status.color === 'green' 
-                                          ? 'bg-green-500'
-                                          : status.color === 'red'
-                                          ? 'bg-red-500'
-                                          : 'bg-gray-500'
-                                        : 'bg-gray-300'
-                                      }
-                                    `} />
-                                    {status.label}
-                                  </div>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-
-
-                    <TabsContent value="features" className="mt-0 space-y-4">
-                      <div className="mb-4 flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold">Product Features</h3>
-                          <p className="text-sm text-gray-500">
-                            Highlight what makes your product special
-                          </p>
-                        </div>
-                        <Button type="button" variant="secondary" size="sm" onClick={addFeature}>
-                          <Plus className="mr-1 h-4 w-4" />
-                          Add Feature
+                        <Button type="button" variant="secondary" onClick={generateSlug}>
+                          Generate
                         </Button>
                       </div>
+                      {form.formState.errors.slug && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {form.formState.errors.slug.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-                      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext
-                          items={features.map((f) => f.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          <div className="space-y-2">
-                            {features.length === 0 ? (
-                              <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
-                                <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                                <p className="mb-4 text-gray-500">No features added yet</p>
-                                <Button type="button" variant="secondary" onClick={addFeature}>
-                                  Add Your First Feature
-                                </Button>
-                              </div>
-                            ) : (
-                              features.map((feature) => (
-                                <FeatureItem
-                                  key={feature.id}
-                                  feature={feature}
-                                  onUpdate={(text) => updateFeature(feature.id, text)}
-                                  onRemove={() => removeFeature(feature.id)}
+                  <div>
+                    <Label htmlFor="subtitle">
+                      Subtitle <span className="text-sm text-gray-500">(optional)</span>
+                    </Label>
+                    <Input
+                      id="subtitle"
+                      {...form.register('subtitle')}
+                      placeholder="e.g., Your complete guide to Danish real estate"
+                      className="mt-1"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      A short tagline that appears below the product name
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      {...form.register('description')}
+                      placeholder="A compelling description that sells your product..."
+                      className="mt-1 min-h-[120px]"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      This appears on the checkout page to convince buyers
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Product Type</Label>
+                      <div className="mt-2 grid grid-cols-4 gap-2">
+                        {[
+                          { value: 'digital', label: 'Digital', icon: Monitor },
+                          { value: 'service', label: 'Service', icon: Briefcase },
+                          { value: 'membership', label: 'Membership', icon: Users },
+                          { value: 'bundle', label: 'Bundle', icon: Layers },
+                        ].map((type) => {
+                          const Icon = type.icon
+                          const isSelected = form.watch('type') === type.value
+                          return (
+                            <button
+                              key={type.value}
+                              type="button"
+                              onClick={() =>
+                                form.setValue(
+                                  'type',
+                                  type.value as 'digital' | 'service' | 'membership' | 'bundle'
+                                )
+                              }
+                              className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                isSelected
+                                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              } `}
+                            >
+                              <Icon
+                                className={`h-5 w-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}
+                              />
+                              <span className="text-sm font-medium">{type.label}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Status</Label>
+                      <div className="mt-2 flex gap-2">
+                        {[
+                          { value: 'draft', label: 'Draft', color: 'gray' },
+                          { value: 'active', label: 'Active', color: 'green' },
+                          { value: 'inactive', label: 'Inactive', color: 'red' },
+                        ].map((status) => {
+                          const isSelected = form.watch('status') === status.value
+                          return (
+                            <button
+                              key={status.value}
+                              type="button"
+                              onClick={() =>
+                                form.setValue(
+                                  'status',
+                                  status.value as 'draft' | 'active' | 'inactive'
+                                )
+                              }
+                              className={`flex-1 rounded-lg border-2 px-4 py-2 font-medium transition-all ${
+                                isSelected
+                                  ? status.color === 'green'
+                                    ? 'border-green-500 bg-green-50 text-green-700'
+                                    : status.color === 'red'
+                                      ? 'border-red-500 bg-red-50 text-red-700'
+                                      : 'border-gray-500 bg-gray-50 text-gray-700'
+                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              } `}
+                            >
+                              <div className="flex items-center justify-center gap-2">
+                                <div
+                                  className={`h-2 w-2 rounded-full ${
+                                    isSelected
+                                      ? status.color === 'green'
+                                        ? 'bg-green-500'
+                                        : status.color === 'red'
+                                          ? 'bg-red-500'
+                                          : 'bg-gray-500'
+                                      : 'bg-gray-300'
+                                  } `}
                                 />
-                              ))
-                            )}
+                                {status.label}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="features" className="mt-0 space-y-4">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">Product Features</h3>
+                      <p className="text-sm text-gray-500">
+                        Highlight what makes your product special
+                      </p>
+                    </div>
+                    <Button type="button" variant="secondary" size="sm" onClick={addFeature}>
+                      <Plus className="mr-1 h-4 w-4" />
+                      Add Feature
+                    </Button>
+                  </div>
+
+                  <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext
+                      items={features.map((f) => f.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {features.length === 0 ? (
+                          <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
+                            <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                            <p className="mb-4 text-gray-500">No features added yet</p>
+                            <Button type="button" variant="secondary" onClick={addFeature}>
+                              Add Your First Feature
+                            </Button>
                           </div>
-                        </SortableContext>
-                      </DndContext>
-                    </TabsContent>
+                        ) : (
+                          features.map((feature) => (
+                            <FeatureItem
+                              key={feature.id}
+                              feature={feature}
+                              onUpdate={(text) => updateFeature(feature.id, text)}
+                              onRemove={() => removeFeature(feature.id)}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </TabsContent>
 
-                    <TabsContent value="media" className="mt-0 space-y-6">
-                      <ImagePicker
-                        value={mediaUrl}
-                        onChange={(url) => setMediaUrl(url)}
-                        label="Product Image"
-                        placeholder="Choose product image"
-                      />
-                    </TabsContent>
+                <TabsContent value="media" className="mt-0 space-y-6">
+                  <ImagePicker
+                    value={mediaUrl}
+                    onChange={(url) => setMediaUrl(url)}
+                    label="Product Image"
+                    placeholder="Choose product image"
+                  />
+                </TabsContent>
 
-                    <TabsContent value="offers" className="mt-0">
-                      <OffersTab productId={productId} />
-                    </TabsContent>
-
-                </div>
-              </Tabs>
-
-              {/* Floating Form Actions */}
-              <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center gap-3 border-t bg-white/95 backdrop-blur px-6 py-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onOpenChange(false)}
-                  disabled={createProduct.isPending || updateProduct.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createProduct.isPending || updateProduct.isPending}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg"
-                >
-                  {createProduct.isPending || updateProduct.isPending ? (
-                    <>
-                      <motion.div
-                        className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      />
-                      Saving...
-                    </>
-                  ) : productId ? (
-                    'Update Product'
-                  ) : (
-                    'Create Product'
-                  )}
-                </Button>
+                <TabsContent value="offers" className="mt-0">
+                  <OffersTab productId={productId} />
+                </TabsContent>
               </div>
-            </form>
+            </Tabs>
+
+            {/* Floating Form Actions */}
+            <div className="absolute right-0 bottom-0 left-0 flex items-center justify-between gap-3 border-t bg-white/95 px-6 py-4 backdrop-blur">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                disabled={createProduct.isPending || updateProduct.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createProduct.isPending || updateProduct.isPending}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md hover:from-purple-600 hover:to-pink-600 hover:shadow-lg"
+              >
+                {createProduct.isPending || updateProduct.isPending ? (
+                  <>
+                    <motion.div
+                      className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    />
+                    Saving...
+                  </>
+                ) : productId ? (
+                  'Update Product'
+                ) : (
+                  'Create Product'
+                )}
+              </Button>
+            </div>
+          </form>
         </div>
       </DialogContent>
     </Dialog>
@@ -606,7 +619,7 @@ function OffersTab({ productId }: { productId?: string }) {
     return (
       <div className="py-12 text-center">
         <Zap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-        <p className="text-gray-500 mb-4">Save the product first to manage offers</p>
+        <p className="mb-4 text-gray-500">Save the product first to manage offers</p>
       </div>
     )
   }
@@ -622,21 +635,22 @@ function OffersTab({ productId }: { productId?: string }) {
     )
   }
 
-  const groupedOffers = offers?.reduce((acc, offer) => {
-    const context = offer.context
-    if (!acc[context]) acc[context] = []
-    acc[context]!.push(offer)
-    return acc
-  }, {} as Record<string, typeof offers>)
+  const groupedOffers = offers?.reduce(
+    (acc, offer) => {
+      const context = offer.context
+      if (!acc[context]) acc[context] = []
+      acc[context]!.push(offer)
+      return acc
+    },
+    {} as Record<string, typeof offers>
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold">Product Offers</h3>
-          <p className="text-sm text-gray-500">
-            Different pricing for different contexts
-          </p>
+          <p className="text-sm text-gray-500">Different pricing for different contexts</p>
         </div>
         <Button
           type="button"
@@ -652,7 +666,7 @@ function OffersTab({ productId }: { productId?: string }) {
         <div className="rounded-lg border-2 border-dashed border-gray-200 py-8 text-center">
           <Zap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
           <p className="mb-4 text-gray-500">No offers created yet</p>
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="mb-4 text-sm text-gray-400">
             Create offers to set different prices for order bumps, upsells, and downsells
           </p>
           <Button
@@ -666,7 +680,7 @@ function OffersTab({ productId }: { productId?: string }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {(['standalone', 'order_bump', 'upsell', 'downsell'] as const).map(context => {
+          {(['standalone', 'order_bump', 'upsell', 'downsell'] as const).map((context) => {
             const contextOffers = groupedOffers?.[context] || []
             const config = contextConfig[context]
             const Icon = config.icon
@@ -675,14 +689,15 @@ function OffersTab({ productId }: { productId?: string }) {
               <div key={context} className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <Icon className="h-4 w-4" />
-                  {context.split('_').map(word => 
-                    word.charAt(0).toUpperCase() + word.slice(1)
-                  ).join(' ')}
+                  {context
+                    .split('_')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ')}
                   {contextOffers.length > 0 && (
                     <span className="text-xs text-gray-500">({contextOffers.length})</span>
                   )}
                 </div>
-                
+
                 {contextOffers.length === 0 ? (
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
                     No {context.replace('_', ' ')} offers
@@ -690,15 +705,12 @@ function OffersTab({ productId }: { productId?: string }) {
                 ) : (
                   <div className="space-y-2">
                     {contextOffers.map((offer) => (
-                      <div
-                        key={offer.id}
-                        className={`rounded-lg border p-3 ${config.color}`}
-                      >
+                      <div key={offer.id} className={`rounded-lg border p-3 ${config.color}`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div>
                               <p className="font-medium">{offer.name}</p>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="mt-1 flex items-center gap-2">
                                 <span className="text-lg font-bold">
                                   ${(offer.price / 100).toFixed(2)}
                                 </span>
@@ -708,11 +720,11 @@ function OffersTab({ productId }: { productId?: string }) {
                                   </span>
                                 )}
                                 {offer.isActive ? (
-                                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
                                     Active
                                   </span>
                                 ) : (
-                                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
                                     Inactive
                                   </span>
                                 )}

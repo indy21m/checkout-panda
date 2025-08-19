@@ -34,7 +34,12 @@ export const currencyEnum = pgEnum('currency', ['USD', 'EUR', 'DKK'])
 export const discountTypeEnum = pgEnum('discount_type', ['percentage', 'fixed'])
 export const couponDurationEnum = pgEnum('coupon_duration', ['forever', 'once', 'repeating'])
 export const productScopeEnum = pgEnum('product_scope', ['all', 'specific'])
-export const offerContextEnum = pgEnum('offer_context', ['standalone', 'order_bump', 'upsell', 'downsell'])
+export const offerContextEnum = pgEnum('offer_context', [
+  'standalone',
+  'order_bump',
+  'upsell',
+  'downsell',
+])
 
 // Users (from Clerk)
 export const users = pgTable('users', {
@@ -228,56 +233,56 @@ export const offers = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    
+
     // Basic details
     name: text('name').notNull(),
     description: text('description'),
-    
+
     // Product and context
     productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
     context: offerContextEnum('context').notNull(), // standalone, order_bump, upsell, downsell
-    
+
     // Pricing
     price: integer('price').notNull(), // in cents - the offer price
     compareAtPrice: integer('compare_at_price'), // original price for showing discount
     currency: currencyEnum('currency').default('USD').notNull(),
-    
+
     // Optional coupon association
     couponId: uuid('coupon_id').references(() => coupons.id, { onDelete: 'set null' }),
-    
+
     // Display settings
     headline: text('headline'), // e.g., "Save 30% today only!"
     badgeText: text('badge_text'), // e.g., "LIMITED TIME"
     badgeColor: text('badge_color'), // hex color
     imageUrl: text('image_url'),
-    
+
     // Order bump specific settings
     bumpDescription: text('bump_description'), // Short description for order bump checkbox
-    
+
     // Upsell/Downsell specific settings
     redirectUrl: text('redirect_url'), // Where to redirect after accepting/declining
     declineRedirectUrl: text('decline_redirect_url'), // Where to redirect on decline
-    
+
     // Conditions
     minQuantity: integer('min_quantity').default(1),
     maxQuantity: integer('max_quantity'), // null = unlimited
-    
+
     // Availability
     availableFrom: timestamp('available_from'),
     availableUntil: timestamp('available_until'),
     maxRedemptions: integer('max_redemptions'), // null = unlimited
     currentRedemptions: integer('current_redemptions').default(0),
-    
+
     // Status
     isActive: boolean('is_active').default(true),
-    
+
     // Analytics
     views: integer('views').default(0),
     conversions: integer('conversions').default(0),
     revenue: integer('revenue').default(0), // in cents
-    
+
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -413,44 +418,44 @@ export const coupons = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    
+
     // Coupon details
     code: text('code').notNull().unique(),
     name: text('name').notNull(),
     description: text('description'),
-    
+
     // Discount configuration
     discountType: discountTypeEnum('discount_type').notNull(),
     discountValue: integer('discount_value').notNull(), // percentage (0-100) or cents
     currency: currencyEnum('currency').default('USD').notNull(), // Required for fixed discounts
-    
+
     // Duration settings
     duration: couponDurationEnum('duration').default('once').notNull(),
     durationInMonths: integer('duration_in_months'), // for repeating discounts
-    
+
     // Redemption limits
     maxRedemptions: integer('max_redemptions'), // null = unlimited
     maxRedemptionsPerCustomer: integer('max_redemptions_per_customer').default(1),
     limitPerCustomer: integer('limit_per_customer').default(1), // Times a single customer can use
-    
+
     // Minimum requirements
     minSubtotal: integer('min_subtotal'), // Minimum cart subtotal in cents
-    
+
     // Validity period
     startAt: timestamp('start_at'), // When coupon becomes active
     redeemableFrom: timestamp('redeemable_from').defaultNow(), // Deprecated, use startAt
     expiresAt: timestamp('expires_at'),
-    
+
     // Product scope
     productScope: productScopeEnum('product_scope').default('all').notNull(),
     appliesTo: jsonb('applies_to').$type<string[]>().default([]), // Array of product/plan IDs
-    
+
     // Analytics
     timesRedeemed: integer('times_redeemed').default(0),
-    
+
     // Status
     isActive: boolean('is_active').default(true),
-    
+
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -472,7 +477,7 @@ export const couponProducts = pgTable(
     productId: uuid('product_id')
       .notNull()
       .references(() => products.id, { onDelete: 'cascade' }),
-    
+
     createdAt: timestamp('created_at').defaultNow(),
   },
   (table) => ({
@@ -488,24 +493,24 @@ export const couponRedemptions = pgTable(
     couponId: uuid('coupon_id')
       .notNull()
       .references(() => coupons.id),
-    
+
     // Customer info
     customerEmail: text('customer_email').notNull(),
     customerId: text('customer_id'), // Stripe customer ID if available
-    
+
     // Session/Payment info
     checkoutSessionId: uuid('checkout_session_id').references(() => checkoutSessions.id),
     stripePaymentIntentId: text('stripe_payment_intent_id'),
-    
+
     // Applied discount
     discountApplied: integer('discount_applied').notNull(), // amount in cents
     originalAmount: integer('original_amount').notNull(),
     finalAmount: integer('final_amount').notNull(),
-    
+
     // Product info
     productId: uuid('product_id').references(() => products.id),
     productName: text('product_name'),
-    
+
     redeemedAt: timestamp('redeemed_at').defaultNow(),
   },
   (table) => ({
@@ -672,42 +677,48 @@ export const quotes = pgTable('quotes', {
   checkoutId: uuid('checkout_id')
     .notNull()
     .references(() => checkouts.id),
-  
+
   // Cart state hash for caching
   cartHash: text('cart_hash').notNull(),
-  
+
   // Customer info
   customerEmail: text('customer_email'),
   customerCountry: text('customer_country').notNull(),
   vatNumber: text('vat_number'),
-  
+
   // Product/Plan references
   productId: uuid('product_id').references(() => products.id),
   planId: uuid('plan_id').references(() => productPlans.id),
-  
+
   // Pricing (all in minor units)
   currency: currencyEnum('currency').notNull(),
   subtotal: integer('subtotal').notNull(),
   discount: integer('discount').default(0),
   tax: integer('tax').default(0),
   total: integer('total').notNull(),
-  
+
   // Line items breakdown
-  lineItems: jsonb('line_items').$type<Array<{
-    type: 'product' | 'plan' | 'bump' | 'discount' | 'tax'
-    label: string
-    amount: number
-  }>>().default([]),
-  
+  lineItems: jsonb('line_items')
+    .$type<
+      Array<{
+        type: 'product' | 'plan' | 'bump' | 'discount' | 'tax'
+        label: string
+        amount: number
+      }>
+    >()
+    .default([]),
+
   // Metadata
-  meta: jsonb('meta').$type<{
-    planInterval?: 'month' | 'year' | 'week' | 'day'
-    trialDays?: number
-    reverseCharge?: boolean
-    couponCode?: string
-    orderBumpIds?: string[]
-  }>().default({}),
-  
+  meta: jsonb('meta')
+    .$type<{
+      planInterval?: 'month' | 'year' | 'week' | 'day'
+      trialDays?: number
+      reverseCharge?: boolean
+      couponCode?: string
+      orderBumpIds?: string[]
+    }>()
+    .default({}),
+
   // Timestamps
   createdAt: timestamp('created_at').defaultNow(),
   expiresAt: timestamp('expires_at'), // Quote expiration
@@ -725,55 +736,61 @@ export const orderStatusEnum = pgEnum('order_status', [
 
 export const orders = pgTable('orders', {
   id: uuid('id').defaultRandom().primaryKey(),
-  
+
   // References
   checkoutId: uuid('checkout_id').references(() => checkouts.id),
   quoteId: text('quote_id').references(() => quotes.id),
   customerId: text('customer_id'), // Stripe customer ID
   productId: uuid('product_id').references(() => products.id),
   planId: uuid('plan_id').references(() => productPlans.id),
-  
+
   // Stripe references
   stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
   stripeSetupIntentId: text('stripe_setup_intent_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   stripeInvoiceId: text('stripe_invoice_id'),
-  
+
   // Customer info
   customerEmail: text('customer_email').notNull(),
   customerName: text('customer_name'),
   customerPhone: text('customer_phone'),
-  
+
   // Billing address
-  billingAddress: jsonb('billing_address').$type<{
-    line1?: string
-    line2?: string
-    city?: string
-    state?: string
-    postal_code?: string
-    country?: string
-  }>().default({}),
-  
+  billingAddress: jsonb('billing_address')
+    .$type<{
+      line1?: string
+      line2?: string
+      city?: string
+      state?: string
+      postal_code?: string
+      country?: string
+    }>()
+    .default({}),
+
   // Pricing (frozen at time of order)
   currency: currencyEnum('currency').notNull(),
   subtotal: integer('subtotal').notNull(),
   discount: integer('discount').default(0),
   tax: integer('tax').default(0),
   total: integer('total').notNull(),
-  
+
   // Order details
   status: orderStatusEnum('status').default('pending').notNull(),
-  orderItems: jsonb('order_items').$type<Array<{
-    type: 'product' | 'plan' | 'bump'
-    id: string
-    name: string
-    amount: number
-    quantity: number
-  }>>().default([]),
-  
+  orderItems: jsonb('order_items')
+    .$type<
+      Array<{
+        type: 'product' | 'plan' | 'bump'
+        id: string
+        name: string
+        amount: number
+        quantity: number
+      }>
+    >()
+    .default([]),
+
   // Metadata
   metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
-  
+
   // Timestamps
   createdAt: timestamp('created_at').defaultNow(),
   completedAt: timestamp('completed_at'),

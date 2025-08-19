@@ -100,7 +100,6 @@ export const productRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-
       const { plans: planData, ...productData } = input
 
       // Generate slug if not provided
@@ -183,7 +182,6 @@ export const productRouter = createTRPCRouter({
           message: 'Product not found',
         })
       }
-
 
       const [updatedProduct] = await ctx.db
         .update(products)

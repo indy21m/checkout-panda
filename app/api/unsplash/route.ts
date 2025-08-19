@@ -11,19 +11,13 @@ export async function GET(request: NextRequest) {
     const perPage = searchParams.get('per_page') || '12'
 
     if (!query) {
-      return NextResponse.json(
-        { error: 'Search query is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Search query is required' }, { status: 400 })
     }
 
     const accessKey = process.env.UNSPLASH_ACCESS_KEY
     if (!accessKey) {
       console.error('UNSPLASH_ACCESS_KEY is not configured')
-      return NextResponse.json(
-        { error: 'Unsplash is not configured' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Unsplash is not configured' }, { status: 500 })
     }
 
     // Search photos from Unsplash
@@ -31,7 +25,7 @@ export async function GET(request: NextRequest) {
       `${UNSPLASH_API_URL}/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&orientation=landscape`,
       {
         headers: {
-          'Authorization': `Client-ID ${accessKey}`,
+          Authorization: `Client-ID ${accessKey}`,
           'Accept-Version': 'v1',
         },
       }
@@ -40,21 +34,18 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('Unsplash API error:', error)
-      
+
       if (response.status === 401) {
-        return NextResponse.json(
-          { error: 'Invalid Unsplash API key' },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: 'Invalid Unsplash API key' }, { status: 401 })
       }
-      
+
       if (response.status === 403) {
         return NextResponse.json(
           { error: 'Rate limit exceeded. Please try again later.' },
           { status: 429 }
         )
       }
-      
+
       return NextResponse.json(
         { error: 'Failed to fetch images from Unsplash' },
         { status: response.status }
@@ -94,10 +85,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(formattedResults)
   } catch (error) {
     console.error('Unsplash search error:', error)
-    return NextResponse.json(
-      { error: 'Failed to search images' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to search images' }, { status: 500 })
   }
 }
 
@@ -107,24 +95,18 @@ export async function POST(request: NextRequest) {
     const { downloadLocation } = await request.json()
 
     if (!downloadLocation) {
-      return NextResponse.json(
-        { error: 'Download location is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Download location is required' }, { status: 400 })
     }
 
     const accessKey = process.env.UNSPLASH_ACCESS_KEY
     if (!accessKey) {
-      return NextResponse.json(
-        { error: 'Unsplash is not configured' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Unsplash is not configured' }, { status: 500 })
     }
 
     // Trigger download tracking as per Unsplash guidelines
     const response = await fetch(downloadLocation, {
       headers: {
-        'Authorization': `Client-ID ${accessKey}`,
+        Authorization: `Client-ID ${accessKey}`,
       },
     })
 

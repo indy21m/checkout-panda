@@ -52,7 +52,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           className="mb-8 text-center"
         >
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500">
               <Sparkles className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold">Checkout Panda</span>

@@ -113,7 +113,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
   })
 
   const filteredOffers = offers.filter((offer) => {
-    const matchesSearch = 
+    const matchesSearch =
       offer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       offer.product?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       offer.description?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -124,14 +124,17 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
     return matchesSearch && matchesContext && matchesProduct
   })
 
-  const groupedOffers = filteredOffers.reduce((acc, offer) => {
-    const productName = offer.product?.name || 'Unknown Product'
-    if (!acc[productName]) {
-      acc[productName] = []
-    }
-    acc[productName].push(offer)
-    return acc
-  }, {} as Record<string, Offer[]>)
+  const groupedOffers = filteredOffers.reduce(
+    (acc, offer) => {
+      const productName = offer.product?.name || 'Unknown Product'
+      if (!acc[productName]) {
+        acc[productName] = []
+      }
+      acc[productName].push(offer)
+      return acc
+    },
+    {} as Record<string, Offer[]>
+  )
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -164,15 +167,13 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
             <h1 className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent">
               Offers
             </h1>
-            <p className="mt-2 text-gray-600">
-              Manage product pricing for different contexts
-            </p>
+            <p className="mt-2 text-gray-600">Manage product pricing for different contexts</p>
           </div>
           <Button
             variant="primary"
             size="lg"
             onClick={onCreateOffer}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:from-purple-600 hover:to-pink-600"
           >
             <Plus className="mr-2 h-5 w-5" />
             Create Offer
@@ -184,7 +185,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
       <motion.div variants={itemVariants}>
         <GlassmorphicCard className="p-4" variant="light">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="relative flex-1 max-w-xl">
+            <div className="relative max-w-xl flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search offers..."
@@ -275,8 +276,10 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {productOffers.map((offer) => {
                   const Icon = contextIcons[offer.context]
-                  const savings = offer.compareAtPrice 
-                    ? Math.round(((offer.compareAtPrice - offer.price) / offer.compareAtPrice) * 100)
+                  const savings = offer.compareAtPrice
+                    ? Math.round(
+                        ((offer.compareAtPrice - offer.price) / offer.compareAtPrice) * 100
+                      )
                     : 0
 
                   return (
@@ -303,18 +306,29 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                       {/* Header */}
                       <div className="mb-4">
                         <div className="flex items-start gap-3">
-                          <div className={cn(
-                            'flex h-10 w-10 items-center justify-center rounded-lg',
-                            contextColors[offer.context].replace('text-', 'bg-').replace('800', '100')
-                          )}>
-                            <Icon className={cn('h-5 w-5', contextColors[offer.context].replace('bg-', 'text-'))} />
+                          <div
+                            className={cn(
+                              'flex h-10 w-10 items-center justify-center rounded-lg',
+                              contextColors[offer.context]
+                                .replace('text-', 'bg-')
+                                .replace('800', '100')
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-5 w-5',
+                                contextColors[offer.context].replace('bg-', 'text-')
+                              )}
+                            />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900">{offer.name}</h4>
-                            <span className={cn(
-                              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium mt-1',
-                              contextColors[offer.context]
-                            )}>
+                            <span
+                              className={cn(
+                                'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                contextColors[offer.context]
+                              )}
+                            >
                               {contextLabels[offer.context]}
                             </span>
                           </div>
@@ -323,7 +337,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
 
                       {/* Description */}
                       {offer.description && (
-                        <p className="mb-4 text-sm text-gray-600 line-clamp-2">
+                        <p className="mb-4 line-clamp-2 text-sm text-gray-600">
                           {offer.description}
                         </p>
                       )}
@@ -393,10 +407,12 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => updateOffer.mutate({
-                                id: offer.id,
-                                isActive: !offer.isActive,
-                              })}
+                              onClick={() =>
+                                updateOffer.mutate({
+                                  id: offer.id,
+                                  isActive: !offer.isActive,
+                                })
+                              }
                             >
                               {offer.isActive ? (
                                 <>

@@ -94,7 +94,7 @@ export function validateVATFormat(vatNumber: string): boolean {
   const normalized = vatNumber.toUpperCase().replace(/[\s\-\.]/g, '')
   const countryCode = normalized.substring(0, 2)
   const format = VAT_FORMATS[countryCode]
-  
+
   return format ? format.test(normalized) : false
 }
 
@@ -104,7 +104,7 @@ export function validateVATFormat(vatNumber: string): boolean {
 export function extractCountryFromVAT(vatNumber: string): string | null {
   const normalized = vatNumber.toUpperCase().replace(/[\s\-\.]/g, '')
   const countryCode = normalized.substring(0, 2)
-  
+
   return VAT_FORMATS[countryCode] ? countryCode : null
 }
 
@@ -122,7 +122,7 @@ export function isEUCountry(countryCode: string): boolean {
  */
 export async function validateVATNumber(vatNumber: string): Promise<VATValidationResult> {
   const normalized = vatNumber.toUpperCase().replace(/[\s\-\.]/g, '')
-  
+
   // Basic format validation
   if (!validateVATFormat(normalized)) {
     return {
@@ -130,7 +130,7 @@ export async function validateVATNumber(vatNumber: string): Promise<VATValidatio
       error: 'Invalid VAT number format',
     }
   }
-  
+
   const countryCode = extractCountryFromVAT(normalized)
   if (!countryCode) {
     return {
@@ -138,14 +138,14 @@ export async function validateVATNumber(vatNumber: string): Promise<VATValidatio
       error: 'Invalid country code',
     }
   }
-  
+
   try {
     // In production, call VIES API here
     // For development, we'll simulate the response
-    
+
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
     // Mock successful validation for testing
     // In production, replace with actual VIES API call
     if (normalized.includes('INVALID')) {
@@ -156,7 +156,7 @@ export async function validateVATNumber(vatNumber: string): Promise<VATValidatio
         error: 'VAT number not found in VIES database',
       }
     }
-    
+
     return {
       valid: true,
       vatNumber: normalized,
@@ -204,11 +204,11 @@ export function calculateTax({
       currency,
     }
   }
-  
+
   // B2B with valid VAT number - reverse charge applies
   if (isB2B && vatNumber && validateVATFormat(vatNumber)) {
     const vatCountry = extractCountryFromVAT(vatNumber)
-    
+
     // Cross-border B2B in EU - reverse charge
     if (vatCountry && vatCountry !== businessCountry && isEUCountry(vatCountry)) {
       return {
@@ -222,11 +222,11 @@ export function calculateTax({
       }
     }
   }
-  
+
   // Standard VAT applies
   const vatRate = EU_VAT_RATES[customerCountry] || 0
   const taxAmount = Math.round(amount * (vatRate / 100))
-  
+
   return {
     subtotal: amount,
     taxRate: vatRate,
@@ -243,12 +243,12 @@ export function calculateTax({
  */
 export function formatVATNumber(vatNumber: string): string {
   const normalized = vatNumber.toUpperCase().replace(/[\s\-\.]/g, '')
-  
+
   // Add spacing for readability
   if (normalized.length > 4) {
     return normalized.replace(/(.{2})(.{4})(.*)/, '$1 $2 $3').trim()
   }
-  
+
   return normalized
 }
 

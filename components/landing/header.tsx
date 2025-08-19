@@ -5,12 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useAuth } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
-import { 
-  Menu, 
-  X, 
-  ArrowRight,
-  Sparkles
-} from 'lucide-react'
+import { Menu, X, ArrowRight, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -36,9 +31,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-0 right-0 left-0 z-50 transition-all duration-300',
         scrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border shadow-sm'
+          ? 'bg-background/80 border-border border-b shadow-sm backdrop-blur-xl'
           : 'bg-transparent'
       )}
     >
@@ -46,15 +41,15 @@ export function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" className="group flex items-center space-x-2">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
-                <div className="relative bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 opacity-50 blur-lg transition-opacity group-hover:opacity-75" />
+                <div className="relative rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 p-2">
+                  <Sparkles className="h-5 w-5 text-white" />
                 </div>
               </motion.div>
               <span className="text-xl font-bold">
@@ -64,12 +59,12 @@ export function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden items-center space-x-8 md:flex">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-text-secondary hover:text-text transition-colors duration-200"
+                className="text-text-secondary hover:text-text text-sm font-medium transition-colors duration-200"
               >
                 {item.name}
               </Link>
@@ -77,7 +72,7 @@ export function Header() {
           </div>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden items-center space-x-4 md:flex">
             {isSignedIn ? (
               <>
                 <Link href="/dashboard">
@@ -117,11 +112,7 @@ export function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2"
             >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
@@ -131,24 +122,21 @@ export function Header() {
           initial={false}
           animate={mobileMenuOpen ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className={cn(
-            'md:hidden overflow-hidden',
-            mobileMenuOpen ? 'mt-4' : ''
-          )}
+          className={cn('overflow-hidden md:hidden', mobileMenuOpen ? 'mt-4' : '')}
         >
           <div className="space-y-1 pb-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block px-3 py-2 text-base font-medium text-text-secondary hover:text-text hover:bg-background-secondary rounded-md transition-colors"
+                className="text-text-secondary hover:text-text hover:bg-background-secondary block rounded-md px-3 py-2 text-base font-medium transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
-            
-            <div className="border-t border-border pt-4 space-y-2">
+
+            <div className="border-border space-y-2 border-t pt-4">
               {isSignedIn ? (
                 <>
                   <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>

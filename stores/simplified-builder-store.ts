@@ -13,17 +13,17 @@ interface SimplifiedBuilderStore {
   blocks: Block[]
   selectedBlockId: string | null
   hasUnsavedChanges: boolean
-  
+
   // History
   history: {
     past: HistoryState[]
     future: HistoryState[]
   }
-  
+
   // View state
   isPreviewMode: boolean
   isSaving: boolean
-  
+
   // Actions - Block Management
   addBlock: (type: BlockType, index?: number, column?: 'left' | 'right') => void
   updateBlock: (id: string, updates: Partial<Block>) => void
@@ -33,15 +33,15 @@ interface SimplifiedBuilderStore {
   toggleBlockVisibility: (id: string) => void
   toggleBlockColumn: (id: string) => void
   reorderBlocks: (startIndex: number, endIndex: number) => void
-  
+
   // Actions - Selection
   selectBlock: (id: string | null) => void
-  
+
   // Actions - History
   undo: () => void
   redo: () => void
   saveToHistory: () => void
-  
+
   // Actions - State Management
   setBlocks: (blocks: Block[]) => void
   setHasUnsavedChanges: (value: boolean) => void
@@ -60,11 +60,11 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
     hasUnsavedChanges: false,
     history: {
       past: [],
-      future: []
+      future: [],
     },
     isPreviewMode: false,
     isSaving: false,
-    
+
     // Add a new block
     addBlock: (type: BlockType, index?: number, column: 'left' | 'right' = 'left') => {
       set((state) => {
@@ -74,31 +74,31 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
           type,
           data: { ...template.data },
           visible: true,
-          column
+          column,
         }
-        
+
         // Save current state to history before making changes
         get().saveToHistory()
-        
+
         if (index !== undefined && index >= 0 && index <= state.blocks.length) {
           state.blocks.splice(index, 0, newBlock)
         } else {
           state.blocks.push(newBlock)
         }
-        
+
         state.selectedBlockId = newBlock.id
         state.hasUnsavedChanges = true
       })
     },
-    
+
     // Update a block
     updateBlock: (id: string, updates: Partial<Block>) => {
       set((state) => {
-        const blockIndex = state.blocks.findIndex(b => b.id === id)
+        const blockIndex = state.blocks.findIndex((b) => b.id === id)
         if (blockIndex !== -1) {
           // Save to history before updating
           get().saveToHistory()
-          
+
           // Deep merge the updates
           const block = state.blocks[blockIndex]
           if (block) {
@@ -112,20 +112,20 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
               block.visible = updates.visible
             }
           }
-          
+
           state.hasUnsavedChanges = true
         }
       })
     },
-    
+
     // Delete a block
     deleteBlock: (id: string) => {
       set((state) => {
-        const blockIndex = state.blocks.findIndex(b => b.id === id)
+        const blockIndex = state.blocks.findIndex((b) => b.id === id)
         if (blockIndex !== -1) {
           get().saveToHistory()
           state.blocks.splice(blockIndex, 1)
-          
+
           if (state.selectedBlockId === id) {
             state.selectedBlockId = null
           }
@@ -133,22 +133,22 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Duplicate a block
     duplicateBlock: (id: string) => {
       set((state) => {
-        const blockIndex = state.blocks.findIndex(b => b.id === id)
+        const blockIndex = state.blocks.findIndex((b) => b.id === id)
         if (blockIndex !== -1) {
           get().saveToHistory()
-          
+
           const originalBlock = state.blocks[blockIndex]
           if (originalBlock) {
             const newBlock: Block = {
               ...originalBlock,
               id: generateBlockId(),
-              data: { ...originalBlock.data }
+              data: { ...originalBlock.data },
             }
-            
+
             state.blocks.splice(blockIndex + 1, 0, newBlock)
             state.selectedBlockId = newBlock.id
             state.hasUnsavedChanges = true
@@ -156,18 +156,18 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Move a block up or down
     moveBlock: (id: string, direction: 'up' | 'down') => {
       set((state) => {
-        const index = state.blocks.findIndex(b => b.id === id)
+        const index = state.blocks.findIndex((b) => b.id === id)
         if (index === -1) return
-        
+
         const newIndex = direction === 'up' ? index - 1 : index + 1
         if (newIndex < 0 || newIndex >= state.blocks.length) return
-        
+
         get().saveToHistory()
-        
+
         // Swap blocks
         const temp = state.blocks[index]
         const other = state.blocks[newIndex]
@@ -175,15 +175,15 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
           state.blocks[index] = other
           state.blocks[newIndex] = temp
         }
-        
+
         state.hasUnsavedChanges = true
       })
     },
-    
+
     // Toggle block visibility
     toggleBlockVisibility: (id: string) => {
       set((state) => {
-        const block = state.blocks.find(b => b.id === id)
+        const block = state.blocks.find((b) => b.id === id)
         if (block) {
           get().saveToHistory()
           block.visible = !block.visible
@@ -191,11 +191,11 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Toggle block column
     toggleBlockColumn: (id: string) => {
       set((state) => {
-        const block = state.blocks.find(b => b.id === id)
+        const block = state.blocks.find((b) => b.id === id)
         if (block) {
           get().saveToHistory()
           block.column = block.column === 'right' ? 'left' : 'right'
@@ -203,42 +203,42 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Reorder blocks (for drag and drop)
     reorderBlocks: (startIndex: number, endIndex: number) => {
       set((state) => {
         if (startIndex === endIndex) return
-        
+
         get().saveToHistory()
-        
+
         const [removed] = state.blocks.splice(startIndex, 1)
         if (removed) {
           state.blocks.splice(endIndex, 0, removed)
         }
-        
+
         state.hasUnsavedChanges = true
       })
     },
-    
+
     // Select a block
     selectBlock: (id: string | null) => {
       set((state) => {
         state.selectedBlockId = id
       })
     },
-    
+
     // Undo
     undo: () => {
       set((state) => {
         if (state.history.past.length === 0) return
-        
+
         // Save current state to future
         const currentState: HistoryState = {
           blocks: JSON.parse(JSON.stringify(state.blocks)),
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }
         state.history.future.unshift(currentState)
-        
+
         // Restore previous state
         const previousState = state.history.past.pop()
         if (previousState) {
@@ -247,19 +247,19 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Redo
     redo: () => {
       set((state) => {
         if (state.history.future.length === 0) return
-        
+
         // Save current state to past
         const currentState: HistoryState = {
           blocks: JSON.parse(JSON.stringify(state.blocks)),
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }
         state.history.past.push(currentState)
-        
+
         // Restore future state
         const futureState = state.history.future.shift()
         if (futureState) {
@@ -268,27 +268,27 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Save current state to history
     saveToHistory: () => {
       set((state) => {
         const historyState: HistoryState = {
           blocks: JSON.parse(JSON.stringify(state.blocks)),
-          timestamp: Date.now()
+          timestamp: Date.now(),
         }
-        
+
         state.history.past.push(historyState)
-        
+
         // Limit history size
         if (state.history.past.length > MAX_HISTORY_SIZE) {
           state.history.past.shift()
         }
-        
+
         // Clear future history when new action is taken
         state.history.future = []
       })
     },
-    
+
     // Set blocks (for loading from database)
     setBlocks: (blocks: Block[]) => {
       set((state) => {
@@ -297,14 +297,14 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         state.history = { past: [], future: [] }
       })
     },
-    
+
     // Set unsaved changes flag
     setHasUnsavedChanges: (value: boolean) => {
       set((state) => {
         state.hasUnsavedChanges = value
       })
     },
-    
+
     // Toggle preview mode
     setPreviewMode: (value: boolean) => {
       set((state) => {
@@ -314,14 +314,14 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         }
       })
     },
-    
+
     // Set saving state
     setSaving: (value: boolean) => {
       set((state) => {
         state.isSaving = value
       })
     },
-    
+
     // Reset builder to initial state
     resetBuilder: () => {
       set((state) => {
@@ -332,6 +332,6 @@ export const useSimplifiedBuilderStore = create<SimplifiedBuilderStore>()(
         state.isPreviewMode = false
         state.isSaving = false
       })
-    }
+    },
   }))
 )

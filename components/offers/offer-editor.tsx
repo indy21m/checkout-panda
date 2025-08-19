@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,14 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ImagePicker } from '@/components/ui/image-picker'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { 
-  CalendarIcon, 
-  Package, 
-  Tag, 
-  ShoppingCart,
-  TrendingUp,
-  TrendingDown,
-} from 'lucide-react'
+import { CalendarIcon, Package, Tag, ShoppingCart, TrendingUp, TrendingDown } from 'lucide-react'
 import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
 import { getCurrencySymbol } from '@/lib/currency'
@@ -43,35 +31,35 @@ import { getCurrencySymbol } from '@/lib/currency'
 const offerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  productId: z.string().uuid('Please select a product'),
+  productId: z.string().min(1, 'Please select a product'),
   context: z.enum(['standalone', 'order_bump', 'upsell', 'downsell']),
   price: z.number().positive('Price must be positive'),
   compareAtPrice: z.number().positive().optional(),
   currency: z.enum(['USD', 'EUR', 'DKK']),
-  couponId: z.string().uuid().optional(),
-  
+  couponId: z.string().optional(),
+
   // Display settings
   headline: z.string().optional(),
   badgeText: z.string().optional(),
   badgeColor: z.string().optional(),
   imageUrl: z.string().optional(),
-  
+
   // Order bump specific
   bumpDescription: z.string().optional(),
-  
+
   // Upsell/Downsell specific
   redirectUrl: z.string().optional(),
   declineRedirectUrl: z.string().optional(),
-  
+
   // Conditions
   minQuantity: z.number().int().positive().default(1),
   maxQuantity: z.number().int().positive().optional(),
-  
+
   // Availability
   availableFrom: z.date().optional(),
   availableUntil: z.date().optional(),
   maxRedemptions: z.number().int().positive().optional(),
-  
+
   isActive: z.boolean().default(true),
 })
 
@@ -106,13 +94,10 @@ const contextDescriptions = {
 
 export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
   const [activeTab, setActiveTab] = useState('details')
-  
+
   const utils = api.useUtils()
 
-  const { data: offer } = api.offer.getById.useQuery(
-    { id: offerId! },
-    { enabled: !!offerId }
-  )
+  const { data: offer } = api.offer.getById.useQuery({ id: offerId! }, { enabled: !!offerId })
 
   const { data: products = [] } = api.product.list.useQuery({})
   const { data: coupons = [] } = api.coupon.list.useQuery({})
@@ -123,6 +108,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
     defaultValues: {
       name: '',
       description: '',
+      productId: '',
       context: 'standalone',
       price: 1,
       currency: 'USD',
@@ -186,6 +172,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
   })
 
   const onSubmit = (data: OfferFormData) => {
+    console.log('Form submitted with data:', data)
     const submitData = {
       ...data,
       price: Math.round(data.price * 100), // Convert dollars to cents
@@ -200,20 +187,30 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
     }
   }
 
-  const selectedProduct = products.find(p => p.id === form.watch('productId'))
+  // Add form error logging
+  const handleFormSubmit = form.handleSubmit(onSubmit, (errors) => {
+    console.log('Form validation errors:', errors)
+    // Show first error as toast
+    const firstError = Object.values(errors)[0]
+    if (firstError && typeof firstError === 'object' && 'message' in firstError) {
+      toast.error(firstError.message as string)
+    }
+  })
+
+  const selectedProduct = products.find((p) => p.id === form.watch('productId'))
   const selectedContext = form.watch('context')
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[80vh] max-h-[900px] w-full max-w-4xl overflow-hidden flex flex-col">
+      <DialogContent className="flex h-[80vh] max-h-[900px] w-full max-w-4xl flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <DialogTitle className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-2xl font-bold text-transparent">
             {offerId ? 'Edit Offer' : 'Create New Offer'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <form onSubmit={handleFormSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="pricing">Pricing</TabsTrigger>
@@ -222,7 +219,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
             </TabsList>
 
             <div className="flex-1 overflow-y-auto px-1">
-              <TabsContent value="details" className="space-y-6 mt-6">
+              <TabsContent value="details" className="mt-6 space-y-6">
                 {/* Offer Name */}
                 <div>
                   <Label htmlFor="name">Offer Name</Label>
@@ -233,7 +230,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     className="mt-2"
                   />
                   {form.formState.errors.name && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.name.message}
                     </p>
                   )}
@@ -258,7 +255,9 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                   <Label>Product</Label>
                   <Select
                     value={form.watch('productId')}
-                    onValueChange={(value) => form.setValue('productId', value)}
+                    onValueChange={(value) => {
+                      form.setValue('productId', value, { shouldValidate: true })
+                    }}
                   >
                     <SelectTrigger className="mt-2">
                       <SelectValue placeholder="Select a product" />
@@ -275,7 +274,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     </SelectContent>
                   </Select>
                   {form.formState.errors.productId && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.productId.message}
                     </p>
                   )}
@@ -288,28 +287,37 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     {Object.entries(contextLabels).map(([value, label]) => {
                       const Icon = contextIcons[value as keyof typeof contextIcons]
                       const isSelected = selectedContext === value
-                      
+
                       return (
                         <button
                           key={value}
                           type="button"
-                          onClick={() => form.setValue('context', value as 'standalone' | 'order_bump' | 'upsell' | 'downsell')}
+                          onClick={() =>
+                            form.setValue(
+                              'context',
+                              value as 'standalone' | 'order_bump' | 'upsell' | 'downsell'
+                            )
+                          }
                           className={cn(
-                            'flex items-center gap-3 p-4 rounded-lg border-2 transition-all',
+                            'flex items-center gap-3 rounded-lg border-2 p-4 transition-all',
                             isSelected
                               ? 'border-purple-500 bg-purple-50'
                               : 'border-gray-200 hover:border-gray-300'
                           )}
                         >
-                          <Icon className={cn(
-                            'h-5 w-5',
-                            isSelected ? 'text-purple-600' : 'text-gray-400'
-                          )} />
+                          <Icon
+                            className={cn(
+                              'h-5 w-5',
+                              isSelected ? 'text-purple-600' : 'text-gray-400'
+                            )}
+                          />
                           <div className="text-left">
-                            <p className={cn(
-                              'font-medium',
-                              isSelected ? 'text-purple-900' : 'text-gray-900'
-                            )}>
+                            <p
+                              className={cn(
+                                'font-medium',
+                                isSelected ? 'text-purple-900' : 'text-gray-900'
+                              )}
+                            >
                               {label}
                             </p>
                             <p className="text-xs text-gray-500">
@@ -323,7 +331,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="pricing" className="space-y-6 mt-6">
+              <TabsContent value="pricing" className="mt-6 space-y-6">
                 {/* Currency */}
                 <div>
                   <Label>Currency</Label>
@@ -347,8 +355,8 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 {/* Offer Price */}
                 <div>
                   <Label htmlFor="price">Offer Price</Label>
-                  <div className="mt-2 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <div className="relative mt-2">
+                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                       {getCurrencySymbol(form.watch('currency'))}
                     </span>
                     <Input
@@ -361,14 +369,12 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     />
                   </div>
                   {form.formState.errors.price && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.price.message}
                     </p>
                   )}
                   {selectedProduct && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Product: {selectedProduct.name}
-                    </p>
+                    <p className="mt-1 text-sm text-gray-500">Product: {selectedProduct.name}</p>
                   )}
                 </div>
 
@@ -377,8 +383,8 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                   <Label htmlFor="compareAtPrice">
                     Compare At Price <span className="text-gray-500">(optional)</span>
                   </Label>
-                  <div className="mt-2 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  <div className="relative mt-2">
+                    <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
                       {getCurrencySymbol(form.watch('currency'))}
                     </span>
                     <Input
@@ -390,17 +396,21 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       className="pl-8"
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-gray-500">
                     Show original price to highlight savings
                   </p>
                 </div>
 
                 {/* Coupon */}
                 <div>
-                  <Label>Apply Coupon <span className="text-gray-500">(optional)</span></Label>
+                  <Label>
+                    Apply Coupon <span className="text-gray-500">(optional)</span>
+                  </Label>
                   <Select
                     value={form.watch('couponId') || ''}
-                    onValueChange={(value) => form.setValue('couponId', value || undefined)}
+                    onValueChange={(value) =>
+                      form.setValue('couponId', value || undefined, { shouldValidate: true })
+                    }
                   >
                     <SelectTrigger className="mt-2">
                       <SelectValue placeholder="No coupon" />
@@ -448,7 +458,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="display" className="space-y-6 mt-6">
+              <TabsContent value="display" className="mt-6 space-y-6">
                 {/* Offer Image */}
                 <div>
                   <ImagePicker
@@ -499,13 +509,10 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                   </div>
                 </div>
 
-
                 {/* Order Bump Description */}
                 {selectedContext === 'order_bump' && (
                   <div>
-                    <Label htmlFor="bumpDescription">
-                      Order Bump Description
-                    </Label>
+                    <Label htmlFor="bumpDescription">Order Bump Description</Label>
                     <Textarea
                       id="bumpDescription"
                       {...form.register('bumpDescription')}
@@ -520,9 +527,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 {(selectedContext === 'upsell' || selectedContext === 'downsell') && (
                   <>
                     <div>
-                      <Label htmlFor="redirectUrl">
-                        Success Redirect URL
-                      </Label>
+                      <Label htmlFor="redirectUrl">Success Redirect URL</Label>
                       <Input
                         id="redirectUrl"
                         type="url"
@@ -532,9 +537,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="declineRedirectUrl">
-                        Decline Redirect URL
-                      </Label>
+                      <Label htmlFor="declineRedirectUrl">Decline Redirect URL</Label>
                       <Input
                         id="declineRedirectUrl"
                         type="url"
@@ -547,7 +550,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 )}
               </TabsContent>
 
-              <TabsContent value="settings" className="space-y-6 mt-6">
+              <TabsContent value="settings" className="mt-6 space-y-6">
                 {/* Availability Dates */}
                 <div>
                   <Label>Available From</Label>
@@ -556,7 +559,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal mt-2',
+                          'mt-2 w-full justify-start text-left font-normal',
                           !form.watch('availableFrom') && 'text-muted-foreground'
                         )}
                       >
@@ -584,7 +587,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal mt-2',
+                          'mt-2 w-full justify-start text-left font-normal',
                           !form.watch('availableUntil') && 'text-muted-foreground'
                         )}
                       >
@@ -618,18 +621,16 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                     className="mt-2"
                     min={1}
                   />
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-gray-500">
                     Leave empty for unlimited redemptions
                   </p>
                 </div>
 
                 {/* Active Status */}
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between rounded-lg border p-4">
                   <div>
                     <Label htmlFor="isActive">Active</Label>
-                    <p className="text-sm text-gray-500">
-                      Make this offer available for use
-                    </p>
+                    <p className="text-sm text-gray-500">Make this offer available for use</p>
                   </div>
                   <Switch
                     id="isActive"
@@ -642,23 +643,19 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
           </Tabs>
 
           <div className="mt-auto flex justify-end gap-3 border-t bg-white pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={createOffer.isPending || updateOffer.isPending}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
             >
               {createOffer.isPending || updateOffer.isPending
                 ? 'Saving...'
                 : offerId
-                ? 'Update Offer'
-                : 'Create Offer'}
+                  ? 'Update Offer'
+                  : 'Create Offer'}
             </Button>
           </div>
         </form>

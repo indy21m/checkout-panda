@@ -6,9 +6,7 @@ import { Elements } from '@stripe/react-stripe-js'
 import type { StripeElementsOptions, Appearance } from '@stripe/stripe-js'
 
 // Initialize Stripe instance (singleton)
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
-)
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
 
 interface StripeProviderProps {
   children: React.ReactNode
@@ -106,14 +104,14 @@ const appearance: Appearance = {
   },
 }
 
-export function StripeProvider({ 
-  children, 
+export function StripeProvider({
+  children,
   clientSecret,
   amount,
   currency = 'USD',
   mode = 'payment',
   country = 'US',
-  quoteId
+  quoteId,
 }: StripeProviderProps) {
   // Create a unique key for the Elements provider to force remount
   const elementsKey = React.useMemo(() => {
@@ -126,7 +124,7 @@ export function StripeProvider({
       quoteId || 'no-quote',
     ].join(':')
   }, [clientSecret, amount, currency, mode, country, quoteId])
-  
+
   const options: StripeElementsOptions = React.useMemo(() => {
     const baseOptions = {
       appearance,
@@ -174,7 +172,7 @@ export function StripeProvider({
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     console.error('Stripe publishable key is not configured')
     return (
-      <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-center">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
         <p className="text-red-800">Payment system is not configured. Please contact support.</p>
       </div>
     )

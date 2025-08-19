@@ -7,9 +7,9 @@ import { api } from '@/lib/trpc/client'
 import { toast } from 'sonner'
 import { getCurrencySymbol, type Currency } from '@/lib/currency'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  DndContext, 
-  closestCenter, 
+import {
+  DndContext,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -17,7 +17,7 @@ import {
   DragOverlay as DndDragOverlay,
   useDroppable,
   type DragStartEvent,
-  type DragEndEvent
+  type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -27,13 +27,32 @@ import {
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
-import { 
-  ArrowLeft, Save, Rocket, Undo, Redo, Plus, 
-  Smartphone, Monitor, Loader2, Sparkles, X, Palette,
-  Type as TypeIcon, Layers, TrendingUp, BarChart3, Users,
-  DollarSign, ShoppingCart, Star,
-  Shield, CheckCircle,
-  Package, Copy, ExternalLink
+import {
+  ArrowLeft,
+  Save,
+  Rocket,
+  Undo,
+  Redo,
+  Plus,
+  Smartphone,
+  Monitor,
+  Loader2,
+  Sparkles,
+  X,
+  Palette,
+  Type as TypeIcon,
+  Layers,
+  TrendingUp,
+  BarChart3,
+  Users,
+  DollarSign,
+  ShoppingCart,
+  Star,
+  Shield,
+  CheckCircle,
+  Package,
+  Copy,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,10 +65,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { SaveIndicator } from '@/components/ui/save-indicator'
-import { 
-  WYSIWYGBlock, 
+import {
+  WYSIWYGBlock,
   blockTemplates,
-  type Block, 
+  type Block,
   type BlockType,
   type HeaderBlockData,
   type ProductBlockData,
@@ -59,7 +78,7 @@ import {
   type TestimonialBlockData,
   type CountdownBlockData,
   type BenefitsBlockData,
-  type PaymentBlockData
+  type PaymentBlockData,
 } from '@/components/builder/checkout-blocks'
 import { useSimplifiedBuilderStore } from '@/stores/simplified-builder-store'
 import { ProductSelectorModal } from '@/components/builder/product-selector-modal'
@@ -67,36 +86,36 @@ import { OfferSelectorModal } from '@/components/builder/offer-selector-modal'
 import type { RouterOutputs } from '@/lib/trpc/api'
 
 // Column Drop Zone Component
-function ColumnDropZone({ 
-  id, 
-  title, 
-  children 
-}: { 
+function ColumnDropZone({
+  id,
+  title,
+  children,
+}: {
   id: string
   title: string
-  children: React.ReactNode 
+  children: React.ReactNode
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
   })
-  
+
   return (
-    <div 
+    <div
       ref={setNodeRef}
       className={cn(
-        "space-y-4 min-h-[200px]",
-        isOver && "bg-blue-50/50 rounded-lg transition-colors"
+        'min-h-[200px] space-y-4',
+        isOver && 'rounded-lg bg-blue-50/50 transition-colors'
       )}
     >
-      <div className="text-xs text-gray-500 font-medium mb-2">{title}</div>
+      <div className="mb-2 text-xs font-medium text-gray-500">{title}</div>
       {children}
     </div>
   )
 }
 
 // Sortable Block Wrapper
-function SortableBlock({ 
-  block, 
+function SortableBlock({
+  block,
   isSelected,
   onSelect,
   onDelete,
@@ -108,7 +127,7 @@ function SortableBlock({
   canMoveUp,
   canMoveDown,
   showAnalytics,
-  analyticsData
+  analyticsData,
 }: {
   block: Block
   isSelected: boolean
@@ -124,14 +143,9 @@ function SortableBlock({
   showAnalytics?: boolean
   analyticsData?: { views: number; clicks: number; engagement: number }
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: block.id,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -139,7 +153,7 @@ function SortableBlock({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="w-full relative">
+    <div ref={setNodeRef} style={style} className="relative w-full">
       {showAnalytics && analyticsData && (
         <AnalyticsOverlay blockType={block.type} metrics={analyticsData} />
       )}
@@ -164,27 +178,27 @@ function SortableBlock({
 }
 
 // Analytics Overlay Component
-function AnalyticsOverlay({ 
-  blockType: _blockType, 
-  metrics 
-}: { 
+function AnalyticsOverlay({
+  blockType: _blockType,
+  metrics,
+}: {
   blockType: string
   metrics?: { views: number; clicks: number; engagement: number }
 }) {
   if (!metrics) return null
-  
+
   const formatNumber = (num: number) => {
     if (num >= 1000) {
       return `${(num / 1000).toFixed(1)}k`
     }
     return num.toString()
   }
-  
+
   return (
-    <div className="absolute top-2 right-2 z-20 pointer-events-none">
-      <div className="bg-black/80 backdrop-blur-sm rounded-lg p-3 text-white shadow-xl">
-        <div className="flex items-center gap-2 mb-2">
-          <BarChart3 className="w-4 h-4 text-blue-400" />
+    <div className="pointer-events-none absolute top-2 right-2 z-20">
+      <div className="rounded-lg bg-black/80 p-3 text-white shadow-xl backdrop-blur-sm">
+        <div className="mb-2 flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-blue-400" />
           <span className="text-xs font-semibold">Analytics</span>
         </div>
         <div className="space-y-1.5">
@@ -198,26 +212,28 @@ function AnalyticsOverlay({
           </div>
           <div className="flex items-center justify-between gap-4">
             <span className="text-xs text-gray-300">Engagement:</span>
-            <span className="text-xs font-medium text-green-400">{metrics.engagement.toFixed(1)}%</span>
+            <span className="text-xs font-medium text-green-400">
+              {metrics.engagement.toFixed(1)}%
+            </span>
           </div>
         </div>
-        
+
         {/* Performance Indicator */}
-        <div className="mt-2 pt-2 border-t border-white/20">
+        <div className="mt-2 border-t border-white/20 pt-2">
           <div className="flex items-center gap-1">
             {metrics.engagement > 50 ? (
               <>
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
                 <span className="text-xs text-green-400">High Performance</span>
               </>
             ) : metrics.engagement > 25 ? (
               <>
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                <div className="h-2 w-2 rounded-full bg-yellow-400" />
                 <span className="text-xs text-yellow-400">Average</span>
               </>
             ) : (
               <>
-                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <div className="h-2 w-2 rounded-full bg-red-400" />
                 <span className="text-xs text-red-400">Needs Optimization</span>
               </>
             )}
@@ -230,27 +246,30 @@ function AnalyticsOverlay({
 
 // Block Library Sidebar
 function BlockLibrary({ onAddBlock }: { onAddBlock: (type: BlockType) => void }) {
-  const blockTypes = Object.entries(blockTemplates).filter(([_, template]) => template != null) as [BlockType, typeof blockTemplates[BlockType]][]
-  
+  const blockTypes = Object.entries(blockTemplates).filter(([_, template]) => template != null) as [
+    BlockType,
+    (typeof blockTemplates)[BlockType],
+  ][]
+
   return (
     <div className="space-y-2">
       {blockTypes.map(([type, template]) => (
         <button
           key={type}
           onClick={() => onAddBlock(type)}
-          className="w-full group relative overflow-hidden rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:shadow-md hover:scale-[1.02] hover:border-gray-300"
+          className="group relative w-full overflow-hidden rounded-lg border border-gray-200 bg-white p-3 text-left transition-all hover:scale-[1.02] hover:border-gray-300 hover:shadow-md"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-blue-50 group-hover:to-blue-100 transition-colors">
-              <div className="text-gray-600 group-hover:text-blue-600 transition-colors">
+            <div className="rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 p-2 transition-colors group-hover:from-blue-50 group-hover:to-blue-100">
+              <div className="text-gray-600 transition-colors group-hover:text-blue-600">
                 {template.icon}
               </div>
             </div>
             <div className="flex-1">
-              <div className="font-medium text-sm text-gray-900">{template.name}</div>
+              <div className="text-sm font-medium text-gray-900">{template.name}</div>
               <div className="text-xs text-gray-500">{template.description}</div>
             </div>
-            <Plus className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+            <Plus className="h-4 w-4 text-gray-400 transition-colors group-hover:text-gray-600" />
           </div>
         </button>
       ))}
@@ -269,11 +288,11 @@ const gradientPresets = [
 ]
 
 // Properties Panel with Styles Tab
-function PropertiesPanel({ 
-  block, 
-  onUpdate, 
+function PropertiesPanel({
+  block,
+  onUpdate,
   onClose,
-  onSelectProduct
+  onSelectProduct,
 }: {
   block: Block | null
   onUpdate: (updates: Partial<Block>) => void
@@ -281,20 +300,20 @@ function PropertiesPanel({
   onSelectProduct?: (blockId: string) => void
 }) {
   const [activeTab, setActiveTab] = useState<'content' | 'styles'>('content')
-  
+
   const openProductSelector = (blockId: string) => {
     if (onSelectProduct) {
       onSelectProduct(blockId)
     }
   }
-  
+
   if (!block) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400">
+      <div className="flex h-full items-center justify-center text-gray-400">
         <div className="text-center">
-          <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <Sparkles className="mx-auto mb-3 h-12 w-12 opacity-50" />
           <p className="font-medium">Select a block to edit</p>
-          <p className="text-sm mt-1">Click any block on the canvas</p>
+          <p className="mt-1 text-sm">Click any block on the canvas</p>
         </div>
       </div>
     )
@@ -311,29 +330,26 @@ function PropertiesPanel({
   const template = blockTemplates[block.type]
   if (!template) {
     return (
-      <div className="h-full flex items-center justify-center text-red-500">
+      <div className="flex h-full items-center justify-center text-red-500">
         <div className="text-center">
           <p className="font-medium">Unknown block type</p>
-          <p className="text-sm mt-1">{block.type}</p>
+          <p className="mt-1 text-sm">{block.type}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="p-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
+      <div className="border-b bg-gradient-to-r from-gray-50 to-gray-100 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {template.icon}
             <h3 className="font-semibold">{template.name}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-white/50 rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4" />
+          <button onClick={onClose} className="rounded-lg p-1 transition-colors hover:bg-white/50">
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -343,25 +359,25 @@ function PropertiesPanel({
         <button
           onClick={() => setActiveTab('content')}
           className={cn(
-            "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
-            activeTab === 'content' 
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            'flex flex-1 items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
+            activeTab === 'content'
+              ? 'border-b-2 border-blue-600 bg-blue-50/50 text-blue-600'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
           )}
         >
-          <TypeIcon className="w-4 h-4" />
+          <TypeIcon className="h-4 w-4" />
           Content
         </button>
         <button
           onClick={() => setActiveTab('styles')}
           className={cn(
-            "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
-            activeTab === 'styles' 
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50" 
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            'flex flex-1 items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
+            activeTab === 'styles'
+              ? 'border-b-2 border-blue-600 bg-blue-50/50 text-blue-600'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
           )}
         >
-          <Palette className="w-4 h-4" />
+          <Palette className="h-4 w-4" />
           Styles
         </button>
       </div>
@@ -369,10 +385,12 @@ function PropertiesPanel({
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === 'content' ? (
-          <BlockEditor 
-            block={block} 
+          <BlockEditor
+            block={block}
             updateData={updateData}
-            onSelectProduct={block.type === 'product' ? () => openProductSelector(block.id) : undefined}
+            onSelectProduct={
+              block.type === 'product' ? () => openProductSelector(block.id) : undefined
+            }
           />
         ) : (
           <StylesEditor block={block} updateStyles={updateStyles} />
@@ -383,14 +401,14 @@ function PropertiesPanel({
 }
 
 // Block Editor Components
-function BlockEditor({ 
-  block, 
+function BlockEditor({
+  block,
   updateData,
-  onSelectProduct 
-}: { 
-  block: Block; 
-  updateData: (updates: Partial<Block['data']>) => void;
-  onSelectProduct?: () => void;
+  onSelectProduct,
+}: {
+  block: Block
+  updateData: (updates: Partial<Block['data']>) => void
+  onSelectProduct?: () => void
 }) {
   // State for order bump product selector
   const [showOrderBumpProductSelector, setShowOrderBumpProductSelector] = useState(false)
@@ -401,7 +419,7 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
+            <label className="mb-1 block text-sm font-medium">Title</label>
             <Input
               type="text"
               value={headerData.title}
@@ -410,7 +428,7 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Subtitle</label>
+            <label className="mb-1 block text-sm font-medium">Subtitle</label>
             <Input
               type="text"
               value={headerData.subtitle}
@@ -426,8 +444,8 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           {/* Offer Selection */}
-          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
+          <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-purple-900">Offer Source</span>
               <Button
                 variant="primary"
@@ -442,13 +460,11 @@ function BlockEditor({
               Choose an offer to auto-fill product details with context-specific pricing.
             </p>
             {productData.offerId && (
-              <p className="text-xs text-purple-600 mt-2 font-medium">
-                ✓ Using offer pricing
-              </p>
+              <p className="mt-2 text-xs font-medium text-purple-600">✓ Using offer pricing</p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Product Name</label>
+            <label className="mb-1 block text-sm font-medium">Product Name</label>
             <Input
               type="text"
               value={productData.name}
@@ -456,7 +472,7 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label className="mb-1 block text-sm font-medium">Description</label>
             <Textarea
               value={productData.description}
               onChange={(e) => updateData({ description: e.target.value })}
@@ -465,7 +481,7 @@ function BlockEditor({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Price</label>
+              <label className="mb-1 block text-sm font-medium">Price</label>
               <Input
                 type="text"
                 value={productData.price}
@@ -473,7 +489,7 @@ function BlockEditor({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Compare Price</label>
+              <label className="mb-1 block text-sm font-medium">Compare Price</label>
               <Input
                 type="text"
                 value={productData.comparePrice || ''}
@@ -483,10 +499,12 @@ function BlockEditor({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
+            <label className="mb-1 block text-sm font-medium">Type</label>
             <Select
               value={productData.type}
-              onValueChange={(value) => updateData({ type: value as 'onetime' | 'subscription' | 'payment-plan' })}
+              onValueChange={(value) =>
+                updateData({ type: value as 'onetime' | 'subscription' | 'payment-plan' })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -499,10 +517,12 @@ function BlockEditor({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Features (one per line)</label>
+            <label className="mb-1 block text-sm font-medium">Features (one per line)</label>
             <Textarea
               value={productData.features.join('\n')}
-              onChange={(e) => updateData({ features: e.target.value.split('\n').filter(f => f.trim()) })}
+              onChange={(e) =>
+                updateData({ features: e.target.value.split('\n').filter((f) => f.trim()) })
+              }
               className="font-mono text-sm"
               rows={5}
             />
@@ -515,7 +535,7 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Section Title</label>
+            <label className="mb-1.5 block text-sm font-medium">Section Title</label>
             <Input
               value={faqData.title}
               onChange={(e) => updateBlockData({ ...faqData, title: e.target.value })}
@@ -523,10 +543,10 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Questions & Answers</label>
+            <label className="mb-1.5 block text-sm font-medium">Questions & Answers</label>
             <div className="space-y-3">
               {faqData.faqs.map((faq, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <div key={index} className="space-y-3 rounded-lg bg-gray-50 p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-3">
                       <Input
@@ -554,9 +574,9 @@ function BlockEditor({
                         const newFaqs = faqData.faqs.filter((_, i) => i !== index)
                         updateBlockData({ ...faqData, faqs: newFaqs })
                       }}
-                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      className="ml-3 rounded p-1.5 text-red-500 transition-colors hover:bg-red-50"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -569,7 +589,7 @@ function BlockEditor({
                 variant="outline"
                 className="w-full"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Question
               </Button>
             </div>
@@ -582,7 +602,7 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Title</label>
+            <label className="mb-1.5 block text-sm font-medium">Title</label>
             <Input
               value={guaranteeData.title}
               onChange={(e) => updateBlockData({ ...guaranteeData, title: e.target.value })}
@@ -590,7 +610,7 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Description</label>
+            <label className="mb-1.5 block text-sm font-medium">Description</label>
             <Textarea
               value={guaranteeData.description}
               onChange={(e) => updateBlockData({ ...guaranteeData, description: e.target.value })}
@@ -599,16 +619,18 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Guarantee Period (days)</label>
+            <label className="mb-1.5 block text-sm font-medium">Guarantee Period (days)</label>
             <Input
               type="number"
               value={guaranteeData.days || ''}
-              onChange={(e) => updateBlockData({ ...guaranteeData, days: parseInt(e.target.value) || undefined })}
+              onChange={(e) =>
+                updateBlockData({ ...guaranteeData, days: parseInt(e.target.value) || undefined })
+              }
               placeholder="30"
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Badge Text (Optional)</label>
+            <label className="mb-1.5 block text-sm font-medium">Badge Text (Optional)</label>
             <Input
               value={guaranteeData.badge || ''}
               onChange={(e) => updateBlockData({ ...guaranteeData, badge: e.target.value })}
@@ -624,7 +646,7 @@ function BlockEditor({
         <>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Title</label>
+              <label className="mb-1.5 block text-sm font-medium">Title</label>
               <Input
                 value={orderBumpData.title}
                 onChange={(e) => updateBlockData({ ...orderBumpData, title: e.target.value })}
@@ -632,7 +654,7 @@ function BlockEditor({
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Description</label>
+              <label className="mb-1.5 block text-sm font-medium">Description</label>
               <Textarea
                 value={orderBumpData.description}
                 onChange={(e) => updateBlockData({ ...orderBumpData, description: e.target.value })}
@@ -642,7 +664,7 @@ function BlockEditor({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Price</label>
+                <label className="mb-1.5 block text-sm font-medium">Price</label>
                 <Input
                   value={orderBumpData.price}
                   onChange={(e) => updateBlockData({ ...orderBumpData, price: e.target.value })}
@@ -650,10 +672,12 @@ function BlockEditor({
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Compare Price</label>
+                <label className="mb-1.5 block text-sm font-medium">Compare Price</label>
                 <Input
                   value={orderBumpData.comparePrice || ''}
-                  onChange={(e) => updateBlockData({ ...orderBumpData, comparePrice: e.target.value })}
+                  onChange={(e) =>
+                    updateBlockData({ ...orderBumpData, comparePrice: e.target.value })
+                  }
                   placeholder="$99"
                 />
               </div>
@@ -663,7 +687,7 @@ function BlockEditor({
               variant="outline"
               className="w-full"
             >
-              <Package className="w-4 h-4 mr-2" />
+              <Package className="mr-2 h-4 w-4" />
               Select from Product Database
             </Button>
             <div className="flex items-center gap-2">
@@ -671,7 +695,9 @@ function BlockEditor({
                 type="checkbox"
                 id="order-bump-default"
                 checked={orderBumpData.isCheckedByDefault || false}
-                onChange={(e) => updateBlockData({ ...orderBumpData, isCheckedByDefault: e.target.checked })}
+                onChange={(e) =>
+                  updateBlockData({ ...orderBumpData, isCheckedByDefault: e.target.checked })
+                }
                 className="rounded border-gray-300"
               />
               <label htmlFor="order-bump-default" className="text-sm text-gray-600">
@@ -703,10 +729,10 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Layout</label>
+            <label className="mb-1.5 block text-sm font-medium">Layout</label>
             <Select
               value={testimonialData.layout}
-              onValueChange={(value: 'single' | 'grid' | 'carousel') => 
+              onValueChange={(value: 'single' | 'grid' | 'carousel') =>
                 updateBlockData({ ...testimonialData, layout: value })
               }
             >
@@ -721,10 +747,10 @@ function BlockEditor({
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Testimonials</label>
+            <label className="mb-1.5 block text-sm font-medium">Testimonials</label>
             <div className="space-y-3">
               {testimonialData.testimonials.map((testimonial, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <div key={index} className="space-y-3 rounded-lg bg-gray-50 p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -766,16 +792,19 @@ function BlockEditor({
                               onClick={() => {
                                 const newTestimonials = [...testimonialData.testimonials]
                                 newTestimonials[index] = { ...testimonial, rating: star }
-                                updateBlockData({ ...testimonialData, testimonials: newTestimonials })
+                                updateBlockData({
+                                  ...testimonialData,
+                                  testimonials: newTestimonials,
+                                })
                               }}
                               className="p-0.5"
                             >
-                              <Star 
+                              <Star
                                 className={cn(
-                                  "w-5 h-5 transition-colors",
-                                  star <= testimonial.rating 
-                                    ? "fill-yellow-400 text-yellow-400" 
-                                    : "text-gray-300"
+                                  'h-5 w-5 transition-colors',
+                                  star <= testimonial.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
                                 )}
                               />
                             </button>
@@ -785,26 +814,30 @@ function BlockEditor({
                     </div>
                     <button
                       onClick={() => {
-                        const newTestimonials = testimonialData.testimonials.filter((_, i) => i !== index)
+                        const newTestimonials = testimonialData.testimonials.filter(
+                          (_, i) => i !== index
+                        )
                         updateBlockData({ ...testimonialData, testimonials: newTestimonials })
                       }}
-                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      className="ml-3 rounded p-1.5 text-red-500 transition-colors hover:bg-red-50"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               ))}
               <Button
                 onClick={() => {
-                  const newTestimonials = [...testimonialData.testimonials, 
-                    { author: '', content: '', rating: 5, title: '' }]
+                  const newTestimonials = [
+                    ...testimonialData.testimonials,
+                    { author: '', content: '', rating: 5, title: '' },
+                  ]
                   updateBlockData({ ...testimonialData, testimonials: newTestimonials })
                 }}
                 variant="outline"
                 className="w-full"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Testimonial
               </Button>
             </div>
@@ -817,7 +850,7 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Title</label>
+            <label className="mb-1.5 block text-sm font-medium">Title</label>
             <Input
               value={countdownData.title}
               onChange={(e) => updateBlockData({ ...countdownData, title: e.target.value })}
@@ -825,15 +858,24 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">End Date & Time</label>
+            <label className="mb-1.5 block text-sm font-medium">End Date & Time</label>
             <Input
               type="datetime-local"
-              value={countdownData.endDate ? new Date(countdownData.endDate).toISOString().slice(0, 16) : ''}
-              onChange={(e) => updateBlockData({ ...countdownData, endDate: new Date(e.target.value).toISOString() })}
+              value={
+                countdownData.endDate
+                  ? new Date(countdownData.endDate).toISOString().slice(0, 16)
+                  : ''
+              }
+              onChange={(e) =>
+                updateBlockData({
+                  ...countdownData,
+                  endDate: new Date(e.target.value).toISOString(),
+                })
+              }
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Display Units</label>
+            <label className="mb-1.5 block text-sm font-medium">Display Units</label>
             <div className="space-y-2">
               {[
                 { key: 'showDays', label: 'Show Days' },
@@ -845,7 +887,7 @@ function BlockEditor({
                   <input
                     type="checkbox"
                     id={`countdown-${key}`}
-                    checked={countdownData[key as keyof CountdownBlockData] as boolean || false}
+                    checked={(countdownData[key as keyof CountdownBlockData] as boolean) || false}
                     onChange={(e) => updateBlockData({ ...countdownData, [key]: e.target.checked })}
                     className="rounded border-gray-300"
                   />
@@ -864,7 +906,7 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Section Title</label>
+            <label className="mb-1.5 block text-sm font-medium">Section Title</label>
             <Input
               value={benefitsData.title}
               onChange={(e) => updateBlockData({ ...benefitsData, title: e.target.value })}
@@ -872,10 +914,10 @@ function BlockEditor({
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Benefits</label>
+            <label className="mb-1.5 block text-sm font-medium">Benefits</label>
             <div className="space-y-3">
               {benefitsData.benefits.map((benefit, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg space-y-3">
+                <div key={index} className="space-y-3 rounded-lg bg-gray-50 p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-[60px_1fr] gap-3">
@@ -915,23 +957,25 @@ function BlockEditor({
                         const newBenefits = benefitsData.benefits.filter((_, i) => i !== index)
                         updateBlockData({ ...benefitsData, benefits: newBenefits })
                       }}
-                      className="ml-3 p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      className="ml-3 rounded p-1.5 text-red-500 transition-colors hover:bg-red-50"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               ))}
               <Button
                 onClick={() => {
-                  const newBenefits = [...benefitsData.benefits, 
-                    { icon: '✨', title: '', description: '' }]
+                  const newBenefits = [
+                    ...benefitsData.benefits,
+                    { icon: '✨', title: '', description: '' },
+                  ]
                   updateBlockData({ ...benefitsData, benefits: newBenefits })
                 }}
                 variant="outline"
                 className="w-full"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Benefit
               </Button>
             </div>
@@ -944,44 +988,45 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div className="space-y-3">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
               <p className="text-sm text-blue-800">
-                <Shield className="w-4 h-4 inline mr-1" />
+                <Shield className="mr-1 inline h-4 w-4" />
                 Professional payment form with Stripe-level security
               </p>
             </div>
-            
+
             {paymentData.useStripeElements !== false && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
                 <p className="text-xs text-yellow-800">
-                  <strong>Note:</strong> If you see Stripe errors in the console (r.stripe.com blocked), 
-                  these are from ad blockers blocking telemetry. The payment form will still work correctly.
+                  <strong>Note:</strong> If you see Stripe errors in the console (r.stripe.com
+                  blocked), these are from ad blockers blocking telemetry. The payment form will
+                  still work correctly.
                 </p>
               </div>
             )}
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Button Text</label>
+            <label className="mb-1.5 block text-sm font-medium">Button Text</label>
             <Input
               value={paymentData.buttonText || ''}
               onChange={(e) => updateBlockData({ ...paymentData, buttonText: e.target.value })}
               placeholder="Complete Purchase"
             />
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Security Text</label>
+            <label className="mb-1.5 block text-sm font-medium">Security Text</label>
             <Input
               value={paymentData.secureText || ''}
               onChange={(e) => updateBlockData({ ...paymentData, secureText: e.target.value })}
               placeholder="Your payment is secured with 256-bit SSL encryption"
             />
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Required Fields</label>
-            <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
+            <label className="mb-1.5 block text-sm font-medium">Required Fields</label>
+            <div className="space-y-2 rounded-lg bg-gray-50 p-3">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -989,9 +1034,7 @@ function BlockEditor({
                   disabled
                   className="rounded border-gray-300 opacity-50"
                 />
-                <label className="text-sm text-gray-600">
-                  Email Address (Always Required)
-                </label>
+                <label className="text-sm text-gray-600">Email Address (Always Required)</label>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -1000,22 +1043,22 @@ function BlockEditor({
                   disabled
                   className="rounded border-gray-300 opacity-50"
                 />
-                <label className="text-sm text-gray-600">
-                  Card Information (Always Required)
-                </label>
+                <label className="text-sm text-gray-600">Card Information (Always Required)</label>
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Optional Fields</label>
+            <label className="mb-1.5 block text-sm font-medium">Optional Fields</label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="payment-billing"
                   checked={paymentData.showBillingAddress || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, showBillingAddress: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, showBillingAddress: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-billing" className="text-sm text-gray-600">
@@ -1027,7 +1070,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-phone"
                   checked={paymentData.showPhoneField || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, showPhoneField: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, showPhoneField: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-phone" className="text-sm text-gray-600">
@@ -1039,7 +1084,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-company"
                   checked={paymentData.showCompanyField || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, showCompanyField: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, showCompanyField: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-company" className="text-sm text-gray-600">
@@ -1048,16 +1095,18 @@ function BlockEditor({
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Stripe Payment Features</label>
+            <label className="mb-1.5 block text-sm font-medium">Stripe Payment Features</label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="payment-stripe"
                   checked={paymentData.useStripeElements !== false}
-                  onChange={(e) => updateBlockData({ ...paymentData, useStripeElements: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, useStripeElements: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-stripe" className="text-sm text-gray-600">
@@ -1069,7 +1118,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-wallets"
                   checked={paymentData.enableWallets || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, enableWallets: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, enableWallets: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-wallets" className="text-sm text-gray-600">
@@ -1081,7 +1132,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-link"
                   checked={paymentData.enableStripeLink || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, enableStripeLink: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, enableStripeLink: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-link" className="text-sm text-gray-600">
@@ -1090,16 +1143,18 @@ function BlockEditor({
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Tax & Compliance</label>
+            <label className="mb-1.5 block text-sm font-medium">Tax & Compliance</label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="payment-vat"
                   checked={paymentData.collectVAT || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, collectVAT: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, collectVAT: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-vat" className="text-sm text-gray-600">
@@ -1111,7 +1166,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-tax"
                   checked={paymentData.enableStripeTax || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, enableStripeTax: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, enableStripeTax: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-tax" className="text-sm text-gray-600">
@@ -1120,16 +1177,18 @@ function BlockEditor({
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Promotions & Trust</label>
+            <label className="mb-1.5 block text-sm font-medium">Promotions & Trust</label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="payment-coupons"
                   checked={paymentData.enableCoupons || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, enableCoupons: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, enableCoupons: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-coupons" className="text-sm text-gray-600">
@@ -1141,7 +1200,9 @@ function BlockEditor({
                   type="checkbox"
                   id="payment-guarantee"
                   checked={paymentData.showGuarantee || false}
-                  onChange={(e) => updateBlockData({ ...paymentData, showGuarantee: e.target.checked })}
+                  onChange={(e) =>
+                    updateBlockData({ ...paymentData, showGuarantee: e.target.checked })
+                  }
                   className="rounded border-gray-300"
                 />
                 <label htmlFor="payment-guarantee" className="text-sm text-gray-600">
@@ -1150,10 +1211,10 @@ function BlockEditor({
               </div>
             </div>
           </div>
-          
+
           {paymentData.showGuarantee && (
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Guarantee Text</label>
+              <label className="mb-1.5 block text-sm font-medium">Guarantee Text</label>
               <Input
                 value={paymentData.guaranteeText || ''}
                 onChange={(e) => updateBlockData({ ...paymentData, guaranteeText: e.target.value })}
@@ -1161,28 +1222,28 @@ function BlockEditor({
               />
             </div>
           )}
-          
-          <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-            <h4 className="font-medium text-sm mb-2">Payment Features Included:</h4>
+
+          <div className="rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-4">
+            <h4 className="mb-2 text-sm font-medium">Payment Features Included:</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 Real-time card validation
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 Auto-detect card type (Visa, Mastercard, etc.)
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 3D Secure authentication
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 Support for digital wallets (Apple Pay, Google Pay)
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" />
                 PCI DSS compliant
               </li>
             </ul>
@@ -1196,26 +1257,26 @@ function BlockEditor({
 }
 
 // Styles Editor Component
-function StylesEditor({ 
-  block, 
-  updateStyles 
-}: { 
+function StylesEditor({
+  block,
+  updateStyles,
+}: {
   block: Block
-  updateStyles: (updates: Partial<Block['styles']>) => void 
+  updateStyles: (updates: Partial<Block['styles']>) => void
 }) {
   const styles = block.styles || {}
-  
+
   return (
     <div className="space-y-6">
       {/* Spacing Section */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <Layers className="w-4 h-4" />
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <Layers className="h-4 w-4" />
           Spacing
         </h4>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Padding</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Padding</label>
             <Select
               value={styles.padding || '1.5rem'}
               onValueChange={(value) => updateStyles({ padding: value })}
@@ -1234,7 +1295,7 @@ function StylesEditor({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Margin</label>
             <Select
               value={styles.margin || '0'}
               onValueChange={(value) => updateStyles({ margin: value })}
@@ -1256,16 +1317,18 @@ function StylesEditor({
 
       {/* Background Section */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <Palette className="w-4 h-4" />
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <Palette className="h-4 w-4" />
           Background
         </h4>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
             <Select
               value={styles.backgroundType || 'color'}
-              onValueChange={(value) => updateStyles({ backgroundType: value as 'color' | 'gradient' })}
+              onValueChange={(value) =>
+                updateStyles({ backgroundType: value as 'color' | 'gradient' })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -1276,18 +1339,22 @@ function StylesEditor({
               </SelectContent>
             </Select>
           </div>
-          
+
           {styles.backgroundType === 'gradient' ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Aurora Gradients</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Aurora Gradients
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {gradientPresets.map((preset) => (
                   <button
                     key={preset.name}
                     onClick={() => updateStyles({ background: preset.value })}
                     className={cn(
-                      "h-12 rounded-lg border-2 transition-all hover:scale-105",
-                      styles.background === preset.value ? "border-blue-500 shadow-lg" : "border-gray-200"
+                      'h-12 rounded-lg border-2 transition-all hover:scale-105',
+                      styles.background === preset.value
+                        ? 'border-blue-500 shadow-lg'
+                        : 'border-gray-200'
                     )}
                     style={{ background: preset.value }}
                     title={preset.name}
@@ -1297,13 +1364,13 @@ function StylesEditor({
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Color</label>
               <div className="flex gap-2">
                 <input
                   type="color"
                   value={styles.background || '#ffffff'}
                   onChange={(e) => updateStyles({ background: e.target.value })}
-                  className="h-10 w-20 rounded border cursor-pointer"
+                  className="h-10 w-20 cursor-pointer rounded border"
                 />
                 <Input
                   type="text"
@@ -1320,19 +1387,19 @@ function StylesEditor({
 
       {/* Typography Section */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <TypeIcon className="w-4 h-4" />
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <TypeIcon className="h-4 w-4" />
           Typography
         </h4>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Text Color</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Text Color</label>
             <div className="flex gap-2">
               <input
                 type="color"
                 value={styles.textColor || '#000000'}
                 onChange={(e) => updateStyles({ textColor: e.target.value })}
-                className="h-10 w-20 rounded border cursor-pointer"
+                className="h-10 w-20 cursor-pointer rounded border"
               />
               <Input
                 type="text"
@@ -1344,7 +1411,7 @@ function StylesEditor({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Font Size</label>
             <Select
               value={styles.fontSize || '1rem'}
               onValueChange={(value) => updateStyles({ fontSize: value })}
@@ -1365,7 +1432,7 @@ function StylesEditor({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Font Weight</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Font Weight</label>
             <Select
               value={styles.fontWeight || '400'}
               onValueChange={(value) => updateStyles({ fontWeight: value })}
@@ -1388,10 +1455,10 @@ function StylesEditor({
 
       {/* Borders & Effects Section */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">Borders & Effects</h4>
+        <h4 className="mb-3 text-sm font-semibold text-gray-900">Borders & Effects</h4>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Border Radius</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Border Radius</label>
             <Select
               value={styles.borderRadius || '0.75rem'}
               onValueChange={(value) => updateStyles({ borderRadius: value })}
@@ -1412,7 +1479,7 @@ function StylesEditor({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Shadow</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Shadow</label>
             <Select
               value={styles.shadow || 'none'}
               onValueChange={(value) => updateStyles({ shadow: value === 'none' ? '' : value })}
@@ -1432,7 +1499,7 @@ function StylesEditor({
             </Select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Border</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Border</label>
             <div className="flex gap-2">
               <Select
                 value={styles.borderWidth || '0'}
@@ -1452,7 +1519,7 @@ function StylesEditor({
                 type="color"
                 value={styles.borderColor || '#e5e7eb'}
                 onChange={(e) => updateStyles({ borderColor: e.target.value })}
-                className="h-10 w-20 rounded border cursor-pointer"
+                className="h-10 w-20 cursor-pointer rounded border"
               />
             </div>
           </div>
@@ -1465,7 +1532,7 @@ function StylesEditor({
 // Keyboard Shortcuts Hook
 function useKeyboardShortcuts() {
   const store = useSimplifiedBuilderStore()
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd/Ctrl + Z: Undo
@@ -1473,34 +1540,37 @@ function useKeyboardShortcuts() {
         e.preventDefault()
         store.undo()
       }
-      
+
       // Cmd/Ctrl + Shift + Z: Redo
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') {
         e.preventDefault()
         store.redo()
       }
-      
+
       // Cmd/Ctrl + S: Save
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         // Trigger save event
         window.dispatchEvent(new CustomEvent('builder:save'))
       }
-      
+
       // Delete: Delete selected block
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (store.selectedBlockId && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        if (
+          store.selectedBlockId &&
+          !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)
+        ) {
           e.preventDefault()
           store.deleteBlock(store.selectedBlockId)
         }
       }
-      
+
       // Escape: Deselect block
       if (e.key === 'Escape') {
         store.selectBlock(null)
       }
     }
-    
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [store])
@@ -1513,7 +1583,7 @@ type Product = RouterOutputs['product']['list'][0]
 export default function SimplifiedBuilderPage() {
   const params = useParams()
   const checkoutId = params?.id as string
-  
+
   const [sidebarOpen] = useState(true)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
@@ -1533,16 +1603,16 @@ export default function SimplifiedBuilderPage() {
     totalViews: 12543,
     conversions: 1879,
     conversionRate: 14.98,
-    avgOrderValue: 127.50,
+    avgOrderValue: 127.5,
     cartAbandonment: 23.4,
     blockMetrics: {
-      'header': { views: 12543, clicks: 3421, engagement: 27.3 },
-      'product': { views: 11987, clicks: 8765, engagement: 73.1 },
-      'orderBump': { views: 10234, clicks: 2156, engagement: 21.1 },
-      'testimonial': { views: 9876, clicks: 1234, engagement: 12.5 },
-      'guarantee': { views: 8765, clicks: 3210, engagement: 36.6 },
-      'payment': { views: 7654, clicks: 1879, engagement: 24.5 },
-    } as Record<string, { views: number; clicks: number; engagement: number }>
+      header: { views: 12543, clicks: 3421, engagement: 27.3 },
+      product: { views: 11987, clicks: 8765, engagement: 73.1 },
+      orderBump: { views: 10234, clicks: 2156, engagement: 21.1 },
+      testimonial: { views: 9876, clicks: 1234, engagement: 12.5 },
+      guarantee: { views: 8765, clicks: 3210, engagement: 36.6 },
+      payment: { views: 7654, clicks: 1879, engagement: 24.5 },
+    } as Record<string, { views: number; clicks: number; engagement: number }>,
   })
   const [globalTheme, setGlobalTheme] = useState({
     primaryColor: '#3b82f6',
@@ -1553,7 +1623,7 @@ export default function SimplifiedBuilderPage() {
     buttonColor: '#3b82f6',
   })
   const [activeId, setActiveId] = useState<string | null>(null)
-  
+
   const {
     blocks,
     selectedBlockId,
@@ -1572,12 +1642,12 @@ export default function SimplifiedBuilderPage() {
     redo,
     setBlocks,
     setHasUnsavedChanges,
-    setSaving
+    setSaving,
   } = useSimplifiedBuilderStore()
-  
+
   // Keyboard shortcuts
   useKeyboardShortcuts()
-  
+
   // Drag and drop sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -1585,10 +1655,10 @@ export default function SimplifiedBuilderPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-  
+
   // Fetch checkout data
   const { data: checkout, isLoading } = api.checkout.getById.useQuery({ id: checkoutId })
-  
+
   // Save mutation
   const saveCheckout = api.checkout.savePageData.useMutation({
     onMutate: () => {
@@ -1600,7 +1670,7 @@ export default function SimplifiedBuilderPage() {
       setSaveStatus('saved')
       setLastSaved(new Date())
       setSaving(false)
-      
+
       if (variables.publish && data) {
         const checkoutUrl = `${window.location.origin}/c/${data.slug}`
         setPublishedUrl(checkoutUrl)
@@ -1614,15 +1684,15 @@ export default function SimplifiedBuilderPage() {
       setSaveStatus('error')
       setSaving(false)
       toast.error('Failed to save: ' + error.message)
-    }
+    },
   })
-  
+
   // Load checkout data
   useEffect(() => {
     if (checkout?.pageData) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const pageData = checkout.pageData as any
-      
+
       // Check if it's the new simplified format
       if (Array.isArray(pageData.blocks)) {
         // Filter out blocks with unknown types and ensure all blocks have the visible property
@@ -1634,12 +1704,12 @@ export default function SimplifiedBuilderPage() {
           }
           return true
         })
-        
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const blocks = validBlocks.map((block: any) => ({
           ...block,
           visible: block.visible !== undefined ? block.visible : true,
-          column: block.column || 'left'
+          column: block.column || 'left',
         }))
         setBlocks(blocks)
       } else if (pageData.sections) {
@@ -1656,7 +1726,7 @@ export default function SimplifiedBuilderPage() {
                 convertedBlocks.push({
                   ...block,
                   visible: block.visible !== undefined ? block.visible : true,
-                  column: block.column || 'left'
+                  column: block.column || 'left',
                 })
               } else {
                 console.warn(`Filtering out unknown block type during conversion: ${block.type}`)
@@ -1668,41 +1738,44 @@ export default function SimplifiedBuilderPage() {
       }
     }
   }, [checkout, setBlocks])
-  
+
   // Save handler
-  const handleSave = useCallback((publish = false) => {
-    const pageData = {
-      blocks,
-      settings: {
-        theme: 'light'
+  const handleSave = useCallback(
+    (publish = false) => {
+      const pageData = {
+        blocks,
+        settings: {
+          theme: 'light',
+        },
       }
-    }
-    
-    saveCheckout.mutate({
-      id: checkoutId,
-      pageData,
-      publish
-    })
-  }, [blocks, checkoutId, saveCheckout])
-  
+
+      saveCheckout.mutate({
+        id: checkoutId,
+        pageData,
+        publish,
+      })
+    },
+    [blocks, checkoutId, saveCheckout]
+  )
+
   // Handle publish
   // Copy URL to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(publishedUrl)
     toast.success('URL copied to clipboard!')
   }
-  
+
   // Auto-save
   useEffect(() => {
     if (!hasUnsavedChanges || isSaving) return
-    
+
     const timer = setTimeout(() => {
       handleSave(false)
     }, 5000)
-    
+
     return () => clearTimeout(timer)
   }, [hasUnsavedChanges, isSaving, handleSave])
-  
+
   // Handle product selection from database
   const handleProductSelection = (product: Product) => {
     if (selectedBlockForProduct) {
@@ -1721,13 +1794,13 @@ export default function SimplifiedBuilderPage() {
         planId: product.plans?.[0]?.id || null, // Use first plan if available
         useProductPricing: true, // Enable product-driven pricing
       }
-      
+
       updateBlock(selectedBlockForProduct, { data: productData })
-      
+
       // Clear selection
       setSelectedBlockForProduct(null)
       setShowProductSelector(false)
-      
+
       // Show success message
       toast.success('Product imported successfully!')
     }
@@ -1741,7 +1814,7 @@ export default function SimplifiedBuilderPage() {
         name: offer.product?.name || offer.name,
         description: offer.description || offer.product?.description || '',
         price: `${getCurrencySymbol(offer.currency)}${(offer.price / 100).toFixed(2)}`,
-        comparePrice: offer.compareAtPrice 
+        comparePrice: offer.compareAtPrice
           ? `${getCurrencySymbol(offer.currency)}${(offer.compareAtPrice / 100).toFixed(2)}`
           : undefined,
         type: 'onetime',
@@ -1754,84 +1827,82 @@ export default function SimplifiedBuilderPage() {
         useOfferPricing: true,
         useProductPricing: false,
       }
-      
+
       updateBlock(selectedBlockForProduct, { data: productData })
-      
+
       // Clear selection
       setSelectedBlockForProduct(null)
       setShowOfferSelector(false)
-      
+
       // Show success message
       toast.success('Offer imported successfully!')
     }
   }
-  
+
   // Handle opening product selector for a specific block
   const openProductSelector = (blockId: string) => {
     setSelectedBlockForProduct(blockId)
     setShowOfferSelector(true) // Changed to open offer selector instead
   }
-  
+
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
     setActiveId(active.id as string)
   }
-  
+
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-    
+
     setActiveId(null)
-    
+
     if (!over) return
-    
+
     const activeId = active.id as string
     const overId = over.id as string
-    
+
     // Find the active block
-    const activeBlock = blocks.find(b => b.id === activeId)
+    const activeBlock = blocks.find((b) => b.id === activeId)
     if (!activeBlock) return
-    
+
     // Create a working copy of blocks
     let newBlocks = [...blocks]
-    
+
     // Handle dropping on column drop zones (empty columns)
     if (overId === 'left-column' || overId === 'right-column') {
       const targetColumn: 'left' | 'right' = overId === 'left-column' ? 'left' : 'right'
-      
+
       // Update the block's column
-      newBlocks = newBlocks.map(b => 
-        b.id === activeId ? { ...b, column: targetColumn } : b
-      )
-      
+      newBlocks = newBlocks.map((b) => (b.id === activeId ? { ...b, column: targetColumn } : b))
+
       setBlocks(newBlocks)
       return
     }
-    
+
     // Handle dropping on another block
-    const overBlock = blocks.find(b => b.id === overId)
+    const overBlock = blocks.find((b) => b.id === overId)
     if (!overBlock) return
-    
-    const activeIndex = newBlocks.findIndex(b => b.id === activeId)
-    const overIndex = newBlocks.findIndex(b => b.id === overId)
-    
+
+    const activeIndex = newBlocks.findIndex((b) => b.id === activeId)
+    const overIndex = newBlocks.findIndex((b) => b.id === overId)
+
     if (activeIndex === -1 || overIndex === -1) return
-    
+
     // Determine target column
     const targetColumn: 'left' | 'right' = overBlock.column || 'left'
-    
+
     // Remove active block from array
     const [movedBlock] = newBlocks.splice(activeIndex, 1)
-    
+
     if (!movedBlock) return // Safety check
-    
+
     // Update the moved block's column
     movedBlock.column = targetColumn
-    
+
     // Find the new index after removal
-    const newOverIndex = newBlocks.findIndex(b => b.id === overId)
-    
+    const newOverIndex = newBlocks.findIndex((b) => b.id === overId)
+
     // Insert at the new position
     if (newOverIndex !== -1) {
       // Insert after the target block
@@ -1840,17 +1911,17 @@ export default function SimplifiedBuilderPage() {
       // If target not found, add to end
       newBlocks.push(movedBlock)
     }
-    
+
     setBlocks(newBlocks)
   }
-  
+
   // Selected block
-  const selectedBlock = blocks.find(b => b.id === selectedBlockId) || null
-  
+  const selectedBlock = blocks.find((b) => b.id === selectedBlockId) || null
+
   // Split blocks by column
-  const leftBlocks = blocks.filter(b => !b.column || b.column === 'left')
-  const rightBlocks = blocks.filter(b => b.column === 'right')
-  
+  const leftBlocks = blocks.filter((b) => !b.column || b.column === 'left')
+  const rightBlocks = blocks.filter((b) => b.column === 'right')
+
   // Loading state
   if (isLoading) {
     return (
@@ -1862,7 +1933,7 @@ export default function SimplifiedBuilderPage() {
       </div>
     )
   }
-  
+
   if (!checkout) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
@@ -1873,11 +1944,11 @@ export default function SimplifiedBuilderPage() {
       </div>
     )
   }
-  
+
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="flex h-screen flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b bg-white px-4 py-3">
         <div className="flex items-center gap-4">
           <Link href="/checkouts">
             <Button variant="ghost" size="icon">
@@ -1896,10 +1967,10 @@ export default function SimplifiedBuilderPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex items-center gap-1 border-r pr-2 mr-2">
+          <div className="mr-2 flex items-center gap-1 border-r pr-2">
             <Button
               variant={activeView === 'desktop' ? 'primary' : 'ghost'}
               size="icon"
@@ -1915,7 +1986,7 @@ export default function SimplifiedBuilderPage() {
               <Smartphone className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {/* History Controls */}
           <Button
             variant="ghost"
@@ -1935,34 +2006,28 @@ export default function SimplifiedBuilderPage() {
           >
             <Redo className="h-4 w-4" />
           </Button>
-          
+
           {/* Theme Settings */}
-          <Button
-            variant="ghost"
-            onClick={() => setShowThemeModal(true)}
-          >
+          <Button variant="ghost" onClick={() => setShowThemeModal(true)}>
             <Palette className="mr-2 h-4 w-4" />
             Theme
           </Button>
-          
+
           {/* A/B Testing */}
-          <Button
-            variant="ghost"
-            onClick={() => setShowABTestModal(true)}
-          >
+          <Button variant="ghost" onClick={() => setShowABTestModal(true)}>
             <Sparkles className="mr-2 h-4 w-4" />
             A/B Test
           </Button>
-          
+
           {/* Analytics Overlay */}
           <Button
-            variant={showAnalytics ? "primary" : "ghost"}
+            variant={showAnalytics ? 'primary' : 'ghost'}
             onClick={() => setShowAnalytics(!showAnalytics)}
           >
             <TrendingUp className="mr-2 h-4 w-4" />
             Analytics
           </Button>
-          
+
           {/* Actions */}
           <Button
             variant="ghost"
@@ -1976,19 +2041,15 @@ export default function SimplifiedBuilderPage() {
             )}
             Save
           </Button>
-          <Button
-            variant="primary"
-            onClick={() => handleSave(true)}
-            disabled={isSaving}
-          >
+          <Button variant="primary" onClick={() => handleSave(true)} disabled={isSaving}>
             <Rocket className="mr-2 h-4 w-4" />
             Publish
           </Button>
         </div>
       </div>
-      
+
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -1996,38 +2057,38 @@ export default function SimplifiedBuilderPage() {
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
-              className="w-80 bg-white border-r flex-shrink-0"
+              className="w-80 flex-shrink-0 border-r bg-white"
             >
-              <div className="p-4 border-b">
+              <div className="border-b p-4">
                 <h2 className="font-semibold">Add Blocks</h2>
               </div>
-              <div className="p-4 overflow-y-auto h-[calc(100vh-180px)]">
+              <div className="h-[calc(100vh-180px)] overflow-y-auto p-4">
                 <BlockLibrary onAddBlock={(type) => addBlock(type)} />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Canvas */}
         <div className="flex-1 overflow-auto">
           {/* A/B Test Variant Switcher */}
           {abTestEnabled && (
-            <div className="sticky top-0 z-10 bg-white border-b px-8 py-3">
-              <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="sticky top-0 z-10 border-b bg-white px-8 py-3">
+              <div className="mx-auto flex max-w-5xl items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <Sparkles className="h-4 w-4 text-purple-600" />
                   <span className="text-sm font-medium">A/B Test Active</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Editing:</span>
-                  <div className="flex bg-gray-100 rounded-lg p-1">
+                  <div className="flex rounded-lg bg-gray-100 p-1">
                     <button
                       onClick={() => setActiveVariant('A')}
                       className={cn(
-                        "px-3 py-1 rounded text-sm font-medium transition-all",
-                        activeVariant === 'A' 
-                          ? "bg-white text-blue-600 shadow-sm" 
-                          : "text-gray-600 hover:text-gray-900"
+                        'rounded px-3 py-1 text-sm font-medium transition-all',
+                        activeVariant === 'A'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
                       )}
                     >
                       Variant A
@@ -2035,10 +2096,10 @@ export default function SimplifiedBuilderPage() {
                     <button
                       onClick={() => setActiveVariant('B')}
                       className={cn(
-                        "px-3 py-1 rounded text-sm font-medium transition-all",
-                        activeVariant === 'B' 
-                          ? "bg-white text-purple-600 shadow-sm" 
-                          : "text-gray-600 hover:text-gray-900"
+                        'rounded px-3 py-1 text-sm font-medium transition-all',
+                        activeVariant === 'B'
+                          ? 'bg-white text-purple-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
                       )}
                     >
                       Variant B
@@ -2048,183 +2109,193 @@ export default function SimplifiedBuilderPage() {
               </div>
             </div>
           )}
-          
-          <div className={cn(
-            "mx-auto p-8 transition-all",
-            activeView === 'mobile' ? "max-w-sm" : "max-w-5xl"
-          )}>
+
+          <div
+            className={cn(
+              'mx-auto p-8 transition-all',
+              activeView === 'mobile' ? 'max-w-sm' : 'max-w-5xl'
+            )}
+          >
             {/* Edit Mode */}
-                {/* Analytics Summary Bar */}
-                {showAnalytics && (
-                  <div className="mb-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur">
-                          <TrendingUp className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold">Live Analytics Overview</h3>
-                          <p className="text-sm text-white/80">Last 30 days performance</p>
-                        </div>
-                      </div>
+            {/* Analytics Summary Bar */}
+            {showAnalytics && (
+              <div className="mb-6 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white shadow-xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-white/20 p-2 backdrop-blur">
+                      <TrendingUp className="h-6 w-6" />
                     </div>
-                    
-                    <div className="grid grid-cols-5 gap-4">
-                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Users className="w-4 h-4 text-white/60" />
-                          <span className="text-xs text-white/60">Total Views</span>
-                        </div>
-                        <p className="text-2xl font-bold">{analyticsData.totalViews.toLocaleString()}</p>
-                      </div>
-                      
-                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="w-4 h-4 text-white/60" />
-                          <span className="text-xs text-white/60">Conversions</span>
-                        </div>
-                        <p className="text-2xl font-bold">{analyticsData.conversions.toLocaleString()}</p>
-                      </div>
-                      
-                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <BarChart3 className="w-4 h-4 text-white/60" />
-                          <span className="text-xs text-white/60">Conv. Rate</span>
-                        </div>
-                        <p className="text-2xl font-bold">{analyticsData.conversionRate}%</p>
-                      </div>
-                      
-                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <DollarSign className="w-4 h-4 text-white/60" />
-                          <span className="text-xs text-white/60">Avg. Order</span>
-                        </div>
-                        <p className="text-2xl font-bold">${analyticsData.avgOrderValue}</p>
-                      </div>
-                      
-                      <div className="bg-white/10 backdrop-blur rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <ShoppingCart className="w-4 h-4 text-white/60" />
-                          <span className="text-xs text-white/60">Abandonment</span>
-                        </div>
-                        <p className="text-2xl font-bold">{analyticsData.cartAbandonment}%</p>
-                      </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Live Analytics Overview</h3>
+                      <p className="text-sm text-white/80">Last 30 days performance</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-4">
+                  <div className="rounded-lg bg-white/10 p-3 backdrop-blur">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-white/60" />
+                      <span className="text-xs text-white/60">Total Views</span>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {analyticsData.totalViews.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-white/10 p-3 backdrop-blur">
+                    <div className="mb-1 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-white/60" />
+                      <span className="text-xs text-white/60">Conversions</span>
+                    </div>
+                    <p className="text-2xl font-bold">
+                      {analyticsData.conversions.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-white/10 p-3 backdrop-blur">
+                    <div className="mb-1 flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-white/60" />
+                      <span className="text-xs text-white/60">Conv. Rate</span>
+                    </div>
+                    <p className="text-2xl font-bold">{analyticsData.conversionRate}%</p>
+                  </div>
+
+                  <div className="rounded-lg bg-white/10 p-3 backdrop-blur">
+                    <div className="mb-1 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-white/60" />
+                      <span className="text-xs text-white/60">Avg. Order</span>
+                    </div>
+                    <p className="text-2xl font-bold">${analyticsData.avgOrderValue}</p>
+                  </div>
+
+                  <div className="rounded-lg bg-white/10 p-3 backdrop-blur">
+                    <div className="mb-1 flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4 text-white/60" />
+                      <span className="text-xs text-white/60">Abandonment</span>
+                    </div>
+                    <p className="text-2xl font-bold">{analyticsData.cartAbandonment}%</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div
+                className={cn(
+                  'grid gap-4',
+                  activeView === 'mobile' ? 'grid-cols-1' : 'grid-cols-2'
                 )}
-                
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
               >
-                <div className={cn(
-                  "grid gap-4",
-                  activeView === 'mobile' ? "grid-cols-1" : "grid-cols-2"
-                )}>
-                  {blocks.length === 0 ? (
-                    <div className="col-span-2 bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
-                      <Plus className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                      <p className="text-gray-500 font-medium">Start by adding blocks</p>
-                      <p className="text-sm text-gray-400 mt-1">Choose from the library on the left</p>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Left Column */}
-                      <ColumnDropZone id="left-column" title="Left Column">
-                        <SortableContext
-                          items={leftBlocks.map(b => b.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {leftBlocks.map((block, index) => (
-                            <SortableBlock
-                              key={block.id}
-                              block={block}
-                              isSelected={selectedBlockId === block.id}
-                              onSelect={() => selectBlock(block.id)}
-                              onDelete={() => deleteBlock(block.id)}
-                              onDuplicate={() => duplicateBlock(block.id)}
-                              onToggleVisibility={() => toggleBlockVisibility(block.id)}
-                              onToggleColumn={() => toggleBlockColumn(block.id)}
-                              onMoveUp={() => moveBlock(block.id, 'up')}
-                              onMoveDown={() => moveBlock(block.id, 'down')}
-                              canMoveUp={index > 0}
-                              canMoveDown={index < leftBlocks.length - 1}
-                              showAnalytics={showAnalytics}
-                              analyticsData={analyticsData.blockMetrics[block.type]}
-                            />
-                          ))}
-                          {leftBlocks.length === 0 && (
-                            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
-                              <p className="text-sm">Drop blocks here</p>
-                            </div>
-                          )}
-                        </SortableContext>
-                        </ColumnDropZone>
-                        
-                        {/* Right Column */}
-                        <ColumnDropZone id="right-column" title="Right Column">
-                          <SortableContext
-                            items={rightBlocks.map(b => b.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                          {rightBlocks.map((block, index) => (
-                            <SortableBlock
-                              key={block.id}
-                              block={block}
-                              isSelected={selectedBlockId === block.id}
-                              onSelect={() => selectBlock(block.id)}
-                              onDelete={() => deleteBlock(block.id)}
-                              onDuplicate={() => duplicateBlock(block.id)}
-                              onToggleVisibility={() => toggleBlockVisibility(block.id)}
-                              onToggleColumn={() => toggleBlockColumn(block.id)}
-                              onMoveUp={() => moveBlock(block.id, 'up')}
-                              onMoveDown={() => moveBlock(block.id, 'down')}
-                              canMoveUp={index > 0}
-                              canMoveDown={index < rightBlocks.length - 1}
-                              showAnalytics={showAnalytics}
-                              analyticsData={analyticsData.blockMetrics[block.type]}
-                            />
-                          ))}
-                          {rightBlocks.length === 0 && (
-                            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
-                              <p className="text-sm">Drop blocks here</p>
-                            </div>
-                          )}
-                          </SortableContext>
-                        </ColumnDropZone>
-                      </>
-                    )}
+                {blocks.length === 0 ? (
+                  <div className="col-span-2 rounded-xl border-2 border-dashed border-gray-300 bg-white p-12 text-center">
+                    <Plus className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                    <p className="font-medium text-gray-500">Start by adding blocks</p>
+                    <p className="mt-1 text-sm text-gray-400">
+                      Choose from the library on the left
+                    </p>
                   </div>
-                <DndDragOverlay>
-                  {activeId ? (
-                    <div className="opacity-80 rotate-2 scale-105">
-                      <WYSIWYGBlock
-                        block={blocks.find(b => b.id === activeId)!}
-                        isSelected={false}
-                        onSelect={() => {}}
-                        onDelete={() => {}}
-                        onDuplicate={() => {}}
-                        onToggleVisibility={() => {}}
-                        onMoveUp={() => {}}
-                        onMoveDown={() => {}}
-                        canMoveUp={false}
-                        canMoveDown={false}
-                        isDragging={true}
-                        dragAttributes={{}}
-                        dragListeners={{}}
-                      />
-                    </div>
-                  ) : null}
-                </DndDragOverlay>
-              </DndContext>
+                ) : (
+                  <>
+                    {/* Left Column */}
+                    <ColumnDropZone id="left-column" title="Left Column">
+                      <SortableContext
+                        items={leftBlocks.map((b) => b.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {leftBlocks.map((block, index) => (
+                          <SortableBlock
+                            key={block.id}
+                            block={block}
+                            isSelected={selectedBlockId === block.id}
+                            onSelect={() => selectBlock(block.id)}
+                            onDelete={() => deleteBlock(block.id)}
+                            onDuplicate={() => duplicateBlock(block.id)}
+                            onToggleVisibility={() => toggleBlockVisibility(block.id)}
+                            onToggleColumn={() => toggleBlockColumn(block.id)}
+                            onMoveUp={() => moveBlock(block.id, 'up')}
+                            onMoveDown={() => moveBlock(block.id, 'down')}
+                            canMoveUp={index > 0}
+                            canMoveDown={index < leftBlocks.length - 1}
+                            showAnalytics={showAnalytics}
+                            analyticsData={analyticsData.blockMetrics[block.type]}
+                          />
+                        ))}
+                        {leftBlocks.length === 0 && (
+                          <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center text-gray-400">
+                            <p className="text-sm">Drop blocks here</p>
+                          </div>
+                        )}
+                      </SortableContext>
+                    </ColumnDropZone>
+
+                    {/* Right Column */}
+                    <ColumnDropZone id="right-column" title="Right Column">
+                      <SortableContext
+                        items={rightBlocks.map((b) => b.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {rightBlocks.map((block, index) => (
+                          <SortableBlock
+                            key={block.id}
+                            block={block}
+                            isSelected={selectedBlockId === block.id}
+                            onSelect={() => selectBlock(block.id)}
+                            onDelete={() => deleteBlock(block.id)}
+                            onDuplicate={() => duplicateBlock(block.id)}
+                            onToggleVisibility={() => toggleBlockVisibility(block.id)}
+                            onToggleColumn={() => toggleBlockColumn(block.id)}
+                            onMoveUp={() => moveBlock(block.id, 'up')}
+                            onMoveDown={() => moveBlock(block.id, 'down')}
+                            canMoveUp={index > 0}
+                            canMoveDown={index < rightBlocks.length - 1}
+                            showAnalytics={showAnalytics}
+                            analyticsData={analyticsData.blockMetrics[block.type]}
+                          />
+                        ))}
+                        {rightBlocks.length === 0 && (
+                          <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center text-gray-400">
+                            <p className="text-sm">Drop blocks here</p>
+                          </div>
+                        )}
+                      </SortableContext>
+                    </ColumnDropZone>
+                  </>
+                )}
+              </div>
+              <DndDragOverlay>
+                {activeId ? (
+                  <div className="scale-105 rotate-2 opacity-80">
+                    <WYSIWYGBlock
+                      block={blocks.find((b) => b.id === activeId)!}
+                      isSelected={false}
+                      onSelect={() => {}}
+                      onDelete={() => {}}
+                      onDuplicate={() => {}}
+                      onToggleVisibility={() => {}}
+                      onMoveUp={() => {}}
+                      onMoveDown={() => {}}
+                      canMoveUp={false}
+                      canMoveDown={false}
+                      isDragging={true}
+                      dragAttributes={{}}
+                      dragListeners={{}}
+                    />
+                  </div>
+                ) : null}
+              </DndDragOverlay>
+            </DndContext>
           </div>
         </div>
-        
+
         {/* Properties Panel */}
         {selectedBlock && (
-          <div className="w-80 bg-white border-l flex-shrink-0">
+          <div className="w-80 flex-shrink-0 border-l bg-white">
             <PropertiesPanel
               block={selectedBlock}
               onUpdate={(updates) => updateBlock(selectedBlock.id, updates)}
@@ -2234,7 +2305,7 @@ export default function SimplifiedBuilderPage() {
           </div>
         )}
       </div>
-      
+
       {/* Theme Settings Modal */}
       {showThemeModal && (
         <ThemeSettingsModal
@@ -2243,7 +2314,7 @@ export default function SimplifiedBuilderPage() {
           onClose={() => setShowThemeModal(false)}
         />
       )}
-      
+
       {/* Product Selector Modal */}
       <ProductSelectorModal
         isOpen={showProductSelector}
@@ -2265,43 +2336,39 @@ export default function SimplifiedBuilderPage() {
         onSelectOffer={handleOfferSelection}
         contextFilter="standalone"
       />
-      
+
       {/* Publish Success Modal */}
       {showPublishModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 min-w-[500px] max-w-md w-full mx-4"
+            className="mx-4 w-full max-w-md min-w-[500px] rounded-xl bg-white p-6"
           >
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Checkout Published!</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="mb-2 text-2xl font-bold">Checkout Published!</h2>
+              <p className="mb-6 text-gray-600">
                 Your checkout is now live and ready to accept payments.
               </p>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <label className="text-sm text-gray-500 block mb-2">Checkout URL</label>
+
+              <div className="mb-6 rounded-lg bg-gray-50 p-4">
+                <label className="mb-2 block text-sm text-gray-500">Checkout URL</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={publishedUrl}
                     readOnly
-                    className="flex-1 px-3 py-2 bg-white border rounded-lg text-sm"
+                    className="flex-1 rounded-lg border bg-white px-3 py-2 text-sm"
                   />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={copyToClipboard}
-                  >
-                    <Copy className="w-4 h-4" />
+                  <Button size="sm" variant="outline" onClick={copyToClipboard}>
+                    <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              
+
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -2315,7 +2382,7 @@ export default function SimplifiedBuilderPage() {
                   className="flex-1"
                   onClick={() => window.open(publishedUrl, '_blank')}
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <ExternalLink className="mr-2 h-4 w-4" />
                   View Checkout
                 </Button>
               </div>
@@ -2323,7 +2390,7 @@ export default function SimplifiedBuilderPage() {
           </motion.div>
         </div>
       )}
-      
+
       {/* A/B Testing Modal */}
       {showABTestModal && (
         <ABTestingModal
@@ -2350,7 +2417,7 @@ function ABTestingModal({
   onToggleEnabled,
   onVariantChange: _onVariantChange,
   onVariantBUpdate,
-  onClose
+  onClose,
 }: {
   enabled: boolean
   activeVariant: 'A' | 'B'
@@ -2364,78 +2431,75 @@ function ABTestingModal({
   const [localEnabled, setLocalEnabled] = useState(enabled)
   const [localVariantB, setLocalVariantB] = useState(variantB.length > 0 ? variantB : [...variantA])
   const [trafficSplit, setTrafficSplit] = useState(50)
-  
+
   const handleApply = () => {
     onToggleEnabled(localEnabled)
     onVariantBUpdate(localVariantB)
     onClose()
     toast.success('A/B test settings updated!')
   }
-  
+
   const handleDuplicateVariantA = () => {
     setLocalVariantB([...variantA])
     toast.success('Variant A duplicated to Variant B')
   }
-  
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-4xl min-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-4xl min-w-[800px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center justify-between border-b p-6">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-2.5">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div className="min-w-0">
               <h2 className="text-xl font-semibold">A/B Testing Configuration</h2>
               <p className="text-sm text-gray-600">Test different checkout variations</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100">
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             {/* Enable/Disable Toggle */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-blue-900">A/B Test Status</h3>
-                  <p className="text-sm text-blue-700 mt-1">
-                    {localEnabled 
+                  <p className="mt-1 text-sm text-blue-700">
+                    {localEnabled
                       ? 'A/B testing is active. Visitors will see different variants.'
                       : 'A/B testing is disabled. All visitors see Variant A.'}
                   </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label className="relative inline-flex cursor-pointer items-center">
                   <input
                     type="checkbox"
                     checked={localEnabled}
                     onChange={(e) => setLocalEnabled(e.target.checked)}
-                    className="sr-only peer"
+                    className="peer sr-only"
                   />
-                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="peer h-7 w-14 rounded-full bg-gray-200 peer-checked:bg-blue-600 peer-focus:ring-4 peer-focus:ring-blue-300 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                 </label>
               </div>
             </div>
-            
+
             {/* Traffic Split */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Traffic Distribution</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-900">Traffic Distribution</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <div className="flex justify-between mb-2">
+                    <div className="mb-2 flex justify-between">
                       <span className="text-sm font-medium">Variant A</span>
                       <span className="text-sm text-gray-600">{100 - trafficSplit}%</span>
                     </div>
-                    <div className="flex justify-between mb-2">
+                    <div className="mb-2 flex justify-between">
                       <span className="text-sm font-medium">Variant B</span>
                       <span className="text-sm text-gray-600">{trafficSplit}%</span>
                     </div>
@@ -2447,9 +2511,9 @@ function ABTestingModal({
                   max="100"
                   value={trafficSplit}
                   onChange={(e) => setTrafficSplit(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
                   style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${trafficSplit}%, #e5e7eb ${trafficSplit}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${trafficSplit}%, #e5e7eb ${trafficSplit}%, #e5e7eb 100%)`,
                   }}
                 />
                 <p className="text-xs text-gray-500">
@@ -2457,34 +2521,30 @@ function ABTestingModal({
                 </p>
               </div>
             </div>
-            
+
             {/* Variant Management */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Variant Management</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-900">Variant Management</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 flex items-center justify-between">
                     <h4 className="font-medium">Variant A (Control)</h4>
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
                       Original
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {variantA.length} blocks configured
-                  </p>
-                  <div className="text-xs text-gray-500">
-                    This is your current checkout design
-                  </div>
+                  <p className="mb-3 text-sm text-gray-600">{variantA.length} blocks configured</p>
+                  <div className="text-xs text-gray-500">This is your current checkout design</div>
                 </div>
-                
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
+
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 flex items-center justify-between">
                     <h4 className="font-medium">Variant B (Test)</h4>
-                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                    <span className="rounded-full bg-purple-100 px-2 py-1 text-xs text-purple-700">
                       Test
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="mb-3 text-sm text-gray-600">
                     {localVariantB.length} blocks configured
                   </p>
                   <Button
@@ -2497,36 +2557,37 @@ function ABTestingModal({
                   </Button>
                 </div>
               </div>
-              
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+
+              <div className="mt-4 rounded-lg bg-gray-50 p-3">
                 <p className="text-sm text-gray-600">
-                  <strong>Note:</strong> To edit Variant B, enable A/B testing and use the variant switcher in the builder.
+                  <strong>Note:</strong> To edit Variant B, enable A/B testing and use the variant
+                  switcher in the builder.
                 </p>
               </div>
             </div>
-            
+
             {/* Test Goals */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Test Goals & Metrics</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-900">Test Goals & Metrics</h3>
               <div className="space-y-2">
-                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-gray-50">
                   <input type="checkbox" className="mt-1" defaultChecked />
                   <div>
-                    <p className="font-medium text-sm">Conversion Rate</p>
+                    <p className="text-sm font-medium">Conversion Rate</p>
                     <p className="text-xs text-gray-600">Track checkout completion percentage</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-gray-50">
                   <input type="checkbox" className="mt-1" defaultChecked />
                   <div>
-                    <p className="font-medium text-sm">Average Order Value</p>
+                    <p className="text-sm font-medium">Average Order Value</p>
                     <p className="text-xs text-gray-600">Compare revenue per transaction</p>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 hover:bg-gray-50">
                   <input type="checkbox" className="mt-1" />
                   <div>
-                    <p className="font-medium text-sm">Cart Abandonment</p>
+                    <p className="text-sm font-medium">Cart Abandonment</p>
                     <p className="text-xs text-gray-600">Monitor drop-off rates</p>
                   </div>
                 </label>
@@ -2534,12 +2595,10 @@ function ABTestingModal({
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t bg-gray-50 flex-shrink-0">
-          <div className="text-sm text-gray-600">
-            Changes will apply to new visitors only
-          </div>
+        <div className="flex flex-shrink-0 items-center justify-between border-t bg-gray-50 p-6">
+          <div className="text-sm text-gray-600">Changes will apply to new visitors only</div>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={onClose}>
               Cancel
@@ -2558,7 +2617,7 @@ function ABTestingModal({
 function ThemeSettingsModal({
   theme,
   onUpdate,
-  onClose
+  onClose,
 }: {
   theme: {
     primaryColor: string
@@ -2579,25 +2638,25 @@ function ThemeSettingsModal({
   onClose: () => void
 }) {
   const [localTheme, setLocalTheme] = useState(theme)
-  
+
   const handleApply = () => {
     onUpdate(localTheme)
     onClose()
   }
-  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      
+
       {/* Modal - Fixed width issues */}
-      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-2xl min-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-2xl min-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50 flex-shrink-0">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex-shrink-0">
-                <Palette className="w-5 h-5 text-white" />
+        <div className="flex-shrink-0 border-b bg-gradient-to-r from-blue-50 to-purple-50 p-6">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex flex-1 items-center gap-3">
+              <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 p-2">
+                <Palette className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
                 <h2 className="text-xl font-semibold">Global Theme Settings</h2>
@@ -2606,68 +2665,80 @@ function ThemeSettingsModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors flex-shrink-0"
+              className="flex-shrink-0 rounded-lg p-2 transition-colors hover:bg-white/50"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
-        
+
         {/* Content */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-6 w-full">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="w-full space-y-6">
             {/* Colors Section */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Palette className="w-4 h-4" />
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <Palette className="h-4 w-4" />
                 Brand Colors
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Primary Color</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Primary Color
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="color"
                       value={localTheme.primaryColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
-                      className="h-10 w-20 rounded border cursor-pointer"
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, primaryColor: e.target.value })
+                      }
+                      className="h-10 w-20 cursor-pointer rounded border"
                     />
                     <Input
                       type="text"
                       value={localTheme.primaryColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, primaryColor: e.target.value })}
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, primaryColor: e.target.value })
+                      }
                       className="font-mono text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Color</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Secondary Color
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="color"
                       value={localTheme.secondaryColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
-                      className="h-10 w-20 rounded border cursor-pointer"
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, secondaryColor: e.target.value })
+                      }
+                      className="h-10 w-20 cursor-pointer rounded border"
                     />
                     <Input
                       type="text"
                       value={localTheme.secondaryColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, secondaryColor: e.target.value })}
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, secondaryColor: e.target.value })
+                      }
                       className="font-mono text-sm"
                     />
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Typography Section */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <TypeIcon className="w-4 h-4" />
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                <TypeIcon className="h-4 w-4" />
                 Typography
               </h3>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Font Family</label>
                 <Select
                   value={localTheme.fontFamily}
                   onValueChange={(value) => setLocalTheme({ ...localTheme, fontFamily: value })}
@@ -2687,116 +2758,134 @@ function ThemeSettingsModal({
                 </Select>
               </div>
             </div>
-            
+
             {/* Page Background */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Page Background</h3>
+              <h3 className="mb-4 text-sm font-semibold text-gray-900">Page Background</h3>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Background Color
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="color"
                     value={localTheme.pageBackground}
-                    onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
-                    className="h-10 w-20 rounded border cursor-pointer"
+                    onChange={(e) =>
+                      setLocalTheme({ ...localTheme, pageBackground: e.target.value })
+                    }
+                    className="h-10 w-20 cursor-pointer rounded border"
                   />
                   <Input
                     type="text"
                     value={localTheme.pageBackground}
-                    onChange={(e) => setLocalTheme({ ...localTheme, pageBackground: e.target.value })}
+                    onChange={(e) =>
+                      setLocalTheme({ ...localTheme, pageBackground: e.target.value })
+                    }
                     className="font-mono text-sm"
                   />
                 </div>
               </div>
             </div>
-            
+
             {/* Button Styles */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Button Styles</h3>
+              <h3 className="mb-4 text-sm font-semibold text-gray-900">Button Styles</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Style</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Button Style
+                  </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'default' })}
                       className={cn(
-                        "p-3 border-2 rounded-lg transition-all",
-                        localTheme.buttonStyle === 'default' 
-                          ? "border-blue-500 bg-blue-50" 
-                          : "border-gray-200 hover:border-gray-300"
+                        'rounded-lg border-2 p-3 transition-all',
+                        localTheme.buttonStyle === 'default'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
                       )}
                     >
-                      <div className="h-8 bg-blue-600 rounded-md" />
-                      <p className="text-xs mt-2">Default</p>
+                      <div className="h-8 rounded-md bg-blue-600" />
+                      <p className="mt-2 text-xs">Default</p>
                     </button>
                     <button
                       onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'rounded' })}
                       className={cn(
-                        "p-3 border-2 rounded-lg transition-all",
-                        localTheme.buttonStyle === 'rounded' 
-                          ? "border-blue-500 bg-blue-50" 
-                          : "border-gray-200 hover:border-gray-300"
+                        'rounded-lg border-2 p-3 transition-all',
+                        localTheme.buttonStyle === 'rounded'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
                       )}
                     >
-                      <div className="h-8 bg-blue-600 rounded-full" />
-                      <p className="text-xs mt-2">Rounded</p>
+                      <div className="h-8 rounded-full bg-blue-600" />
+                      <p className="mt-2 text-xs">Rounded</p>
                     </button>
                     <button
                       onClick={() => setLocalTheme({ ...localTheme, buttonStyle: 'sharp' })}
                       className={cn(
-                        "p-3 border-2 rounded-lg transition-all",
-                        localTheme.buttonStyle === 'sharp' 
-                          ? "border-blue-500 bg-blue-50" 
-                          : "border-gray-200 hover:border-gray-300"
+                        'rounded-lg border-2 p-3 transition-all',
+                        localTheme.buttonStyle === 'sharp'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
                       )}
                     >
                       <div className="h-8 bg-blue-600" />
-                      <p className="text-xs mt-2">Sharp</p>
+                      <p className="mt-2 text-xs">Sharp</p>
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Button Color</label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Button Color
+                  </label>
                   <div className="flex gap-2">
                     <input
                       type="color"
                       value={localTheme.buttonColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
-                      className="h-10 w-20 rounded border cursor-pointer"
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, buttonColor: e.target.value })
+                      }
+                      className="h-10 w-20 cursor-pointer rounded border"
                     />
                     <Input
                       type="text"
                       value={localTheme.buttonColor}
-                      onChange={(e) => setLocalTheme({ ...localTheme, buttonColor: e.target.value })}
+                      onChange={(e) =>
+                        setLocalTheme({ ...localTheme, buttonColor: e.target.value })
+                      }
                       className="font-mono text-sm"
                     />
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Preview Section */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Preview</h3>
-              <div 
-                className="p-6 rounded-lg border"
-                style={{ 
+              <h3 className="mb-4 text-sm font-semibold text-gray-900">Preview</h3>
+              <div
+                className="rounded-lg border p-6"
+                style={{
                   backgroundColor: localTheme.pageBackground,
-                  fontFamily: localTheme.fontFamily 
+                  fontFamily: localTheme.fontFamily,
                 }}
               >
-                <h4 
-                  className="text-2xl font-bold mb-2"
-                  style={{ color: localTheme.primaryColor }}
-                >
+                <h4 className="mb-2 text-2xl font-bold" style={{ color: localTheme.primaryColor }}>
                   Sample Heading
                 </h4>
-                <p className="mb-4">This is how your checkout page will look with these theme settings.</p>
+                <p className="mb-4">
+                  This is how your checkout page will look with these theme settings.
+                </p>
                 <button
-                  className="px-6 py-3 text-white font-semibold"
+                  className="px-6 py-3 font-semibold text-white"
                   style={{
                     backgroundColor: localTheme.buttonColor,
-                    borderRadius: localTheme.buttonStyle === 'rounded' ? '9999px' : localTheme.buttonStyle === 'sharp' ? '0' : '0.5rem'
+                    borderRadius:
+                      localTheme.buttonStyle === 'rounded'
+                        ? '9999px'
+                        : localTheme.buttonStyle === 'sharp'
+                          ? '0'
+                          : '0.5rem',
                   }}
                 >
                   Sample Button
@@ -2805,9 +2894,9 @@ function ThemeSettingsModal({
             </div>
           </div>
         </div>
-        
+
         {/* Footer */}
-        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 flex-shrink-0 w-full">
+        <div className="flex w-full flex-shrink-0 justify-end gap-3 border-t bg-gray-50 p-6">
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>

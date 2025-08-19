@@ -8,20 +8,14 @@ export async function POST(request: NextRequest) {
     // Check authentication
     const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     // Validate file type
@@ -36,10 +30,7 @@ export async function POST(request: NextRequest) {
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024 // 5MB
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 5MB.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 })
     }
 
     // Generate unique filename
@@ -60,10 +51,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Upload error:', error)
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
   }
 }
 
@@ -72,19 +60,13 @@ export async function DELETE(request: NextRequest) {
     // Check authentication
     const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { url } = await request.json()
 
     if (!url) {
-      return NextResponse.json(
-        { error: 'No URL provided' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No URL provided' }, { status: 400 })
     }
 
     // Delete from Vercel Blob
@@ -93,9 +75,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Delete error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete file' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 })
   }
 }

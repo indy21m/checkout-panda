@@ -1,25 +1,25 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/api/trpc'
-import { 
-  checkouts, 
-  checkoutSessions, 
-  funnels, 
-  quotes, 
-  products, 
-  productPlans, 
+import {
+  checkouts,
+  checkoutSessions,
+  funnels,
+  quotes,
+  products,
+  productPlans,
   orderBumps,
   coupons,
-  offers
+  offers,
 } from '@/server/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
-import { 
-  generateQuoteId, 
-  cartToKey, 
+import {
+  generateQuoteId,
+  cartToKey,
   isQuoteExpired,
   validateCurrencyConsistency,
   calculateDiscount,
-  type CartState 
+  type CartState,
 } from '@/lib/currency'
 
 // Helper function to generate slug from name
@@ -314,51 +314,48 @@ export const checkoutRouter = createTRPCRouter({
         customerEmail: input.customerEmail,
         vatNumber: input.vatNumber,
       }
-      
+
       const quoteId = generateQuoteId(cartState)
       const cartHash = cartToKey(cartState)
-      
+
       // Check for existing non-expired quote
       const existingQuote = await ctx.db.query.quotes.findFirst({
-        where: and(
-          eq(quotes.cartHash, cartHash),
-          eq(quotes.checkoutId, input.checkoutId)
-        ),
+        where: and(eq(quotes.cartHash, cartHash), eq(quotes.checkoutId, input.checkoutId)),
       })
-      
+
       if (existingQuote && !isQuoteExpired(existingQuote.createdAt!)) {
         return existingQuote
       }
-      
+
       // Get product and plan
       let subtotal = 0
       let currency = 'USD'
       let planInterval: 'month' | 'year' | 'week' | 'day' | undefined
       let trialDays = 0
-      const lineItems: Array<{ 
+      const lineItems: Array<{
         type: 'product' | 'plan' | 'bump' | 'discount' | 'tax'
         label: string
-        amount: number 
+        amount: number
       }> = []
-      
+
       if (input.planId) {
         const plan = await ctx.db.query.productPlans.findFirst({
           where: eq(productPlans.id, input.planId),
           with: { product: true },
         })
-        
+
         if (!plan) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Plan not found',
           })
         }
-        
+
         subtotal = plan.price
         currency = plan.currency
         planInterval = plan.billingInterval as typeof planInterval
         trialDays = plan.trialDays || 0
-        
+
         lineItems.push({
           type: 'plan',
           label: `${plan.product.name} - ${plan.name}`,
@@ -372,29 +369,31 @@ export const checkoutRouter = createTRPCRouter({
             product: true,
           },
         })
-        
+
         if (!offer) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Offer not found',
           })
         }
-        
+
         // Check if offer is active and available
         const now = new Date()
-        if (!offer.isActive ||
-            (offer.availableFrom && offer.availableFrom > now) ||
-            (offer.availableUntil && offer.availableUntil < now) ||
-            (offer.maxRedemptions && (offer.currentRedemptions || 0) >= offer.maxRedemptions)) {
+        if (
+          !offer.isActive ||
+          (offer.availableFrom && offer.availableFrom > now) ||
+          (offer.availableUntil && offer.availableUntil < now) ||
+          (offer.maxRedemptions && (offer.currentRedemptions || 0) >= offer.maxRedemptions)
+        ) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Offer is not available',
           })
         }
-        
+
         subtotal = offer.price
         currency = offer.currency
-        
+
         lineItems.push({
           type: 'product',
           label: offer.product?.name || offer.name,
@@ -404,33 +403,31 @@ export const checkoutRouter = createTRPCRouter({
         const product = await ctx.db.query.products.findFirst({
           where: eq(products.id, input.productId),
         })
-        
+
         if (!product) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Product not found',
           })
         }
-        
+
         subtotal = 2999 // Default price - should come from offers
         currency = 'USD' // Default currency
-        
+
         lineItems.push({
           type: 'product',
           label: product.name,
           amount: 2999, // Default price - should come from offers
         })
       }
-      
+
       // Add order bumps
       if (input.orderBumpIds.length > 0) {
         const bumps = await ctx.db.query.orderBumps.findMany({
-          where: and(
-            eq(orderBumps.checkoutId, input.checkoutId),
-          ),
+          where: and(eq(orderBumps.checkoutId, input.checkoutId)),
           with: { product: true },
         })
-        
+
         const currencyItems = []
         for (const bump of bumps) {
           if (input.orderBumpIds.includes(bump.id)) {
@@ -438,7 +435,7 @@ export const checkoutRouter = createTRPCRouter({
               currency: 'USD', // Default currency
               amount: 999, // Default bump price - should come from offers
             })
-            
+
             subtotal += 999 // Default bump price - should come from offers
             lineItems.push({
               type: 'bump',
@@ -447,13 +444,13 @@ export const checkoutRouter = createTRPCRouter({
             })
           }
         }
-        
+
         // Validate currency consistency
         const validation = validateCurrencyConsistency([
           { currency, amount: subtotal },
           ...currencyItems,
         ])
-        
+
         if (!validation.valid) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
@@ -461,44 +458,41 @@ export const checkoutRouter = createTRPCRouter({
           })
         }
       }
-      
+
       // Apply coupon
       let discount = 0
       let couponMeta: { code?: string; id?: string } = {}
-      
+
       if (input.couponCode) {
         const coupon = await ctx.db.query.coupons.findFirst({
-          where: and(
-            eq(coupons.code, input.couponCode.toUpperCase()),
-            eq(coupons.isActive, true)
-          ),
+          where: and(eq(coupons.code, input.couponCode.toUpperCase()), eq(coupons.isActive, true)),
           with: {
             couponProducts: true,
           },
         })
-        
+
         if (coupon) {
           // Validate coupon eligibility
           const now = new Date()
-          const isValidDate = 
+          const isValidDate =
             (!coupon.startAt || coupon.startAt <= now) &&
             (!coupon.expiresAt || coupon.expiresAt >= now)
-          
-          const isUnderRedemptionLimit = 
+
+          const isUnderRedemptionLimit =
             !coupon.maxRedemptions || (coupon.timesRedeemed || 0) < coupon.maxRedemptions
-          
-          const meetsMinimum = 
-            !coupon.minSubtotal || subtotal >= coupon.minSubtotal
-          
+
+          const meetsMinimum = !coupon.minSubtotal || subtotal >= coupon.minSubtotal
+
           // Check product scope
           let isValidForProduct = coupon.productScope === 'all'
           if (coupon.productScope === 'specific' && coupon.appliesTo) {
             const targetIds = coupon.appliesTo as string[]
-            isValidForProduct = 
+            isValidForProduct =
               (input.productId && targetIds.includes(input.productId)) ||
-              (input.planId && targetIds.includes(input.planId)) || false
+              (input.planId && targetIds.includes(input.planId)) ||
+              false
           }
-          
+
           if (isValidDate && isUnderRedemptionLimit && meetsMinimum && isValidForProduct) {
             // Check currency for fixed discounts
             if (coupon.discountType === 'fixed' && coupon.currency !== currency) {
@@ -507,16 +501,16 @@ export const checkoutRouter = createTRPCRouter({
                 message: `Coupon currency (${coupon.currency}) doesn't match cart currency (${currency})`,
               })
             }
-            
+
             // Calculate discount
             if (coupon.discountType === 'percentage') {
               discount = calculateDiscount(subtotal, coupon.discountValue)
             } else {
               discount = Math.min(subtotal, coupon.discountValue)
             }
-            
+
             couponMeta = { code: coupon.code, id: coupon.id }
-            
+
             lineItems.push({
               type: 'discount',
               label: `Coupon: ${coupon.code}`,
@@ -525,19 +519,19 @@ export const checkoutRouter = createTRPCRouter({
           }
         }
       }
-      
+
       // Calculate tax
       let tax = 0
       let reverseCharge = false
       let taxLabel = 'Tax'
-      
+
       if (input.collectVAT || input.enableStripeTax) {
         const { calculateTax, validateVATFormat } = await import('@/lib/vat')
         const taxableAmount = subtotal - discount
-        
+
         // Check if VAT number is provided and valid
         const isB2B = !!input.vatNumber && validateVATFormat(input.vatNumber)
-        
+
         // Calculate tax using VAT library
         const taxResult = calculateTax({
           amount: taxableAmount,
@@ -547,11 +541,11 @@ export const checkoutRouter = createTRPCRouter({
           isB2B,
           currency,
         })
-        
+
         tax = taxResult.taxAmount
         reverseCharge = taxResult.reverseCharge
         taxLabel = taxResult.taxLabel
-        
+
         if (tax > 0 || reverseCharge) {
           lineItems.push({
             type: 'tax',
@@ -560,9 +554,9 @@ export const checkoutRouter = createTRPCRouter({
           })
         }
       }
-      
+
       const total = Math.max(0, subtotal - discount + tax)
-      
+
       // Store quote
       const quoteValues = {
         id: quoteId,
@@ -588,12 +582,9 @@ export const checkoutRouter = createTRPCRouter({
         },
         expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
       }
-      
-      const [newQuote] = await ctx.db
-        .insert(quotes)
-        .values(quoteValues)
-        .returning()
-      
+
+      const [newQuote] = await ctx.db.insert(quotes).values(quoteValues).returning()
+
       return newQuote
     }),
 
@@ -607,7 +598,7 @@ export const checkoutRouter = createTRPCRouter({
         // Re-send cart params to verify quote is current
         checkoutId: z.string().uuid(),
         productId: z.string().uuid().optional(),
-        offerId: z.string().uuid().optional(),  // Add offerId support
+        offerId: z.string().uuid().optional(), // Add offerId support
         planId: z.string().uuid().optional(),
         orderBumpIds: z.array(z.string().uuid()).default([]),
         couponCode: z.string().optional(),
@@ -615,19 +606,19 @@ export const checkoutRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { stripe } = await import('@/lib/stripe/config')
-      
+
       // Get the quote
       const quote = await ctx.db.query.quotes.findFirst({
         where: eq(quotes.id, input.quoteId),
       })
-      
+
       if (!quote) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Quote not found',
         })
       }
-      
+
       // Verify quote is current (not expired)
       if (quote.expiresAt && new Date(quote.expiresAt) < new Date()) {
         throw new TRPCError({
@@ -635,20 +626,20 @@ export const checkoutRouter = createTRPCRouter({
           message: 'Quote has expired, please refresh',
         })
       }
-      
+
       // Generate idempotency key
       const idempotencyKey = `${quote.id}-${input.customerEmail}`
-      
+
       // Get or create Stripe customer
       const existingCustomers = await stripe.customers.list({
         email: input.customerEmail,
         limit: 1,
       })
-      
+
       let stripeCustomerId: string
       if (existingCustomers.data.length > 0) {
         stripeCustomerId = existingCustomers.data[0]!.id
-        
+
         // Update customer info if provided
         if (input.customerName) {
           await stripe.customers.update(stripeCustomerId, {
@@ -671,16 +662,16 @@ export const checkoutRouter = createTRPCRouter({
         })
         stripeCustomerId = newCustomer.id
       }
-      
+
       // Check for existing payment intent for this quote
       const existingIntents = await stripe.paymentIntents.search({
         query: `metadata['quoteId']:'${quote.id}' AND customer:'${stripeCustomerId}'`,
         limit: 1,
       })
-      
+
       // Determine payment mode
       const isSubscription = quote.meta && 'planInterval' in quote.meta && quote.meta.planInterval
-      
+
       // Handle zero-total flows (free trials, 100% coupons)
       if (quote.total === 0) {
         if (isSubscription) {
@@ -706,7 +697,7 @@ export const checkoutRouter = createTRPCRouter({
           }
         }
       }
-      
+
       // Handle subscriptions (using deferred Elements mode)
       if (isSubscription) {
         // For subscriptions, we'll use deferred Elements mode
@@ -722,16 +713,16 @@ export const checkoutRouter = createTRPCRouter({
           stripePriceId: quote.planId || undefined,
         }
       }
-      
+
       // Handle one-time payments
       if (existingIntents.data.length > 0) {
         const existingIntent = existingIntents.data[0]!
-        
+
         // Check if intent needs updating
-        const needsUpdate = 
+        const needsUpdate =
           existingIntent.amount !== quote.total ||
           existingIntent.currency !== quote.currency.toLowerCase()
-        
+
         if (needsUpdate) {
           // Update existing intent
           const updatedIntent = await stripe.paymentIntents.update(
@@ -750,7 +741,7 @@ export const checkoutRouter = createTRPCRouter({
             },
             { idempotencyKey }
           )
-          
+
           return {
             mode: 'payment' as const,
             clientSecret: updatedIntent.client_secret!,
@@ -771,7 +762,7 @@ export const checkoutRouter = createTRPCRouter({
           }
         }
       }
-      
+
       // Create new payment intent
       const paymentIntent = await stripe.paymentIntents.create(
         {
@@ -799,7 +790,7 @@ export const checkoutRouter = createTRPCRouter({
         },
         { idempotencyKey }
       )
-      
+
       return {
         mode: 'payment' as const,
         clientSecret: paymentIntent.client_secret!,
@@ -1008,7 +999,7 @@ export const checkoutRouter = createTRPCRouter({
 
       return { nextPath }
     }),
-    
+
   // VAT number validation endpoint
   validateVAT: publicProcedure
     .input(
@@ -1019,9 +1010,9 @@ export const checkoutRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       const { validateVATNumber } = await import('@/lib/vat')
-      
+
       const result = await validateVATNumber(input.vatNumber)
-      
+
       return {
         valid: result.valid,
         vatNumber: result.vatNumber,
@@ -1032,7 +1023,7 @@ export const checkoutRouter = createTRPCRouter({
         error: result.error,
       }
     }),
-    
+
   // Calculate tax for checkout
   calculateTax: publicProcedure
     .input(
@@ -1047,7 +1038,7 @@ export const checkoutRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const { calculateTax } = await import('@/lib/vat')
-      
+
       return calculateTax({
         amount: input.amount,
         customerCountry: input.customerCountry,

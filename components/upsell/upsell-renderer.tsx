@@ -226,9 +226,7 @@ export function UpsellRenderer({ session }: UpsellRendererProps) {
                   <div className="mb-6">
                     {offer.discountPercent ? (
                       <div className="flex items-center gap-4">
-                        <span className="text-2xl text-gray-500 line-through">
-                          $29.99
-                        </span>
+                        <span className="text-2xl text-gray-500 line-through">$29.99</span>
                         <span className="text-primary text-4xl font-bold">
                           ${(displayPrice / 100).toFixed(2)}
                         </span>

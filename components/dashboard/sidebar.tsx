@@ -191,12 +191,14 @@ export function Sidebar() {
               >
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="relative w-full rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="relative w-full rounded-lg border border-gray-200 bg-gray-50 transition-colors hover:bg-gray-100"
                 >
                   <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <div className="py-3 pr-4 pl-12 text-sm text-gray-500 text-left">
+                  <div className="py-3 pr-4 pl-12 text-left text-sm text-gray-500">
                     Search...{' '}
-                    <kbd className="ml-2 rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs">⌘K</kbd>
+                    <kbd className="ml-2 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-xs">
+                      ⌘K
+                    </kbd>
                   </div>
                 </button>
               </motion.div>
@@ -367,7 +369,7 @@ export function Sidebar() {
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2"
             >
-              <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/90 backdrop-blur-xl shadow-2xl">
+              <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/90 shadow-2xl backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-transparent to-pink-50/50" />
                 <div className="relative">
                   <div className="flex items-center border-b border-gray-200/50">
@@ -376,7 +378,7 @@ export function Sidebar() {
                       type="text"
                       placeholder="Search products, checkouts, analytics..."
                       onKeyDown={(e) => e.key === 'Escape' && setShowSearch(false)}
-                      className="w-full bg-transparent py-5 px-4 text-lg placeholder-gray-400 focus:outline-none"
+                      className="w-full bg-transparent px-4 py-5 text-lg placeholder-gray-400 focus:outline-none"
                       autoFocus
                     />
                     <div className="mr-6 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
@@ -386,9 +388,13 @@ export function Sidebar() {
                 </div>
                 <div className="relative bg-gradient-to-b from-gray-50/50 to-white/50 px-6 py-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">Quick search across your entire workspace</p>
+                    <p className="text-sm text-gray-500">
+                      Quick search across your entire workspace
+                    </p>
                     <div className="flex gap-2">
-                      <kbd className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">⌘K</kbd>
+                      <kbd className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        ⌘K
+                      </kbd>
                     </div>
                   </div>
                 </div>

@@ -126,7 +126,6 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
         </div>
       </motion.div>
 
-
       {/* Controls Bar */}
       <motion.div variants={itemVariants}>
         <GlassmorphicCard className="p-4" variant="light">
@@ -138,7 +137,7 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full"
+                  className="w-full pl-10"
                 />
               </div>
 
@@ -163,7 +162,7 @@ export function ModernProductDashboard({ onCreateProduct, onEditProduct }: Produ
               </DropdownMenu>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
               {selectedProducts.size > 0 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -313,9 +312,6 @@ function ProductCard({
   onDuplicate: () => void
   onArchive: () => void
 }) {
-  const lowestPrice =
-    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : 0
-
   return (
     <GlassmorphicCard
       className={cn(
@@ -387,28 +383,11 @@ function ProductCard({
 
         {/* Pricing */}
         <div className="mb-4">
-          {product.plans && product.plans.length > 0 ? (
-            <>
-              <div className="flex items-baseline gap-2">
-                <span className="text-primary text-2xl font-bold">
-                  From {getCurrencySymbol('USD')}
-                  {(lowestPrice / 100).toFixed(2)}
-                </span>
-                {product.isRecurring && product.interval && (
-                  <span className="text-sm text-gray-500">/{product.interval}</span>
-                )}
-              </div>
-              {product.plans.length > 1 && (
-                <p className="text-sm text-gray-600">{product.plans.length} pricing plans</p>
-              )}
-            </>
-          ) : (
-            <div className="text-gray-500">
-              <span className="text-sm">Set pricing via</span>
-              <br />
-              <span className="text-primary font-semibold">Offers</span>
-            </div>
-          )}
+          <div className="text-gray-500">
+            <span className="text-sm">Set pricing via</span>
+            <br />
+            <span className="text-primary font-semibold">Offers</span>
+          </div>
         </div>
 
         {/* Stats */}
@@ -465,9 +444,6 @@ function ProductListItem({
   onDuplicate: () => void
   onArchive: () => void
 }) {
-  const lowestPrice =
-    product.plans.length > 0 ? Math.min(...product.plans.map((p) => p.price)) : 0
-
   return (
     <GlassmorphicCard
       className={cn(
@@ -531,14 +507,7 @@ function ProductListItem({
         <div className="flex gap-8">
           <div className="text-center">
             <p className="text-sm text-gray-600">Price</p>
-            {product.plans && product.plans.length > 0 ? (
-              <p className="text-primary font-semibold">
-                {getCurrencySymbol('USD')}
-                {(lowestPrice / 100).toFixed(2)}
-              </p>
-            ) : (
-              <p className="text-gray-500 text-sm">Via Offers</p>
-            )}
+            <p className="text-sm text-gray-500">Via Offers</p>
           </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">Revenue</p>

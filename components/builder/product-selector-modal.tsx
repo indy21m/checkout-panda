@@ -81,7 +81,7 @@ export function ProductSelectorModal({
     <AnimatePresence>
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="w-full min-w-[600px] max-w-3xl">
+          <DialogContent className="w-full max-w-3xl min-w-[600px]">
             <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit">
               <DialogHeader>
                 <DialogTitle>Select Product</DialogTitle>

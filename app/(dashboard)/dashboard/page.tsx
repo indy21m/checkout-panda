@@ -39,7 +39,7 @@ export default async function DashboardPage() {
     ])
     checkouts = results[0]
     const fetchedProducts = results[1]
-    products = fetchedProducts.map(p => ({ id: p.id, name: p.name }))
+    products = fetchedProducts.map((p) => ({ id: p.id, name: p.name }))
   } catch (error) {
     console.error('Dashboard data fetch error:', error)
     databaseError = true

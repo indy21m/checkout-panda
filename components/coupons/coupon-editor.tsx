@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,13 +56,10 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
   const [activeTab, setActiveTab] = useState('details')
   const [searchOffer, setSearchOffer] = useState('')
   const [selectedOffers, setSelectedOffers] = useState<string[]>([])
-  
+
   const utils = api.useUtils()
 
-  const { data: coupon } = api.coupon.getById.useQuery(
-    { id: couponId! },
-    { enabled: !!couponId }
-  )
+  const { data: coupon } = api.coupon.getById.useQuery({ id: couponId! }, { enabled: !!couponId })
 
   const { data: offers = [] } = api.offer.list.useQuery({ includeInactive: true })
 
@@ -94,9 +86,8 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
         name: coupon.name,
         description: coupon.description || '',
         discountType: coupon.discountType,
-        discountValue: coupon.discountType === 'fixed' 
-          ? coupon.discountValue / 100 
-          : coupon.discountValue,
+        discountValue:
+          coupon.discountType === 'fixed' ? coupon.discountValue / 100 : coupon.discountValue,
         currency: coupon.currency,
         duration: coupon.duration,
         durationInMonths: coupon.durationInMonths || undefined,
@@ -106,7 +97,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
         expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt) : undefined,
         offerScope: coupon.productScope || 'all',
       })
-      
+
       // TODO: Update when coupon-offers relation is added to database
       const offerIds: string[] = []
       setSelectedOffers(offerIds)
@@ -144,9 +135,8 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
   const onSubmit = (data: CouponFormData) => {
     const submitData = {
       ...data,
-      discountValue: data.discountType === 'fixed' 
-        ? Math.round(data.discountValue * 100) 
-        : data.discountValue,
+      discountValue:
+        data.discountType === 'fixed' ? Math.round(data.discountValue * 100) : data.discountValue,
       offerIds: selectedOffers,
     }
 
@@ -158,31 +148,35 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
   }
 
   const toggleOffer = (offerId: string) => {
-    setSelectedOffers(prev => {
+    setSelectedOffers((prev) => {
       const updated = prev.includes(offerId)
-        ? prev.filter(id => id !== offerId)
+        ? prev.filter((id) => id !== offerId)
         : [...prev, offerId]
       form.setValue('offerIds', updated)
       return updated
     })
   }
 
-  const filteredOffers = offers.filter(offer =>
-    offer.name.toLowerCase().includes(searchOffer.toLowerCase()) ||
-    offer.product?.name.toLowerCase().includes(searchOffer.toLowerCase())
+  const filteredOffers = offers.filter(
+    (offer) =>
+      offer.name.toLowerCase().includes(searchOffer.toLowerCase()) ||
+      offer.product?.name.toLowerCase().includes(searchOffer.toLowerCase())
   )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full min-w-[600px] max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="flex max-h-[90vh] w-full max-w-3xl min-w-[600px] flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent">
+          <DialogTitle className="bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-2xl font-bold text-transparent">
             {couponId ? 'Edit Coupon' : 'New Coupon'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-1 flex-col overflow-hidden"
+        >
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="limits">Limits</TabsTrigger>
@@ -190,7 +184,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
             </TabsList>
 
             <div className="flex-1 overflow-y-auto px-1">
-              <TabsContent value="details" className="space-y-6 mt-6">
+              <TabsContent value="details" className="mt-6 space-y-6">
                 {/* Coupon Code */}
                 <div>
                   <Label htmlFor="code">
@@ -205,7 +199,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                     maxLength={20}
                   />
                   {form.formState.errors.code && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.code.message}
                     </p>
                   )}
@@ -221,7 +215,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                     className="mt-2"
                   />
                   {form.formState.errors.name && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.name.message}
                     </p>
                   )}
@@ -246,7 +240,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                   <Label>Discount type</Label>
                   <Select
                     value={form.watch('discountType')}
-                    onValueChange={(value: 'percentage' | 'fixed') => 
+                    onValueChange={(value: 'percentage' | 'fixed') =>
                       form.setValue('discountType', value)
                     }
                   >
@@ -265,7 +259,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                   <Label htmlFor="discountValue">
                     {form.watch('discountType') === 'percentage' ? 'Percentage' : 'Amount'}
                   </Label>
-                  <div className="flex gap-2 mt-2">
+                  <div className="mt-2 flex gap-2">
                     {form.watch('discountType') === 'fixed' && (
                       <Select
                         value={form.watch('currency')}
@@ -297,14 +291,14 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                     )}
                   </div>
                   {form.formState.errors.discountValue && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {form.formState.errors.discountValue.message}
                     </p>
                   )}
                 </div>
               </TabsContent>
 
-              <TabsContent value="limits" className="space-y-6 mt-6">
+              <TabsContent value="limits" className="mt-6 space-y-6">
                 {/* Duration */}
                 <div>
                   <Label>Duration</Label>
@@ -323,10 +317,13 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                       <SelectItem value="repeating">Repeating</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {form.watch('duration') === 'once' && 'Discount applies to the first payment only'}
-                    {form.watch('duration') === 'forever' && 'Discount applies to all recurring payments'}
-                    {form.watch('duration') === 'repeating' && 'Discount applies for a specific number of months'}
+                  <p className="mt-2 text-sm text-gray-500">
+                    {form.watch('duration') === 'once' &&
+                      'Discount applies to the first payment only'}
+                    {form.watch('duration') === 'forever' &&
+                      'Discount applies to all recurring payments'}
+                    {form.watch('duration') === 'repeating' &&
+                      'Discount applies for a specific number of months'}
                   </p>
                 </div>
 
@@ -353,7 +350,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal mt-2',
+                          'mt-2 w-full justify-start text-left font-normal',
                           !form.watch('redeemableFrom') && 'text-muted-foreground'
                         )}
                       >
@@ -382,7 +379,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal mt-2',
+                          'mt-2 w-full justify-start text-left font-normal',
                           !form.watch('expiresAt') && 'text-muted-foreground'
                         )}
                       >
@@ -435,10 +432,10 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                 </div>
               </TabsContent>
 
-              <TabsContent value="offers" className="space-y-6 mt-6">
+              <TabsContent value="offers" className="mt-6 space-y-6">
                 <div>
                   <Label>Offers</Label>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-gray-500">
                     Choose which offers this coupon applies to.
                   </p>
                 </div>
@@ -454,13 +451,13 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                     }
                   }}
                 >
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center space-x-2 rounded-lg border p-4 hover:bg-gray-50">
                     <RadioGroupItem value="all" id="all-offers" />
                     <Label htmlFor="all-offers" className="flex-1 cursor-pointer">
                       All offers
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center space-x-2 rounded-lg border p-4 hover:bg-gray-50">
                     <RadioGroupItem value="specific" id="specific-offers" />
                     <Label htmlFor="specific-offers" className="flex-1 cursor-pointer">
                       Specific offers
@@ -472,7 +469,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                 {form.watch('offerScope') === 'specific' && (
                   <div className="space-y-4">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                       <Input
                         placeholder="Search for an offer"
                         value={searchOffer}
@@ -481,7 +478,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                       />
                     </div>
 
-                    <div className="border rounded-lg max-h-64 overflow-y-auto">
+                    <div className="max-h-64 overflow-y-auto rounded-lg border">
                       {filteredOffers.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
                           {searchOffer ? 'No offers found' : 'No offers available'}
@@ -498,18 +495,19 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
                             return (
                               <div
                                 key={offer.id}
-                                className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer"
+                                className="flex cursor-pointer items-center gap-3 p-4 hover:bg-gray-50"
                                 onClick={() => toggleOffer(offer.id)}
                               >
                                 <Checkbox
                                   checked={selectedOffers.includes(offer.id)}
                                   onCheckedChange={() => toggleOffer(offer.id)}
                                 />
-                                <Package className="w-4 h-4 text-gray-400" />
+                                <Package className="h-4 w-4 text-gray-400" />
                                 <div className="flex-1">
                                   <p className="font-medium">{offer.name}</p>
                                   <p className="text-sm text-gray-500">
-                                    {offer.product?.name} • {contextLabels[offer.context]} • ${(offer.price / 100).toFixed(2)}
+                                    {offer.product?.name} • {contextLabels[offer.context]} • $
+                                    {(offer.price / 100).toFixed(2)}
                                   </p>
                                 </div>
                               </div>
@@ -521,7 +519,7 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
 
                     {selectedOffers.length > 0 && (
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Info className="w-4 h-4" />
+                        <Info className="h-4 w-4" />
                         <span>{selectedOffers.length} offer(s) selected</span>
                       </div>
                     )}
@@ -531,24 +529,20 @@ export function CouponEditor({ open, onOpenChange, couponId }: CouponEditorProps
             </div>
           </Tabs>
 
-          <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+          <div className="flex justify-end gap-3 border-t pt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={createCoupon.isPending || updateCoupon.isPending}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700"
             >
               {createCoupon.isPending || updateCoupon.isPending
                 ? 'Saving...'
                 : couponId
-                ? 'Update Coupon'
-                : 'Create Coupon'}
+                  ? 'Update Coupon'
+                  : 'Create Coupon'}
             </Button>
           </div>
         </form>

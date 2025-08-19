@@ -3,15 +3,15 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/
 import { StripeService } from '@/server/services/stripe-service'
 import { db } from '@/server/db'
 import { eq, and, sql } from 'drizzle-orm'
-import { 
-  checkouts, 
-  products, 
-  users, 
-  productPlans, 
-  orderBumps, 
+import {
+  checkouts,
+  products,
+  users,
+  productPlans,
+  orderBumps,
   analyticsEvents,
   coupons,
-  couponRedemptions 
+  couponRedemptions,
 } from '@/server/db/schema'
 import { TRPCError } from '@trpc/server'
 import { stripe } from '@/lib/stripe/config'
@@ -36,14 +36,16 @@ export const paymentRouter = createTRPCRouter({
         // Customer info
         customerName: z.string().optional(),
         customerPhone: z.string().optional(),
-        billingAddress: z.object({
-          line1: z.string(),
-          line2: z.string().optional(),
-          city: z.string(),
-          state: z.string(),
-          postal_code: z.string(),
-          country: z.string(),
-        }).optional(),
+        billingAddress: z
+          .object({
+            line1: z.string(),
+            line2: z.string().optional(),
+            city: z.string(),
+            state: z.string(),
+            postal_code: z.string(),
+            country: z.string(),
+          })
+          .optional(),
         // Tax
         vatNumber: z.string().optional(),
         enableTax: z.boolean().default(false),
@@ -111,9 +113,7 @@ export const paymentRouter = createTRPCRouter({
         // Add order bumps to amount
         if (input.orderBumpIds && input.orderBumpIds.length > 0) {
           const bumps = await db.query.orderBumps.findMany({
-            where: and(
-              eq(orderBumps.checkoutId, input.checkoutId),
-            ),
+            where: and(eq(orderBumps.checkoutId, input.checkoutId)),
             with: { product: true },
           })
 
@@ -128,7 +128,7 @@ export const paymentRouter = createTRPCRouter({
         // Apply our custom coupon if provided
         let appliedCouponId: string | undefined
         let discountAmount = 0
-        
+
         if (input.couponCode) {
           // First check our custom coupons
           const customCoupon = await db.query.coupons.findFirst({
@@ -140,27 +140,34 @@ export const paymentRouter = createTRPCRouter({
               couponProducts: true,
             },
           })
-          
+
           if (customCoupon) {
             // Validate coupon eligibility
             const now = new Date()
-            const isValid = 
+            const isValid =
               (!customCoupon.redeemableFrom || customCoupon.redeemableFrom <= now) &&
               (!customCoupon.expiresAt || customCoupon.expiresAt >= now) &&
-              (!customCoupon.maxRedemptions || (customCoupon.timesRedeemed || 0) < customCoupon.maxRedemptions)
-            
+              (!customCoupon.maxRedemptions ||
+                (customCoupon.timesRedeemed || 0) < customCoupon.maxRedemptions)
+
             // Check product scope
             let isValidForProduct = customCoupon.productScope === 'all'
             if (customCoupon.productScope === 'specific') {
-              const productIdToCheck = input.productId || 
-                (input.planId ? (await db.query.productPlans.findFirst({
-                  where: eq(productPlans.id, input.planId),
-                }))?.productId : undefined)
-              
-              isValidForProduct = !!productIdToCheck && 
-                customCoupon.couponProducts.some(cp => cp.productId === productIdToCheck)
+              const productIdToCheck =
+                input.productId ||
+                (input.planId
+                  ? (
+                      await db.query.productPlans.findFirst({
+                        where: eq(productPlans.id, input.planId),
+                      })
+                    )?.productId
+                  : undefined)
+
+              isValidForProduct =
+                !!productIdToCheck &&
+                customCoupon.couponProducts.some((cp) => cp.productId === productIdToCheck)
             }
-            
+
             if (isValid && isValidForProduct) {
               // Apply discount
               if (customCoupon.discountType === 'fixed') {
@@ -168,7 +175,7 @@ export const paymentRouter = createTRPCRouter({
               } else {
                 discountAmount = Math.round(amount * (customCoupon.discountValue / 100))
               }
-              
+
               amount = Math.max(0, amount - discountAmount)
               appliedCouponId = customCoupon.id
               metadata.couponCode = customCoupon.code
@@ -515,7 +522,7 @@ export const paymentRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const coupon = await stripe.coupons.retrieve(input.code)
-        
+
         if (!coupon.valid) {
           return {
             valid: false,

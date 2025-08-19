@@ -12,10 +12,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GlassmorphicCard } from '@/components/ui/glassmorphic-card'
-import { 
-  Search, 
-  Package, 
-  Check, 
+import {
+  Search,
+  Package,
+  Check,
   Loader2,
   ShoppingCart,
   TrendingUp,
@@ -116,12 +116,13 @@ export function OfferSelectorModal({
     <AnimatePresence>
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="w-full min-w-[700px] max-w-4xl">
+          <DialogContent className="w-full max-w-4xl min-w-[700px]">
             <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit">
               <DialogHeader>
                 <DialogTitle>Select Offer</DialogTitle>
                 <DialogDescription>
-                  Choose an offer to display in your checkout page. Offers include product-specific pricing and settings.
+                  Choose an offer to display in your checkout page. Offers include product-specific
+                  pricing and settings.
                 </DialogDescription>
               </DialogHeader>
 
@@ -148,7 +149,7 @@ export function OfferSelectorModal({
                       <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
                       <p className="text-gray-500">No offers found</p>
                       {contextFilter && (
-                        <p className="text-sm text-gray-400 mt-2">
+                        <p className="mt-2 text-sm text-gray-400">
                           Showing only {contextLabels[contextFilter]} offers
                         </p>
                       )}
@@ -157,8 +158,10 @@ export function OfferSelectorModal({
                     filteredOffers?.map((offer) => {
                       const isSelected = selectedOffer?.id === offer.id
                       const Icon = contextIcons[offer.context]
-                      const savings = offer.compareAtPrice 
-                        ? Math.round(((offer.compareAtPrice - offer.price) / offer.compareAtPrice) * 100)
+                      const savings = offer.compareAtPrice
+                        ? Math.round(
+                            ((offer.compareAtPrice - offer.price) / offer.compareAtPrice) * 100
+                          )
                         : 0
 
                       return (
@@ -179,11 +182,18 @@ export function OfferSelectorModal({
                               {/* Context Icon */}
                               <div
                                 className={cn(
-                                  'h-12 w-12 flex-shrink-0 rounded-lg flex items-center justify-center',
-                                  contextColors[offer.context].replace('text-', 'bg-').replace('800', '100')
+                                  'flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg',
+                                  contextColors[offer.context]
+                                    .replace('text-', 'bg-')
+                                    .replace('800', '100')
                                 )}
                               >
-                                <Icon className={cn('h-6 w-6', contextColors[offer.context].replace('bg-', 'text-'))} />
+                                <Icon
+                                  className={cn(
+                                    'h-6 w-6',
+                                    contextColors[offer.context].replace('bg-', 'text-')
+                                  )}
+                                />
                               </div>
 
                               {/* Offer Info */}
@@ -191,20 +201,20 @@ export function OfferSelectorModal({
                                 <div className="flex items-start justify-between">
                                   <div>
                                     <h3 className="font-semibold text-gray-900">{offer.name}</h3>
-                                    <p className="text-sm text-gray-600 mt-1">
+                                    <p className="mt-1 text-sm text-gray-600">
                                       {offer.product?.name}
                                     </p>
                                     {offer.description && (
-                                      <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                                      <p className="mt-2 line-clamp-2 text-sm text-gray-500">
                                         {offer.description}
                                       </p>
                                     )}
                                   </div>
-                                  
+
                                   {/* Selection Indicator */}
                                   {isSelected && (
                                     <div className="ml-4 flex-shrink-0">
-                                      <div className="bg-primary h-8 w-8 rounded-full flex items-center justify-center">
+                                      <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-full">
                                         <Check className="h-5 w-5 text-white" />
                                       </div>
                                     </div>
@@ -232,10 +242,12 @@ export function OfferSelectorModal({
                                   </div>
 
                                   {/* Context Badge */}
-                                  <span className={cn(
-                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                    contextColors[offer.context]
-                                  )}>
+                                  <span
+                                    className={cn(
+                                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                      contextColors[offer.context]
+                                    )}
+                                  >
                                     {contextLabels[offer.context]}
                                   </span>
 
@@ -252,10 +264,12 @@ export function OfferSelectorModal({
                                 {(offer.headline || offer.badgeText) && (
                                   <div className="mt-2 flex items-center gap-2">
                                     {offer.badgeText && (
-                                      <span 
+                                      <span
                                         className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
                                         style={{
-                                          backgroundColor: offer.badgeColor ? `${offer.badgeColor}20` : '#fee',
+                                          backgroundColor: offer.badgeColor
+                                            ? `${offer.badgeColor}20`
+                                            : '#fee',
                                           color: offer.badgeColor || '#dc2626',
                                         }}
                                       >
@@ -263,7 +277,9 @@ export function OfferSelectorModal({
                                       </span>
                                     )}
                                     {offer.headline && (
-                                      <p className="text-xs text-gray-600 italic">{offer.headline}</p>
+                                      <p className="text-xs text-gray-600 italic">
+                                        {offer.headline}
+                                      </p>
                                     )}
                                   </div>
                                 )}
@@ -277,15 +293,11 @@ export function OfferSelectorModal({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t">
+                <div className="flex justify-end gap-3 border-t pt-4">
                   <Button variant="ghost" onClick={onClose}>
                     Cancel
                   </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleSelectOffer}
-                    disabled={!selectedOffer}
-                  >
+                  <Button variant="primary" onClick={handleSelectOffer} disabled={!selectedOffer}>
                     Select Offer
                   </Button>
                 </div>
