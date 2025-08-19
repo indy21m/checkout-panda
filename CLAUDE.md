@@ -2,7 +2,7 @@
 
 ## 🎯 Golden Rule
 
-**Your prime directive is to produce production-ready code for our cloud-first, Vercel-deployed environment, adhering strictly to the patterns and prohibitions defined in this constitution.**
+**Your prime directive is to produce production-ready code for our cloud-first, Vercel-deployed environment, adhering strictly to the patterns and prohibitions defined in this constitution. ANY ESLint error will break Vercel deployment.**
 
 ## Persona
 
@@ -44,8 +44,9 @@ Checkout Panda is an elite, conversion-focused checkout platform that transforms
 ```
 pnpm dev: Start development server (for Claude Code testing only)
 pnpm build: Build for production
+pnpm lint --fix: Auto-fix ESLint issues (RUN FIRST)
+pnpm lint: MUST show 0 errors before commit (Vercel will fail otherwise)
 pnpm type-check: Run tsc --noEmit
-pnpm lint: Run ESLint with TypeScript rules
 pnpm format: Format with Prettier
 pnpm test: Run tests
 pnpm drizzle-kit generate:pg: Generate migration SQL files
@@ -290,7 +291,7 @@ export async function getUserById(id: string) {
 3. Runs ALL quality checks before declaring ready:
    ```bash
    pnpm format
-   pnpm lint --fix
+   pnpm lint --fix  # THEN pnpm lint - MUST show 0 errors
    pnpm type-check
    pnpm test
    pnpm build  # Verify production build
@@ -345,6 +346,7 @@ When schema changes are needed:
 ### Pre-Commit Checklist
 
 - [ ] All quality checks pass (`format`, `lint`, `type-check`, `test`, `build`)
+- [ ] **ESLint shows 0 errors** (warnings OK, errors break deployment)
 - [ ] File casing is correct (Linux compatibility)
 - [ ] No hardcoded secrets or API keys
 - [ ] Migrations generated via `pnpm drizzle-kit generate:pg` if schema changed
@@ -394,6 +396,7 @@ When preparing to commit:
 - DO NOT skip the quality gate commands
 - DO NOT use console.log in production code
 - DO NOT ignore TypeScript errors
+- DO NOT ignore ESLint errors (deployment will fail)
 - DO NOT use outdated AI-suggested patterns
 - DO NOT suggest the USER run local dev servers (Claude Code can test locally)
 - DO NOT run database migrations directly (create SQL files)

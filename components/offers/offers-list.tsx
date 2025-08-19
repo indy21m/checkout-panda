@@ -273,7 +273,7 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                 <span className="text-sm text-gray-500">({productOffers.length} offers)</span>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {productOffers.map((offer) => {
                   const Icon = contextIcons[offer.context]
                   const savings = offer.compareAtPrice
@@ -285,30 +285,30 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                   return (
                     <GlassmorphicCard
                       key={offer.id}
-                      className="relative overflow-hidden p-6 transition-all hover:shadow-lg"
+                      className="relative overflow-hidden p-8 transition-all hover:shadow-xl"
                       variant="light"
                     >
                       {/* Status Badge */}
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-6 right-6">
                         {offer.isActive ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                            <Eye className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100/80 px-3 py-1.5 text-xs font-medium text-green-800 backdrop-blur-sm">
+                            <Eye className="h-3.5 w-3.5" />
                             Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                            <EyeOff className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100/80 px-3 py-1.5 text-xs font-medium text-gray-600 backdrop-blur-sm">
+                            <EyeOff className="h-3.5 w-3.5" />
                             Inactive
                           </span>
                         )}
                       </div>
 
                       {/* Header */}
-                      <div className="mb-4">
-                        <div className="flex items-start gap-3">
+                      <div className="mb-6">
+                        <div className="flex items-start gap-4">
                           <div
                             className={cn(
-                              'flex h-10 w-10 items-center justify-center rounded-lg',
+                              'flex h-12 w-12 items-center justify-center rounded-xl shadow-sm',
                               contextColors[offer.context]
                                 .replace('text-', 'bg-')
                                 .replace('800', '100')
@@ -316,16 +316,18 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                           >
                             <Icon
                               className={cn(
-                                'h-5 w-5',
+                                'h-6 w-6',
                                 contextColors[offer.context].replace('bg-', 'text-')
                               )}
                             />
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{offer.name}</h4>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="truncate pr-2 text-lg font-semibold text-gray-900">
+                              {offer.name}
+                            </h4>
                             <span
                               className={cn(
-                                'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                'mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium',
                                 contextColors[offer.context]
                               )}
                             >
@@ -337,51 +339,57 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
 
                       {/* Description */}
                       {offer.description && (
-                        <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                        <p className="mb-6 line-clamp-2 text-sm leading-relaxed text-gray-600">
                           {offer.description}
                         </p>
                       )}
 
                       {/* Pricing */}
-                      <div className="mb-4 space-y-2">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold text-gray-900">
+                      <div className="mb-6 space-y-3">
+                        <div className="flex flex-wrap items-baseline gap-3">
+                          <span className="text-3xl font-bold text-gray-900">
                             {getCurrencySymbol(offer.currency)}
                             {(offer.price / 100).toFixed(2)}
                           </span>
                           {offer.compareAtPrice && (
                             <>
-                              <span className="text-sm text-gray-500 line-through">
+                              <span className="text-base text-gray-500 line-through">
                                 {getCurrencySymbol(offer.currency)}
                                 {(offer.compareAtPrice / 100).toFixed(2)}
                               </span>
-                              <span className="text-sm font-medium text-green-600">
+                              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-sm font-medium text-green-700">
                                 Save {savings}%
                               </span>
                             </>
                           )}
                         </div>
                         {offer.coupon && (
-                          <div className="flex items-center gap-1 text-sm text-purple-600">
-                            <Tag className="h-3 w-3" />
-                            <span>Coupon: {offer.coupon.code}</span>
+                          <div className="flex items-center gap-2 text-sm text-purple-600">
+                            <Tag className="h-4 w-4" />
+                            <span className="font-medium">Coupon: {offer.coupon.code}</span>
                           </div>
                         )}
                       </div>
 
                       {/* Stats */}
-                      <div className="grid grid-cols-3 gap-2 border-t pt-4 text-center">
-                        <div>
-                          <p className="text-xs text-gray-500">Views</p>
-                          <p className="font-semibold text-gray-900">{offer.views}</p>
+                      <div className="mb-6 grid grid-cols-3 gap-3 rounded-lg bg-gray-50/50 p-4">
+                        <div className="text-center">
+                          <p className="mb-1 text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            Views
+                          </p>
+                          <p className="text-lg font-bold text-gray-900">{offer.views}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Conversions</p>
-                          <p className="font-semibold text-gray-900">{offer.conversions}</p>
+                        <div className="border-x border-gray-200/50 text-center">
+                          <p className="mb-1 text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            Conversions
+                          </p>
+                          <p className="text-lg font-bold text-gray-900">{offer.conversions}</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Revenue</p>
-                          <p className="font-semibold text-gray-900">
+                        <div className="text-center">
+                          <p className="mb-1 text-xs font-medium tracking-wider text-gray-500 uppercase">
+                            Revenue
+                          </p>
+                          <p className="text-lg font-bold text-gray-900">
                             {getCurrencySymbol(offer.currency)}
                             {((offer.revenue || 0) / 100).toFixed(0)}
                           </p>
@@ -389,20 +397,20 @@ export function OffersList({ onCreateOffer, onEditOffer }: OffersListProps) {
                       </div>
 
                       {/* Actions */}
-                      <div className="mt-4 flex gap-2">
+                      <div className="flex gap-3">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex-1"
+                          variant="secondary"
+                          size="md"
+                          className="flex-1 border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
                           onClick={() => onEditOffer(offer)}
                         >
-                          <Edit className="mr-1 h-3 w-3" />
+                          <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" className="h-10 w-10">
+                              <MoreVertical className="h-5 w-5" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">

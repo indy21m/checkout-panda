@@ -260,132 +260,245 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[80vh] max-h-[900px] w-full max-w-4xl flex-col overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] w-full max-w-4xl overflow-hidden p-0">
+        <DialogHeader className="border-b border-gray-100 px-6 pt-6 pb-4">
           <DialogTitle className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-2xl font-bold text-transparent">
             {offerId ? 'Edit Offer' : 'Create New Offer'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleFormSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-col">
-            <TabsList className="grid w-full grid-cols-4">
+        <form onSubmit={handleFormSubmit} className="flex h-full flex-col">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex flex-1 flex-col overflow-hidden"
+          >
+            <TabsList
+              className="mx-6 mt-4 grid w-full grid-cols-3"
+              style={{ width: 'calc(100% - 3rem)' }}
+            >
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="pricing">Pricing</TabsTrigger>
-              <TabsTrigger value="display">Display</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto px-1">
+            <div
+              className="flex-1 overflow-y-auto px-6 pb-6"
+              style={{ maxHeight: 'calc(90vh - 220px)' }}
+            >
               <TabsContent value="details" className="mt-6 space-y-6">
-                {/* Offer Name */}
-                <div>
-                  <Label htmlFor="name">Offer Name</Label>
-                  <Input
-                    id="name"
-                    {...form.register('name')}
-                    placeholder="e.g., Summer Sale - 30% Off"
-                    className="mt-2"
-                  />
-                  {form.formState.errors.name && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {form.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
+                {/* Basic Information Section */}
+                <div className="space-y-6">
+                  <h3 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
+                    Basic Information
+                  </h3>
 
-                {/* Description */}
-                <div>
-                  <Label htmlFor="description">
-                    Description <span className="text-gray-500">(optional)</span>
-                  </Label>
-                  <Textarea
-                    id="description"
-                    {...form.register('description')}
-                    placeholder="Internal notes about this offer..."
-                    className="mt-2"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Product Selection */}
-                <div>
-                  <Label>Product</Label>
-                  <Select
-                    value={form.watch('productId')}
-                    onValueChange={(value) => {
-                      form.setValue('productId', value, { shouldValidate: true })
-                    }}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select a product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4" />
-                            {product.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.productId && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {form.formState.errors.productId.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Context Selection */}
-                <div>
-                  <Label>Offer Context</Label>
-                  <div className="mt-2 grid grid-cols-2 gap-3">
-                    {Object.entries(contextLabels).map(([value, label]) => {
-                      const Icon = contextIcons[value as keyof typeof contextIcons]
-                      const isSelected = selectedContext === value
-
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() =>
-                            form.setValue(
-                              'context',
-                              value as 'standalone' | 'order_bump' | 'upsell' | 'downsell'
-                            )
-                          }
-                          className={cn(
-                            'flex items-center gap-3 rounded-lg border-2 p-4 transition-all',
-                            isSelected
-                              ? 'border-purple-500 bg-purple-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          )}
-                        >
-                          <Icon
-                            className={cn(
-                              'h-5 w-5',
-                              isSelected ? 'text-purple-600' : 'text-gray-400'
-                            )}
-                          />
-                          <div className="text-left">
-                            <p
-                              className={cn(
-                                'font-medium',
-                                isSelected ? 'text-purple-900' : 'text-gray-900'
-                              )}
-                            >
-                              {label}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {contextDescriptions[value as keyof typeof contextDescriptions]}
-                            </p>
-                          </div>
-                        </button>
-                      )
-                    })}
+                  {/* Offer Name */}
+                  <div>
+                    <Label htmlFor="name">Offer Name</Label>
+                    <Input
+                      id="name"
+                      {...form.register('name')}
+                      placeholder="e.g., Summer Sale - 30% Off"
+                      className="mt-2"
+                    />
+                    {form.formState.errors.name && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {form.formState.errors.name.message}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Description */}
+                  <div>
+                    <Label htmlFor="description">
+                      Description <span className="text-gray-500">(optional)</span>
+                    </Label>
+                    <Textarea
+                      id="description"
+                      {...form.register('description')}
+                      placeholder="Internal notes about this offer..."
+                      className="mt-2"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Product Selection */}
+                  <div>
+                    <Label>Product</Label>
+                    <Select
+                      value={form.watch('productId')}
+                      onValueChange={(value) => {
+                        form.setValue('productId', value, { shouldValidate: true })
+                      }}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Select a product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            <div className="flex items-center gap-2">
+                              <Package className="h-4 w-4" />
+                              {product.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.formState.errors.productId && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {form.formState.errors.productId.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Context Selection */}
+                  <div>
+                    <Label>Offer Context</Label>
+                    <div className="mt-2 grid grid-cols-2 gap-3">
+                      {Object.entries(contextLabels).map(([value, label]) => {
+                        const Icon = contextIcons[value as keyof typeof contextIcons]
+                        const isSelected = selectedContext === value
+
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() =>
+                              form.setValue(
+                                'context',
+                                value as 'standalone' | 'order_bump' | 'upsell' | 'downsell'
+                              )
+                            }
+                            className={cn(
+                              'flex items-center gap-3 rounded-lg border-2 p-4 transition-all',
+                              isSelected
+                                ? 'border-purple-500 bg-purple-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-5 w-5',
+                                isSelected ? 'text-purple-600' : 'text-gray-400'
+                              )}
+                            />
+                            <div className="text-left">
+                              <p
+                                className={cn(
+                                  'font-medium',
+                                  isSelected ? 'text-purple-900' : 'text-gray-900'
+                                )}
+                              >
+                                {label}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {contextDescriptions[value as keyof typeof contextDescriptions]}
+                              </p>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Display Settings Section */}
+                <div className="space-y-6 border-t pt-6">
+                  <h3 className="text-sm font-semibold tracking-wider text-gray-700 uppercase">
+                    Display Settings
+                  </h3>
+
+                  {/* Offer Image */}
+                  <div>
+                    <ImagePicker
+                      value={form.watch('imageUrl')}
+                      onChange={(url) => form.setValue('imageUrl', url)}
+                      onRemove={() => form.setValue('imageUrl', '')}
+                      label="Offer Image"
+                      placeholder="Choose offer image"
+                    />
+                  </div>
+
+                  {/* Headline */}
+                  <div>
+                    <Label htmlFor="headline">
+                      Headline <span className="text-gray-500">(optional)</span>
+                    </Label>
+                    <Input
+                      id="headline"
+                      {...form.register('headline')}
+                      placeholder="e.g., Save 30% today only!"
+                      className="mt-2"
+                    />
+                  </div>
+
+                  {/* Badge */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="badgeText">
+                        Badge Text <span className="text-gray-500">(optional)</span>
+                      </Label>
+                      <Input
+                        id="badgeText"
+                        {...form.register('badgeText')}
+                        placeholder="e.g., LIMITED TIME"
+                        className="mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="badgeColor">
+                        Badge Color <span className="text-gray-500">(optional)</span>
+                      </Label>
+                      <Input
+                        id="badgeColor"
+                        type="color"
+                        {...form.register('badgeColor')}
+                        className="mt-2 h-10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Order Bump Description */}
+                  {selectedContext === 'order_bump' && (
+                    <div>
+                      <Label htmlFor="bumpDescription">Order Bump Description</Label>
+                      <Textarea
+                        id="bumpDescription"
+                        {...form.register('bumpDescription')}
+                        placeholder="Short description for the order bump checkbox..."
+                        className="mt-2"
+                        rows={2}
+                      />
+                    </div>
+                  )}
+
+                  {/* Upsell/Downsell URLs */}
+                  {(selectedContext === 'upsell' || selectedContext === 'downsell') && (
+                    <>
+                      <div>
+                        <Label htmlFor="redirectUrl">Success Redirect URL</Label>
+                        <Input
+                          id="redirectUrl"
+                          type="url"
+                          {...form.register('redirectUrl')}
+                          placeholder="https://example.com/thank-you"
+                          className="mt-2"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="declineRedirectUrl">Decline Redirect URL</Label>
+                        <Input
+                          id="declineRedirectUrl"
+                          type="url"
+                          {...form.register('declineRedirectUrl')}
+                          placeholder="https://example.com/other-offers"
+                          className="mt-2"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </TabsContent>
 
@@ -467,9 +580,13 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                             key={cycle.value}
                             type="button"
                             onClick={() =>
-                              form.setValue('billingCycle', cycle.value as 'monthly' | 'quarterly' | 'yearly' | 'custom', {
-                                shouldValidate: true,
-                              })
+                              form.setValue(
+                                'billingCycle',
+                                cycle.value as 'monthly' | 'quarterly' | 'yearly' | 'custom',
+                                {
+                                  shouldValidate: true,
+                                }
+                              )
                             }
                             className={cn(
                               'rounded-md px-3 py-2 text-sm font-medium transition-all',
@@ -733,98 +850,6 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
                 </div>
               </TabsContent>
 
-              <TabsContent value="display" className="mt-6 space-y-6">
-                {/* Offer Image */}
-                <div>
-                  <ImagePicker
-                    value={form.watch('imageUrl')}
-                    onChange={(url) => form.setValue('imageUrl', url)}
-                    onRemove={() => form.setValue('imageUrl', '')}
-                    label="Offer Image"
-                    placeholder="Choose offer image"
-                  />
-                </div>
-
-                {/* Headline */}
-                <div>
-                  <Label htmlFor="headline">
-                    Headline <span className="text-gray-500">(optional)</span>
-                  </Label>
-                  <Input
-                    id="headline"
-                    {...form.register('headline')}
-                    placeholder="e.g., Save 30% today only!"
-                    className="mt-2"
-                  />
-                </div>
-
-                {/* Badge */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="badgeText">
-                      Badge Text <span className="text-gray-500">(optional)</span>
-                    </Label>
-                    <Input
-                      id="badgeText"
-                      {...form.register('badgeText')}
-                      placeholder="e.g., LIMITED TIME"
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="badgeColor">
-                      Badge Color <span className="text-gray-500">(optional)</span>
-                    </Label>
-                    <Input
-                      id="badgeColor"
-                      type="color"
-                      {...form.register('badgeColor')}
-                      className="mt-2 h-10"
-                    />
-                  </div>
-                </div>
-
-                {/* Order Bump Description */}
-                {selectedContext === 'order_bump' && (
-                  <div>
-                    <Label htmlFor="bumpDescription">Order Bump Description</Label>
-                    <Textarea
-                      id="bumpDescription"
-                      {...form.register('bumpDescription')}
-                      placeholder="Short description for the order bump checkbox..."
-                      className="mt-2"
-                      rows={2}
-                    />
-                  </div>
-                )}
-
-                {/* Upsell/Downsell URLs */}
-                {(selectedContext === 'upsell' || selectedContext === 'downsell') && (
-                  <>
-                    <div>
-                      <Label htmlFor="redirectUrl">Success Redirect URL</Label>
-                      <Input
-                        id="redirectUrl"
-                        type="url"
-                        {...form.register('redirectUrl')}
-                        placeholder="https://example.com/thank-you"
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="declineRedirectUrl">Decline Redirect URL</Label>
-                      <Input
-                        id="declineRedirectUrl"
-                        type="url"
-                        {...form.register('declineRedirectUrl')}
-                        placeholder="https://example.com/other-offers"
-                        className="mt-2"
-                      />
-                    </div>
-                  </>
-                )}
-              </TabsContent>
-
               <TabsContent value="settings" className="mt-6 space-y-6">
                 {/* Availability Dates */}
                 <div>
@@ -917,7 +942,7 @@ export function OfferEditor({ open, onOpenChange, offerId }: OfferEditorProps) {
             </div>
           </Tabs>
 
-          <div className="mt-auto flex justify-end gap-3 border-t bg-white pt-4">
+          <div className="flex justify-end gap-3 border-t bg-gray-50/50 px-6 py-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
