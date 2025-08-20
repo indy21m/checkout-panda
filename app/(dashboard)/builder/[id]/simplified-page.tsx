@@ -71,7 +71,7 @@ import {
   type Block,
   type BlockType,
   type HeaderBlockData,
-  type ProductBlockData,
+  type OfferBlockData,
   type FAQBlockData,
   type GuaranteeBlockData,
   type OrderBumpBlockData,
@@ -410,8 +410,8 @@ function BlockEditor({
   updateData: (updates: Partial<Block['data']>) => void
   onSelectProduct?: () => void
 }) {
-  // State for order bump product selector
-  const [showOrderBumpProductSelector, setShowOrderBumpProductSelector] = useState(false)
+  // State for order bump offer selector
+  const [showOrderBumpOfferSelector, setShowOrderBumpOfferSelector] = useState(false)
   const updateBlockData = updateData // Alias for clarity
   switch (block.type) {
     case 'header':
@@ -440,7 +440,7 @@ function BlockEditor({
       )
 
     case 'product':
-      const productData = block.data as ProductBlockData
+      const offerData = block.data as OfferBlockData
       return (
         <div className="space-y-4">
           {/* Offer Selection */}
@@ -459,7 +459,7 @@ function BlockEditor({
             <p className="text-xs text-purple-700">
               Choose an offer to auto-fill product details with context-specific pricing.
             </p>
-            {productData.offerId && (
+            {offerData.offerId && (
               <p className="mt-2 text-xs font-medium text-purple-600">✓ Using offer pricing</p>
             )}
           </div>
@@ -467,14 +467,14 @@ function BlockEditor({
             <label className="mb-1 block text-sm font-medium">Product Name</label>
             <Input
               type="text"
-              value={productData.name}
+              value={offerData.name}
               onChange={(e) => updateData({ name: e.target.value })}
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">Description</label>
             <Textarea
-              value={productData.description}
+              value={offerData.description}
               onChange={(e) => updateData({ description: e.target.value })}
               rows={3}
             />
@@ -484,7 +484,7 @@ function BlockEditor({
               <label className="mb-1 block text-sm font-medium">Price</label>
               <Input
                 type="text"
-                value={productData.price}
+                value={offerData.price}
                 onChange={(e) => updateData({ price: e.target.value })}
               />
             </div>
@@ -492,7 +492,7 @@ function BlockEditor({
               <label className="mb-1 block text-sm font-medium">Compare Price</label>
               <Input
                 type="text"
-                value={productData.comparePrice || ''}
+                value={offerData.comparePrice || ''}
                 onChange={(e) => updateData({ comparePrice: e.target.value })}
                 placeholder="Optional"
               />
@@ -501,7 +501,7 @@ function BlockEditor({
           <div>
             <label className="mb-1 block text-sm font-medium">Type</label>
             <Select
-              value={productData.type}
+              value={offerData.type}
               onValueChange={(value) =>
                 updateData({ type: value as 'onetime' | 'subscription' | 'payment-plan' })
               }
@@ -519,7 +519,7 @@ function BlockEditor({
           <div>
             <label className="mb-1 block text-sm font-medium">Features (one per line)</label>
             <Textarea
-              value={productData.features.join('\n')}
+              value={offerData.features.join('\n')}
               onChange={(e) =>
                 updateData({ features: e.target.value.split('\n').filter((f) => f.trim()) })
               }
@@ -683,12 +683,12 @@ function BlockEditor({
               </div>
             </div>
             <Button
-              onClick={() => setShowOrderBumpProductSelector(true)}
+              onClick={() => setShowOrderBumpOfferSelector(true)}
               variant="outline"
               className="w-full"
             >
               <Package className="mr-2 h-4 w-4" />
-              Select from Product Database
+              Select from Offer Database
             </Button>
             <div className="flex items-center gap-2">
               <input
@@ -705,20 +705,25 @@ function BlockEditor({
               </label>
             </div>
           </div>
-          {showOrderBumpProductSelector && (
-            <ProductSelectorModal
-              isOpen={showOrderBumpProductSelector}
-              onClose={() => setShowOrderBumpProductSelector(false)}
-              onSelectProduct={(product) => {
+          {showOrderBumpOfferSelector && (
+            <OfferSelectorModal
+              isOpen={showOrderBumpOfferSelector}
+              onClose={() => setShowOrderBumpOfferSelector(false)}
+              onSelectOffer={(offer) => {
                 updateBlockData({
                   ...orderBumpData,
-                  title: `🎁 Add ${product.name}`,
-                  description: product.description || '',
-                  price: `$29.99`, // Default price - will be set via offers
-                  comparePrice: undefined,
+                  title: `🎁 Add ${offer.product?.name || offer.name}`,
+                  description: offer.description || offer.product?.description || '',
+                  price: `${getCurrencySymbol(offer.currency)}${(offer.price / 100).toFixed(2)}`,
+                  comparePrice: offer.compareAtPrice
+                    ? `${getCurrencySymbol(offer.currency)}${(offer.compareAtPrice / 100).toFixed(2)}`
+                    : undefined,
+                  offerId: offer.id,
+                  useOfferPricing: true,
                 })
-                setShowOrderBumpProductSelector(false)
+                setShowOrderBumpOfferSelector(false)
               }}
+              contextFilter="order_bump"
             />
           )}
         </>
@@ -1780,7 +1785,7 @@ export default function SimplifiedBuilderPage() {
   const handleProductSelection = (product: Product) => {
     if (selectedBlockForProduct) {
       // Update the selected product block with database product data
-      const productData: ProductBlockData = {
+      const productData: OfferBlockData = {
         name: product.name,
         description: product.description || '',
         price: `${getCurrencySymbol('USD' as Currency)}29.99`, // Default price - should come from offers
@@ -1810,7 +1815,7 @@ export default function SimplifiedBuilderPage() {
   const handleOfferSelection = (offer: RouterOutputs['offer']['list'][0]) => {
     if (selectedBlockForProduct) {
       // Update the selected product block with offer data
-      const productData: ProductBlockData = {
+      const productData: OfferBlockData = {
         name: offer.product?.name || offer.name,
         description: offer.description || offer.product?.description || '',
         price: `${getCurrencySymbol(offer.currency)}${(offer.price / 100).toFixed(2)}`,

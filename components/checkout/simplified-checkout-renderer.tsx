@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import type {
   Block,
   HeaderBlockData,
-  ProductBlockData,
+  OfferBlockData,
   BenefitsBlockData,
   OrderBumpBlockData,
   TestimonialBlockData,
@@ -149,13 +149,13 @@ export function SimplifiedCheckoutRenderer({ checkout }: SimplifiedCheckoutRende
 
   // Initialize cart state from blocks
   const initialCart = React.useMemo<CartState>(() => {
-    const productData = productBlock?.data as ProductBlockData | undefined
+    const offerData = productBlock?.data as OfferBlockData | undefined
 
     return {
       checkoutId: checkout.id,
-      productId: productData?.productId,
-      offerId: productData?.offerId, // Extract offerId from product block
-      planId: productData?.planId || undefined,
+      productId: offerData?.productId,
+      offerId: offerData?.offerId, // Extract offerId from product block
+      planId: offerData?.planId || undefined,
       currency: 'USD', // Default, will be updated from product
       orderBumps: orderBumpBlocks.map((block) => {
         const bumpData = block.data as OrderBumpBlockData
@@ -554,19 +554,19 @@ function ProductBlock({
   cart: CartState
   quote: Quote | null
 }) {
-  const productData = block.data as ProductBlockData
+  const offerData = block.data as OfferBlockData
 
   // Fetch offer data if offerId is present
   const { data: offer } = api.offer.getById.useQuery(
-    { id: productData.offerId! },
-    { enabled: !!productData.offerId && productData.useOfferPricing }
+    { id: offerData.offerId! },
+    { enabled: !!offerData.offerId && offerData.useOfferPricing }
   )
 
-  // Use offer data when available, otherwise fall back to productData
-  const displayName = offer?.name || productData.name
-  const displayDescription = offer?.description || productData.description
-  const displayBadge = offer?.badgeText || productData.badge
-  const displayFeatures = offer?.product?.features || productData.features
+  // Use offer data when available, otherwise fall back to offerData
+  const displayName = offer?.name || offerData.name
+  const displayDescription = offer?.description || offerData.description
+  const displayBadge = offer?.badgeText || offerData.badge
+  const displayFeatures = offer?.product?.features || offerData.features
 
   const currency = quote?.currency || offer?.currency || cart.currency || 'USD'
 
@@ -593,18 +593,18 @@ function ProductBlock({
             <span className="text-3xl font-bold text-blue-600">
               {formatMoney(quote.subtotal, currency)}
             </span>
-            {(offer?.compareAtPrice || productData.comparePrice) && (
+            {(offer?.compareAtPrice || offerData.comparePrice) && (
               <span className="text-lg text-gray-400 line-through">
                 {offer?.compareAtPrice
                   ? formatMoney(offer.compareAtPrice, currency)
-                  : productData.comparePrice}
+                  : offerData.comparePrice}
               </span>
             )}
             {quote.meta?.planInterval && (
               <span className="text-gray-500">/{quote.meta.planInterval}</span>
             )}
           </>
-        ) : offer && productData.useOfferPricing ? (
+        ) : offer && offerData.useOfferPricing ? (
           <>
             <span className="text-3xl font-bold text-blue-600">
               {formatMoney(offer.price, currency)}
@@ -617,11 +617,11 @@ function ProductBlock({
           </>
         ) : (
           <>
-            <span className="text-3xl font-bold text-blue-600">{productData.price}</span>
-            {productData.comparePrice && (
-              <span className="text-lg text-gray-400 line-through">{productData.comparePrice}</span>
+            <span className="text-3xl font-bold text-blue-600">{offerData.price}</span>
+            {offerData.comparePrice && (
+              <span className="text-lg text-gray-400 line-through">{offerData.comparePrice}</span>
             )}
-            {productData.type === 'subscription' && <span className="text-gray-500">/month</span>}
+            {offerData.type === 'subscription' && <span className="text-gray-500">/month</span>}
           </>
         )}
       </div>
@@ -650,6 +650,24 @@ function OrderBumpBlock({
 }) {
   const bumpData = block.data as OrderBumpBlockData
 
+  // Fetch offer data if offerId is present
+  const { data: offer } = api.offer.getById.useQuery(
+    { id: bumpData.offerId! },
+    { enabled: !!bumpData.offerId && bumpData.useOfferPricing }
+  )
+
+  // Use offer data when available, otherwise fall back to bumpData
+  const displayTitle = bumpData.title
+  const displayDescription = offer?.description || bumpData.description
+  const displayPrice =
+    offer && bumpData.useOfferPricing
+      ? `${formatMoney(offer.price, offer.currency)}`
+      : bumpData.price
+  const displayComparePrice =
+    offer?.compareAtPrice && bumpData.useOfferPricing
+      ? `${formatMoney(offer.compareAtPrice, offer.currency)}`
+      : bumpData.comparePrice
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -672,12 +690,12 @@ function OrderBumpBlock({
           className="mt-1 h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600"
         />
         <div className="flex-1">
-          <h4 className="mb-1 text-lg font-bold">{bumpData.title}</h4>
-          <p className="mb-2 text-gray-700">{bumpData.description}</p>
+          <h4 className="mb-1 text-lg font-bold">{displayTitle}</h4>
+          <p className="mb-2 text-gray-700">{displayDescription}</p>
           <div className="flex items-baseline gap-2">
-            <span className="font-bold text-green-600">{bumpData.price}</span>
-            {bumpData.comparePrice && (
-              <span className="text-gray-400 line-through">{bumpData.comparePrice}</span>
+            <span className="font-bold text-green-600">{displayPrice}</span>
+            {displayComparePrice && (
+              <span className="text-gray-400 line-through">{displayComparePrice}</span>
             )}
           </div>
         </div>

@@ -20,6 +20,7 @@ import {
   FileText,
   Clock,
   Columns2,
+  Tag,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -35,6 +36,9 @@ export type BlockType =
   | 'countdown'
   | 'payment'
 
+// Export both names for backward compatibility during migration
+export type ProductBlockData = OfferBlockData
+
 export interface HeaderBlockData {
   title: string
   subtitle: string
@@ -42,7 +46,7 @@ export interface HeaderBlockData {
   imageUrl?: string
 }
 
-export interface ProductBlockData {
+export interface OfferBlockData {
   // Display fields (for preview and manual entry)
   name: string
   description: string
@@ -78,6 +82,7 @@ export interface OrderBumpBlockData {
   isCheckedByDefault?: boolean
   productId?: string // Legacy - for backward compatibility
   offerId?: string // New - links to offer for pricing
+  useOfferPricing?: boolean // Whether to use offer pricing
 }
 
 export interface TestimonialBlockData {
@@ -134,7 +139,7 @@ export interface PaymentBlockData {
 
 export type BlockData =
   | HeaderBlockData
-  | ProductBlockData
+  | OfferBlockData
   | BenefitsBlockData
   | OrderBumpBlockData
   | TestimonialBlockData
@@ -199,9 +204,9 @@ export const blockTemplates: Record<
         'Garanteret 12% årligt afkast eller pengene tilbage',
       ],
       badge: 'Kun 5 pladser tilbage',
-    } as ProductBlockData,
+    } as OfferBlockData,
     icon: <ShoppingCart className="h-5 w-5" />,
-    name: 'Product Details',
+    name: 'Offer Details',
     description: 'Showcase your offer',
   },
   benefits: {
@@ -512,8 +517,8 @@ function getBlockPreview(block: Block): string {
     case 'header':
       return (block.data as HeaderBlockData).title || 'No title set'
     case 'product':
-      const productData = block.data as ProductBlockData
-      return `${productData.name} - ${productData.price}`
+      const offerData = block.data as OfferBlockData
+      return `${offerData.name} - ${offerData.price}`
     case 'benefits':
       const benefitsData = block.data as BenefitsBlockData
       return `${benefitsData.benefits.length} benefits`
@@ -615,31 +620,30 @@ export function WYSIWYGBlock({
         )
 
       case 'product':
-        const productData = block.data as ProductBlockData
+        const offerData = block.data as OfferBlockData
         const defaultProductStyle = !block.styles?.background
-          ? 'bg-white border border-gray-200 shadow-sm'
+          ? 'bg-white border border-gray-100 shadow-sm'
           : ''
         return (
           <div className={cn('rounded-xl p-6', defaultProductStyle)} style={customStyles}>
-            {productData.badge && (
-              <span className="mb-4 inline-block rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-                {productData.badge}
+            {offerData.badge && (
+              <span className="mb-4 inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                <Tag className="h-3 w-3" />
+                {offerData.badge}
               </span>
             )}
-            <h2 className="mb-2 text-2xl font-bold">{productData.name}</h2>
-            <p className="mb-4 text-gray-600">{productData.description}</p>
-            <div className="mb-4 flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-blue-600">{productData.price}</span>
-              {productData.comparePrice && (
-                <span className="text-lg text-gray-400 line-through">
-                  {productData.comparePrice}
-                </span>
+            <h2 className="mb-2 text-2xl font-bold">{offerData.name}</h2>
+            <p className="mb-4 text-gray-600">{offerData.description}</p>
+            <div className="mb-6 flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-blue-600">{offerData.price}</span>
+              {offerData.comparePrice && (
+                <span className="text-lg text-gray-400 line-through">{offerData.comparePrice}</span>
               )}
-              {productData.type === 'subscription' && <span className="text-gray-500">/month</span>}
+              {offerData.type === 'subscription' && <span className="text-gray-500">/month</span>}
             </div>
-            <ul className="space-y-2">
-              {productData.features.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2">
+            <ul className="space-y-3">
+              {offerData.features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-3">
                   <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-500" />
                   <span className="text-gray-700">{feature}</span>
                 </li>
