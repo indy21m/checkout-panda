@@ -1,0 +1,12 @@
+// Checkout components
+export { CheckoutPage } from './CheckoutPage'
+export { CheckoutForm } from './CheckoutForm'
+export { StripeProvider } from './StripeProvider'
+export { OrderBump } from './OrderBump'
+export { OrderSummary } from './OrderSummary'
+export { ProductInfo } from './ProductInfo'
+export { CouponInput } from './CouponInput'
+export { TrustBadges } from './TrustBadges'
+export { FAQ } from './FAQ'
+export { Guarantee } from './Guarantee'
+export { Testimonial } from './Testimonial'

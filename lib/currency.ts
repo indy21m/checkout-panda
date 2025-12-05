@@ -1,7 +1,6 @@
 // Currency types and utilities
-import crypto from 'crypto'
 
-// Database only supports these currencies
+// Supported currencies
 export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'DKK'] as const
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number]
 
@@ -151,59 +150,3 @@ export function validateCurrencyConsistency(items: Array<{ currency: string; amo
   return { valid: true, currency: firstCurrency }
 }
 
-/**
- * Cart state for hashing and idempotency
- */
-export interface CartState {
-  productId?: string
-  planId?: string | null
-  orderBumpIds: string[]
-  couponCode?: string | null
-  customerCountry: string
-  customerEmail?: string
-  vatNumber?: string | null
-}
-
-/**
- * Generate a deterministic hash key for cart state (for caching and idempotency)
- */
-export function cartToKey(cart: CartState): string {
-  // Sort bumps for consistency
-  const sortedBumps = [...cart.orderBumpIds].sort()
-
-  const normalized = {
-    productId: cart.productId || '',
-    planId: cart.planId || '',
-    bumps: sortedBumps.join(','),
-    coupon: (cart.couponCode || '').toUpperCase(),
-    country: cart.customerCountry,
-    email: cart.customerEmail || '',
-    vat: cart.vatNumber || '',
-  }
-
-  // Create deterministic string
-  const str = JSON.stringify(normalized)
-
-  // Generate hash
-  return crypto.createHash('sha256').update(str).digest('hex').substring(0, 16) // Use first 16 chars for brevity
-}
-
-/**
- * Generate a quote ID from cart state and timestamp
- */
-export function generateQuoteId(cart: CartState): string {
-  const cartKey = cartToKey(cart)
-  const timestamp = Date.now()
-  return `quote_${cartKey}_${timestamp}`
-}
-
-/**
- * Check if a quote is expired (default 10 minutes)
- */
-export function isQuoteExpired(createdAt: Date, expirationMinutes = 10): boolean {
-  const now = Date.now()
-  const created = new Date(createdAt).getTime()
-  const expirationMs = expirationMinutes * 60 * 1000
-
-  return now - created > expirationMs
-}

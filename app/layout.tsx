@@ -1,16 +1,18 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
-import { TRPCReactProvider } from '@/components/providers/trpc-provider'
+import { AuthProvider } from '@/components/providers/auth-provider'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+export const viewport: Viewport = {
+  themeColor: '#8b5cf6',
+}
+
 export const metadata: Metadata = {
-  title: 'Checkout Panda - Elite Checkout Platform',
-  description:
-    'Transform payment transactions into visually stunning, highly profitable customer journeys',
+  title: 'Checkout Panda - High-Converting Checkout Pages',
+  description: 'Simple, high-converting checkout pages with upsells for digital products',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   icons: {
     icon: [
@@ -22,20 +24,17 @@ export const metadata: Metadata = {
     other: [{ rel: 'mask-icon', url: '/logo.png' }],
   },
   manifest: '/site.webmanifest',
-  themeColor: '#8b5cf6',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          <TRPCReactProvider>
-            {children}
-            <Toaster />
-          </TRPCReactProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+        <Toaster />
+      </body>
+    </html>
   )
 }
