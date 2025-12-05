@@ -212,10 +212,7 @@ export function PaymentSection({
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Payment Element - Always visible */}
         <div className="space-y-2">
-          <PaymentElement
-            options={paymentElementOptions}
-            onReady={() => setIsPaymentReady(true)}
-          />
+          <PaymentElement options={paymentElementOptions} onReady={() => setIsPaymentReady(true)} />
         </div>
 
         {/* Email (hidden field synced with payment element, or shown if needed) */}

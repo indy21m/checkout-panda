@@ -35,8 +35,8 @@ export function ProductCard({
 
   // Calculate display amount
   const displayAmount = isInstallment
-    ? selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount
-    : breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount
+    ? (selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount)
+    : (breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount)
 
   // Show first 7 benefits by default, rest on expand
   const visibleBenefits = showAllBenefits
@@ -78,7 +78,19 @@ export function ProductCard({
                     exit={{ opacity: 0, height: 0 }}
                     className="flex items-start gap-2"
                   >
-                    <span className="flex-shrink-0">{benefit.startsWith('✅') || benefit.startsWith('🎁') || benefit.startsWith('👨') || benefit.startsWith('🔎') || benefit.startsWith('🇩🇰') || benefit.startsWith('📊') || benefit.startsWith('🍾') || benefit.startsWith('🍀') || benefit.startsWith('🚨') ? '' : '•'}</span>
+                    <span className="flex-shrink-0">
+                      {benefit.startsWith('✅') ||
+                      benefit.startsWith('🎁') ||
+                      benefit.startsWith('👨') ||
+                      benefit.startsWith('🔎') ||
+                      benefit.startsWith('🇩🇰') ||
+                      benefit.startsWith('📊') ||
+                      benefit.startsWith('🍾') ||
+                      benefit.startsWith('🍀') ||
+                      benefit.startsWith('🚨')
+                        ? ''
+                        : '•'}
+                    </span>
                     <span>{benefit}</span>
                   </motion.li>
                 ))}
@@ -93,10 +105,7 @@ export function ProductCard({
               >
                 <span>{showAllBenefits ? 'See less' : 'See more'}</span>
                 <ChevronDown
-                  className={cn(
-                    'h-4 w-4 transition-transform',
-                    showAllBenefits && 'rotate-180'
-                  )}
+                  className={cn('h-4 w-4 transition-transform', showAllBenefits && 'rotate-180')}
                 />
               </button>
             )}
@@ -148,19 +157,14 @@ export function ProductCard({
               {isInstallment && <span className="text-sm font-normal text-gray-500">.</span>}
             </span>
             {isInstallment && breakdown && (
-              <p className="text-xs text-gray-500">
-                {selectedTier.installments?.count}x payments
-              </p>
+              <p className="text-xs text-gray-500">{selectedTier.installments?.count}x payments</p>
             )}
           </div>
         </div>
 
         {/* View order details link */}
         {(breakdown?.items && breakdown.items.length > 1) || includeOrderBump ? (
-          <button
-            type="button"
-            className="mt-2 text-xs text-blue-600 hover:underline"
-          >
+          <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
             View order details
           </button>
         ) : null}

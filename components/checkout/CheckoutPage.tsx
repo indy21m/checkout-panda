@@ -170,15 +170,10 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
                         {/* Star Rating */}
                         <div className="mb-3 flex gap-0.5">
                           {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                            />
+                            <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           ))}
                         </div>
-                        <p className="text-sm leading-relaxed text-gray-700">
-                          {testimonial.quote}
-                        </p>
+                        <p className="text-sm leading-relaxed text-gray-700">{testimonial.quote}</p>
                         <div className="mt-4 flex items-center gap-3">
                           {/* Avatar */}
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
@@ -199,10 +194,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
                       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                         <div className="mb-3 flex gap-0.5">
                           {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                            />
+                            <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           ))}
                         </div>
                         <p className="text-sm leading-relaxed text-gray-700">

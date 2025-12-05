@@ -175,10 +175,3 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ received: true })
   }
 }
-
-// Disable body parsing to access raw body for signature verification
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
