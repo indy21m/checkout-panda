@@ -1,7 +1,6 @@
 'use client'
 
 import { Check } from 'lucide-react'
-import { Testimonial } from './Testimonial'
 import type { Product } from '@/types'
 
 interface ProductInfoProps {
@@ -34,16 +33,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
             ))}
           </ul>
         </div>
-      )}
-
-      {/* Testimonial */}
-      {checkout.testimonial && (
-        <Testimonial
-          quote={checkout.testimonial.quote}
-          author={checkout.testimonial.author}
-          role={checkout.testimonial.role}
-          avatar={checkout.testimonial.avatar}
-        />
       )}
     </div>
   )
