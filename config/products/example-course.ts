@@ -18,8 +18,8 @@ export const exampleCourse: Product = {
   stripe: {
     productId: 'prod_xxx', // Replace with real Stripe product ID
     priceId: 'price_xxx', // Replace with real Stripe price ID
-    priceAmount: 14900, // €149.00
-    currency: 'EUR',
+    priceAmount: 109900, // 1099 DKK
+    currency: 'DKK',
   },
 
   checkout: {
@@ -64,8 +64,8 @@ export const exampleCourse: Product = {
     stripe: {
       productId: 'prod_yyy', // Replace with real Stripe product ID
       priceId: 'price_yyy', // Replace with real Stripe price ID
-      priceAmount: 4700, // €47.00
-      currency: 'EUR',
+      priceAmount: 34900, // 349 DKK
+      currency: 'DKK',
     },
     title: 'Tax Optimization Toolkit',
     description:
@@ -80,8 +80,8 @@ export const exampleCourse: Product = {
       stripe: {
         productId: 'prod_zzz', // Replace with real Stripe product ID
         priceId: 'price_zzz', // Replace with real Stripe price ID
-        priceAmount: 29700, // €297.00
-        currency: 'EUR',
+        priceAmount: 219900, // 2199 DKK
+        currency: 'DKK',
       },
       title: 'Personal Portfolio Review',
       subtitle: 'Get 1-on-1 feedback on your specific situation',
@@ -93,7 +93,7 @@ export const exampleCourse: Product = {
         'Specific action plan for your goals',
         'Recording of the call to keep forever',
       ],
-      originalPrice: 49700, // €497.00
+      originalPrice: 369900, // 3699 DKK
       urgencyText: 'This exclusive price disappears when you leave this page',
     },
   ],
@@ -104,8 +104,8 @@ export const exampleCourse: Product = {
     stripe: {
       productId: 'prod_aaa', // Replace with real Stripe product ID
       priceId: 'price_aaa', // Replace with real Stripe price ID
-      priceAmount: 9700, // €97.00
-      currency: 'EUR',
+      priceAmount: 71900, // 719 DKK
+      currency: 'DKK',
     },
     title: 'Quick-Start Portfolio Checklist',
     subtitle: 'Not ready for 1-on-1 coaching?',
@@ -116,7 +116,7 @@ export const exampleCourse: Product = {
       'Broker comparison spreadsheet (Danish options)',
       'Common mistakes to avoid guide',
     ],
-    originalPrice: 14700, // €147.00
+    originalPrice: 109900, // 1099 DKK
   },
 
   thankYou: {
