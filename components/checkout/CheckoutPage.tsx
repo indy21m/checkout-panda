@@ -6,9 +6,10 @@ import { StripeProvider } from './StripeProvider'
 import { CheckoutForm } from './CheckoutForm'
 import { ProductInfo } from './ProductInfo'
 import { OrderSummary } from './OrderSummary'
-import { FAQ } from './FAQ'
 import { Guarantee } from './Guarantee'
 import { TrustBadges } from './TrustBadges'
+import { Lock } from 'lucide-react'
+import { formatMoney } from '@/lib/currency'
 import type { Product, PriceBreakdown } from '@/types'
 
 interface CheckoutPageProps {
@@ -118,6 +119,10 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
     [breakdown]
   )
 
+  // Determine if there are upsells (for step indicator)
+  const hasUpsells = product.upsells && product.upsells.length > 0
+  const totalSteps = hasUpsells ? 2 : 1
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
@@ -125,9 +130,15 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-gray-900">Checkout</span>
+              <Lock className="h-5 w-5 text-green-600" />
+              <span className="text-xl font-bold text-gray-900">Secure Checkout</span>
             </div>
-            <TrustBadges variant="compact" />
+            <div className="flex items-center gap-4">
+              <span className="hidden text-sm text-gray-500 sm:block">
+                Step 1 of {totalSteps}
+              </span>
+              <TrustBadges variant="compact" />
+            </div>
           </div>
         </div>
       </header>
@@ -140,7 +151,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
             <ProductInfo product={product} />
 
             {/* Checkout Form with Stripe */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+            <div id="checkout-form" className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
               <StripeProvider
                 clientSecret={clientSecret || undefined}
                 amount={displayTotal}
@@ -161,7 +172,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
               </StripeProvider>
             </div>
 
-            {/* Guarantee */}
+            {/* Guarantee - positioned after payment form for trust */}
             {product.checkout.guarantee && (
               <Guarantee
                 text={product.checkout.guarantee}
@@ -169,9 +180,19 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
               />
             )}
 
-            {/* FAQ */}
-            {product.checkout.faq && product.checkout.faq.length > 0 && (
-              <FAQ items={product.checkout.faq} />
+            {/* Single Testimonial - only shown on checkout, brief */}
+            {product.checkout.testimonial && (
+              <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+                <p className="text-sm italic text-gray-600">
+                  &ldquo;{product.checkout.testimonial.quote}&rdquo;
+                </p>
+                <p className="mt-2 text-xs font-medium text-gray-900">
+                  — {product.checkout.testimonial.author}
+                  {product.checkout.testimonial.role && (
+                    <span className="text-gray-500">, {product.checkout.testimonial.role}</span>
+                  )}
+                </p>
+              </div>
             )}
           </div>
 
@@ -190,7 +211,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-6">
+      <footer className="border-t border-gray-200 bg-white py-6 pb-24 lg:pb-6">
         <div className="mx-auto max-w-6xl px-4 text-center">
           <TrustBadges variant="full" />
           <p className="mt-4 text-xs text-gray-500">
@@ -198,6 +219,28 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
           </p>
         </div>
       </footer>
+
+      {/* Mobile Sticky Bottom CTA Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-sm">
+            <span className="text-gray-500">Total:</span>{' '}
+            <span className="text-lg font-bold text-gray-900">
+              {formatMoney(displayTotal, product.stripe.currency)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              // Scroll to payment form
+              document.getElementById('checkout-form')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+            className="rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-bold text-white shadow-lg"
+          >
+            Complete Purchase
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { formatMoney } from '@/lib/currency'
-import { Tag, ShieldCheck } from 'lucide-react'
+import { Tag, ShieldCheck, ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Product, PriceBreakdown } from '@/types'
 
 interface OrderSummaryProps {
@@ -17,6 +19,7 @@ export function OrderSummary({
   breakdown,
   couponCode,
 }: OrderSummaryProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
   const currency = product.stripe.currency
 
   // Calculate amounts from breakdown or defaults
@@ -47,79 +50,105 @@ export function OrderSummary({
     : total
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900">Order Summary</h3>
-
-      {/* Product Image */}
-      {product.checkout.image && (
-        <div className="mb-4 overflow-hidden rounded-lg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={product.checkout.image}
-            alt={product.name}
-            className="h-40 w-full object-cover"
-          />
+    <div className="rounded-2xl border border-gray-100 bg-white shadow-lg">
+      {/* Mobile Collapsible Header */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between p-4 lg:hidden"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Your Order</span>
+          <span className="text-lg font-bold text-gray-900">
+            ({formatMoney(displayTotal, currency)})
+          </span>
         </div>
-      )}
+        <ChevronDown
+          className={cn(
+            'h-5 w-5 text-gray-400 transition-transform',
+            isExpanded && 'rotate-180'
+          )}
+        />
+      </button>
 
-      {/* Line Items */}
-      <div className="space-y-3 border-b border-gray-100 pb-4">
-        {displayItems.map((item, index) => (
-          <div key={index} className="flex justify-between text-sm">
-            <span className="text-gray-600">{item.name}</span>
-            <span className="font-medium text-gray-900">{formatMoney(item.amount, currency)}</span>
+      {/* Desktop Header (always visible) */}
+      <h3 className="hidden p-6 pb-0 text-lg font-semibold text-gray-900 lg:block">
+        Order Summary
+      </h3>
+
+      {/* Collapsible Content */}
+      <div className={cn('p-6 pt-2 lg:pt-6', !isExpanded && 'hidden lg:block')}>
+        {/* Product Image */}
+        {product.checkout.image && (
+          <div className="mb-4 overflow-hidden rounded-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={product.checkout.image}
+              alt={product.name}
+              className="h-40 w-full object-cover"
+            />
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Subtotal */}
-      <div className="flex justify-between border-b border-gray-100 py-3 text-sm">
-        <span className="text-gray-600">Subtotal</span>
-        <span className="font-medium text-gray-900">{formatMoney(displaySubtotal, currency)}</span>
-      </div>
-
-      {/* Coupon Discount */}
-      {discount > 0 && (
-        <div className="flex items-center justify-between border-b border-gray-100 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-green-600" />
-            <span className="text-green-600">
-              Discount {couponCode && <span className="font-medium">({couponCode})</span>}
-            </span>
-          </div>
-          <span className="font-medium text-green-600">-{formatMoney(discount, currency)}</span>
+        {/* Line Items */}
+        <div className="space-y-3 border-b border-gray-100 pb-4">
+          {displayItems.map((item, index) => (
+            <div key={index} className="flex justify-between text-sm">
+              <span className="text-gray-600">{item.name}</span>
+              <span className="font-medium text-gray-900">{formatMoney(item.amount, currency)}</span>
+            </div>
+          ))}
         </div>
-      )}
 
-      {/* Tax */}
-      {tax > 0 && (
+        {/* Subtotal */}
         <div className="flex justify-between border-b border-gray-100 py-3 text-sm">
-          <span className="text-gray-600">{taxLabel}</span>
-          <span className="text-gray-900">{formatMoney(tax, currency)}</span>
+          <span className="text-gray-600">Subtotal</span>
+          <span className="font-medium text-gray-900">{formatMoney(displaySubtotal, currency)}</span>
         </div>
-      )}
 
-      {/* Reverse Charge Note */}
-      {reverseCharge && (
-        <div className="border-b border-gray-100 py-3">
-          <p className="text-xs text-gray-500">
-            VAT reverse charge applies. Tax will be self-assessed by the buyer.
-          </p>
+        {/* Coupon Discount */}
+        {discount > 0 && (
+          <div className="flex items-center justify-between border-b border-gray-100 py-3 text-sm">
+            <div className="flex items-center gap-2">
+              <Tag className="h-4 w-4 text-green-600" />
+              <span className="text-green-600">
+                Discount {couponCode && <span className="font-medium">({couponCode})</span>}
+              </span>
+            </div>
+            <span className="font-medium text-green-600">-{formatMoney(discount, currency)}</span>
+          </div>
+        )}
+
+        {/* Tax */}
+        {tax > 0 && (
+          <div className="flex justify-between border-b border-gray-100 py-3 text-sm">
+            <span className="text-gray-600">{taxLabel}</span>
+            <span className="text-gray-900">{formatMoney(tax, currency)}</span>
+          </div>
+        )}
+
+        {/* Reverse Charge Note */}
+        {reverseCharge && (
+          <div className="border-b border-gray-100 py-3">
+            <p className="text-xs text-gray-500">
+              VAT reverse charge applies. Tax will be self-assessed by the buyer.
+            </p>
+          </div>
+        )}
+
+        {/* Total */}
+        <div className="flex justify-between pt-4">
+          <span className="text-lg font-semibold text-gray-900">Total</span>
+          <span className="text-xl font-bold text-gray-900">
+            {formatMoney(displayTotal, currency)}
+          </span>
         </div>
-      )}
 
-      {/* Total */}
-      <div className="flex justify-between pt-4">
-        <span className="text-lg font-semibold text-gray-900">Total</span>
-        <span className="text-xl font-bold text-gray-900">
-          {formatMoney(displayTotal, currency)}
-        </span>
-      </div>
-
-      {/* Trust Badge */}
-      <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
-        <ShieldCheck className="h-4 w-4 text-green-500" />
-        <span>Secure checkout - Your data is encrypted</span>
+        {/* Trust Badge */}
+        <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
+          <ShieldCheck className="h-4 w-4 text-green-500" />
+          <span>Secure checkout - Your data is encrypted</span>
+        </div>
       </div>
     </div>
   )
