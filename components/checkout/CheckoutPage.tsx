@@ -3,12 +3,11 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { StripeProvider } from './StripeProvider'
-import { CheckoutForm } from './CheckoutForm'
-import { ProductInfo } from './ProductInfo'
-import { OrderSummary } from './OrderSummary'
-import { PricingSelector } from './PricingSelector'
-import { Guarantee } from './Guarantee'
+import { ProductCard } from './ProductCard'
+import { PaymentSection } from './PaymentSection'
+import { OrderBump } from './OrderBump'
 import { formatMoney } from '@/lib/currency'
+import { Star } from 'lucide-react'
 import type { Product, PriceBreakdown } from '@/types'
 
 interface CheckoutPageProps {
@@ -32,8 +31,9 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Calculate display total
-  const displayTotal = breakdown?.total ?? product.stripe.priceAmount
+  // Get selected tier for amount calculation
+  const selectedTier = product.stripe.pricingTiers?.find((t) => t.id === selectedPriceTierId)
+  const displayTotal = breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount
 
   // Initialize payment (called when email is entered)
   const handleInitializePayment = useCallback(
@@ -105,8 +105,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
   const handleCouponApplied = useCallback(
     (code: string, discountType: 'percent' | 'fixed', discountAmount: number) => {
       setCouponCode(code)
-      // If payment already initialized, we need to recreate the payment intent
-      // The form will handle this on next submit
+      // If payment already initialized, update the breakdown
       if (breakdown) {
         let newDiscount = 0
         if (discountType === 'percent') {
@@ -125,106 +124,128 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Logo */}
+      <header className="border-b border-gray-200 bg-white py-4">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400">
+            <span className="text-lg">🐼</span>
+          </div>
+        </div>
+      </header>
+
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-5">
-          {/* Left Column - Product Info & Form */}
-          <div className="space-y-8 lg:col-span-3">
-            {/* Product Info */}
-            <ProductInfo product={product} />
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Left Column - Product Card & Testimonials */}
+          <div className="space-y-6">
+            {/* Product Card */}
+            <ProductCard
+              product={product}
+              selectedPriceTierId={selectedPriceTierId}
+              onPriceTierChange={setSelectedPriceTierId}
+              onCouponApplied={handleCouponApplied}
+              breakdown={breakdown}
+              includeOrderBump={includeOrderBump}
+            />
 
-            {/* Pricing Selector - only show if multiple pricing tiers */}
-            {product.stripe.pricingTiers && product.stripe.pricingTiers.length > 1 && (
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
-                <PricingSelector
-                  tiers={product.stripe.pricingTiers}
-                  selectedTierId={selectedPriceTierId}
-                  currency={product.stripe.currency}
-                  onChange={setSelectedPriceTierId}
-                />
-              </div>
-            )}
-
-            {/* Checkout Form with Stripe */}
-            <div
-              id="checkout-form"
-              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg"
-            >
-              <StripeProvider
-                clientSecret={clientSecret || undefined}
-                amount={displayTotal}
+            {/* Order Bump - Below product card */}
+            {product.orderBump?.enabled && (
+              <OrderBump
+                orderBump={product.orderBump}
                 currency={product.stripe.currency}
-              >
-                <CheckoutForm
-                  product={product}
-                  includeOrderBump={includeOrderBump}
-                  onOrderBumpChange={setIncludeOrderBump}
-                  onInitializePayment={handleInitializePayment}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  onCouponApplied={handleCouponApplied}
-                  clientSecret={clientSecret}
-                  breakdown={breakdown}
-                  isLoading={isLoading}
-                  error={error}
-                />
-              </StripeProvider>
-            </div>
-
-            {/* Guarantee - positioned after payment form for trust */}
-            {product.checkout.guarantee && (
-              <Guarantee text={product.checkout.guarantee} days={product.checkout.guaranteeDays} />
+                checked={includeOrderBump}
+                onChange={setIncludeOrderBump}
+              />
             )}
 
-            {/* Testimonials - support multiple testimonials or single */}
+            {/* Testimonials */}
             {(product.checkout.testimonials || product.checkout.testimonial) && (
               <div className="space-y-4">
                 {product.checkout.testimonials
-                  ? // Multiple testimonials
-                    product.checkout.testimonials.map((testimonial, index) => (
+                  ? product.checkout.testimonials.map((testimonial, index) => (
                       <div
                         key={index}
-                        className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+                        className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
                       >
-                        <p className="text-sm text-gray-600 italic">
-                          &ldquo;{testimonial.quote}&rdquo;
+                        {/* Star Rating */}
+                        <div className="mb-3 flex gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm leading-relaxed text-gray-700">
+                          {testimonial.quote}
                         </p>
-                        <p className="mt-2 text-xs font-medium text-gray-900">
-                          — {testimonial.author}
-                          {testimonial.role && (
-                            <span className="text-gray-500">, {testimonial.role}</span>
-                          )}
-                        </p>
+                        <div className="mt-4 flex items-center gap-3">
+                          {/* Avatar */}
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
+                            {testimonial.author
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {testimonial.author}
+                          </span>
+                        </div>
                       </div>
                     ))
-                  : // Single testimonial (backward compatibility)
-                    product.checkout.testimonial && (
-                      <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                        <p className="text-sm text-gray-600 italic">
-                          &ldquo;{product.checkout.testimonial.quote}&rdquo;
+                  : product.checkout.testimonial && (
+                      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                        <div className="mb-3 flex gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm leading-relaxed text-gray-700">
+                          {product.checkout.testimonial.quote}
                         </p>
-                        <p className="mt-2 text-xs font-medium text-gray-900">
-                          — {product.checkout.testimonial.author}
-                          {product.checkout.testimonial.role && (
-                            <span className="text-gray-500">
-                              , {product.checkout.testimonial.role}
-                            </span>
-                          )}
-                        </p>
+                        <div className="mt-4 flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
+                            {product.checkout.testimonial.author
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {product.checkout.testimonial.author}
+                          </span>
+                        </div>
                       </div>
                     )}
               </div>
             )}
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Payment Section */}
+          <div>
             <div className="sticky top-8">
-              <OrderSummary
-                product={product}
-                includeOrderBump={includeOrderBump}
-                breakdown={breakdown}
-                couponCode={couponCode}
-              />
+              <StripeProvider
+                clientSecret={clientSecret || undefined}
+                amount={displayTotal}
+                currency={product.stripe.currency}
+              >
+                <PaymentSection
+                  product={product}
+                  selectedPriceTierId={selectedPriceTierId}
+                  onInitializePayment={handleInitializePayment}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  clientSecret={clientSecret}
+                  breakdown={breakdown}
+                  isLoading={isLoading}
+                  error={error}
+                />
+              </StripeProvider>
             </div>
           </div>
         </div>
@@ -242,12 +263,12 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
           <button
             type="button"
             onClick={() => {
-              // Scroll to payment form
-              document.getElementById('checkout-form')?.scrollIntoView({ behavior: 'smooth' })
+              // Scroll to payment section
+              document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth' })
             }}
-            className="rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 text-sm font-bold text-white shadow-lg"
+            className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-bold text-white shadow-sm"
           >
-            Complete Purchase
+            Continue
           </button>
         </div>
       </div>
