@@ -152,13 +152,13 @@ export function DownsellPage({
               <p className="mb-6 text-center text-sm text-gray-600">{downsell.description}</p>
             )}
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons - Green for conversion */}
             <div className="space-y-3">
               <Button
                 onClick={handleAccept}
                 disabled={isProcessing}
                 size="lg"
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 py-5 font-bold text-white shadow-lg hover:from-blue-600 hover:to-purple-600"
+                className="h-14 w-full bg-gradient-to-r from-green-500 to-green-600 py-5 text-lg font-bold text-white shadow-lg shadow-green-500/25 hover:from-green-600 hover:to-green-700"
               >
                 {isProcessing ? (
                   <>
@@ -167,7 +167,7 @@ export function DownsellPage({
                   </>
                 ) : (
                   <>
-                    Yes, add for {formatMoney(downsell.stripe.priceAmount, product.stripe.currency)}
+                    Yes! Add for {formatMoney(downsell.stripe.priceAmount, product.stripe.currency)}
                   </>
                 )}
               </Button>
@@ -180,6 +180,12 @@ export function DownsellPage({
               >
                 No thanks, take me to my purchase
               </button>
+            </div>
+
+            {/* Urgency Text */}
+            <div className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-gray-400">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-orange-400" />
+              <span>This offer expires when you leave this page</span>
             </div>
           </div>
         </motion.div>

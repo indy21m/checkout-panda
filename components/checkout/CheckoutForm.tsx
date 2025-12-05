@@ -241,16 +241,16 @@ export function CheckoutForm({
         </div>
       )}
 
-      {/* Submit Button */}
+      {/* Submit Button - Green for conversion */}
       <Button
         type="submit"
         size="lg"
         disabled={!stripe || isProcessing || isLoading || (!clientSecret && !email)}
         className={cn(
           'relative w-full',
-          'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800',
-          'py-6 text-lg font-semibold text-white',
-          'shadow-lg transition-all duration-200 hover:shadow-xl'
+          'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
+          'h-14 py-6 text-lg font-bold text-white',
+          'shadow-lg shadow-green-500/25 transition-all duration-200 hover:shadow-xl'
         )}
       >
         {isProcessing || isLoading ? (
@@ -265,16 +265,23 @@ export function CheckoutForm({
           </>
         ) : (
           <>
-            <CreditCard className="mr-2 h-5 w-5" />
-            Pay {formatMoney(displayAmount, currency)}
+            <Lock className="mr-2 h-5 w-5" />
+            Complete Secure Purchase — {formatMoney(displayAmount, currency)}
           </>
         )}
       </Button>
 
-      {/* Security Note */}
-      <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-        <Lock className="h-3 w-3" />
-        <span>Your payment is secured with 256-bit SSL encryption</span>
+      {/* Trust Badges - directly under CTA */}
+      <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-1">
+          <Lock className="h-3 w-3 text-green-600" />
+          <span>SSL Encrypted</span>
+        </div>
+        <span className="text-gray-300">•</span>
+        <div className="flex items-center gap-1">
+          <CreditCard className="h-3 w-3 text-blue-600" />
+          <span>Powered by Stripe</span>
+        </div>
       </div>
     </form>
   )

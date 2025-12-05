@@ -27,7 +27,7 @@ export function OrderBump({ orderBump, currency, checked, onChange }: OrderBumpP
     >
       {/* Special Offer Badge */}
       <div className="absolute -top-3 left-4 rounded bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1 text-xs font-bold text-yellow-900 shadow-sm">
-        SPECIAL OFFER
+        🎁 ONE-TIME OFFER
       </div>
 
       <div className="mt-2 flex items-start gap-3">

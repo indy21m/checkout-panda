@@ -133,10 +133,13 @@ export function UpsellOffer({
           </button>
         </div>
 
-        {/* Urgency Text */}
-        {upsell.urgencyText && (
-          <p className="mt-6 text-center text-xs text-gray-400">{upsell.urgencyText}</p>
-        )}
+        {/* Urgency Text - always show expiry warning */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-gray-400">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-orange-400" />
+          <span>
+            {upsell.urgencyText || 'This offer expires when you leave this page'}
+          </span>
+        </div>
       </div>
     </motion.div>
   )

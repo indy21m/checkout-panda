@@ -76,12 +76,33 @@ export function ThankYouPage({
           )}
         </motion.div>
 
+        {/* Email Notice - Prominent */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-8 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+              <Mail className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-blue-900">Check Your Email</h3>
+              <p className="mt-1 text-sm text-blue-700">
+                We&apos;ve sent your receipt and access instructions to your email.
+                If you don&apos;t see it, check your spam folder.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* What You Purchased */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-10 rounded-xl border border-gray-100 bg-white p-6 shadow-lg"
+          transition={{ delay: 0.3 }}
+          className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-lg"
         >
           <h2 className="mb-4 font-semibold text-gray-900">Your Purchase:</h2>
           <ul className="space-y-2">
@@ -103,7 +124,7 @@ export function ThankYouPage({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.45 }}
             className="mt-8"
           >
             <h2 className="mb-4 text-center font-semibold text-gray-900">What&apos;s Next:</h2>
@@ -136,7 +157,7 @@ export function ThankYouPage({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.65 }}
             className="mt-10 text-center"
           >
             <Link
@@ -151,15 +172,18 @@ export function ThankYouPage({
           </motion.div>
         )}
 
-        {/* Support Note */}
-        <motion.p
+        {/* Support Section */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-12 text-center text-sm text-gray-500"
+          className="mt-12 rounded-lg border border-gray-100 bg-gray-50 p-4 text-center"
         >
-          Questions? Check your email for support contact information.
-        </motion.p>
+          <h4 className="text-sm font-medium text-gray-700">Need Help?</h4>
+          <p className="mt-1 text-sm text-gray-500">
+            Check your email for support contact information, or reply to your receipt email.
+          </p>
+        </motion.div>
       </main>
     </div>
   )
