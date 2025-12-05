@@ -8,7 +8,6 @@ import { ProductInfo } from './ProductInfo'
 import { OrderSummary } from './OrderSummary'
 import { PricingSelector } from './PricingSelector'
 import { Guarantee } from './Guarantee'
-import { TrustBadges } from './TrustBadges'
 import { formatMoney } from '@/lib/currency'
 import type { Product, PriceBreakdown } from '@/types'
 
@@ -230,16 +229,6 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-6 pb-24 lg:pb-6">
-        <div className="mx-auto max-w-6xl px-4 text-center">
-          <TrustBadges variant="full" />
-          <p className="mt-4 text-xs text-gray-500">
-            Your payment is secured by Stripe. We never store your card details.
-          </p>
-        </div>
-      </footer>
 
       {/* Mobile Sticky Bottom CTA Bar */}
       <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden">

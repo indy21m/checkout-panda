@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { COUNTRIES, DEFAULT_COUNTRY } from '@/lib/countries'
 import { OrderBump } from './OrderBump'
 import { CouponInput } from './CouponInput'
 import { Loader2, CreditCard, ChevronRight, Lock } from 'lucide-react'
@@ -58,7 +59,7 @@ export function CheckoutForm({
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [country, setCountry] = useState('DK')
+  const [country, setCountry] = useState(DEFAULT_COUNTRY)
   const [address, setAddress] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
@@ -174,11 +175,6 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="text-center lg:text-left">
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">Complete Your Purchase</h2>
-        <p className="text-gray-600">Secure checkout powered by Stripe</p>
-      </div>
-
       {/* Customer Info */}
       <div className="space-y-4">
         <div>
@@ -234,25 +230,11 @@ export function CheckoutForm({
               <SelectValue placeholder="Select country" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="DK">Denmark</SelectItem>
-              <SelectItem value="SE">Sweden</SelectItem>
-              <SelectItem value="NO">Norway</SelectItem>
-              <SelectItem value="DE">Germany</SelectItem>
-              <SelectItem value="FR">France</SelectItem>
-              <SelectItem value="ES">Spain</SelectItem>
-              <SelectItem value="IT">Italy</SelectItem>
-              <SelectItem value="NL">Netherlands</SelectItem>
-              <SelectItem value="BE">Belgium</SelectItem>
-              <SelectItem value="AT">Austria</SelectItem>
-              <SelectItem value="PL">Poland</SelectItem>
-              <SelectItem value="FI">Finland</SelectItem>
-              <SelectItem value="IE">Ireland</SelectItem>
-              <SelectItem value="PT">Portugal</SelectItem>
-              <SelectItem value="GB">United Kingdom</SelectItem>
-              <SelectItem value="US">United States</SelectItem>
-              <SelectItem value="CA">Canada</SelectItem>
-              <SelectItem value="AU">Australia</SelectItem>
-              <SelectItem value="NZ">New Zealand</SelectItem>
+              {COUNTRIES.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

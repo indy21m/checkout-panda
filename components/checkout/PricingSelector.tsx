@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { TrendingDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatMoney } from '@/lib/currency'
 import type { PricingTier, Currency } from '@/types'
@@ -25,7 +24,6 @@ export function PricingSelector({
 
       {tiers.map((tier) => {
         const isSelected = tier.id === selectedTierId
-        const savings = tier.originalPrice ? tier.originalPrice - tier.priceAmount : 0
 
         return (
           <motion.div
@@ -77,19 +75,6 @@ export function PricingSelector({
                     </div>
                   </div>
                 </div>
-
-                {/* Description */}
-                {tier.description && (
-                  <p className="mt-1 text-sm text-gray-600">{tier.description}</p>
-                )}
-
-                {/* Savings Badge */}
-                {isSelected && savings > 0 && (
-                  <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                    <TrendingDown className="h-3 w-3" />
-                    Save {formatMoney(savings, currency)}
-                  </div>
-                )}
 
                 {/* Total for installments */}
                 {tier.installments && (

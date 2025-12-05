@@ -57,26 +57,34 @@ export function OrderSummary({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between p-4 lg:hidden"
+        className="flex w-full items-center justify-between border-b border-gray-100 p-4 transition-colors hover:bg-gray-50 lg:hidden"
+        aria-expanded={isExpanded}
+        aria-controls="order-summary-content"
+        aria-label={isExpanded ? 'Hide order summary' : 'Show order summary'}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Your Order</span>
-          <span className="text-lg font-bold text-gray-900">
-            ({formatMoney(displayTotal, currency)})
+          <span className="text-sm font-medium text-gray-700">
+            {isExpanded ? 'Hide' : 'Show'} order summary
           </span>
+          <ChevronDown
+            className={cn('h-4 w-4 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
+          />
         </div>
-        <ChevronDown
-          className={cn('h-5 w-5 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
-        />
+        <span className="text-lg font-bold text-gray-900">
+          {formatMoney(displayTotal, currency)}
+        </span>
       </button>
 
       {/* Desktop Header (always visible) */}
-      <h3 className="hidden p-6 pb-0 text-lg font-semibold text-gray-900 lg:block">
-        Order Summary
+      <h3 className="hidden p-6 pb-0 text-xl font-bold text-gray-900 lg:block">
+        Complete Your Purchase
       </h3>
 
       {/* Collapsible Content */}
-      <div className={cn('p-6 pt-2 lg:pt-6', !isExpanded && 'hidden lg:block')}>
+      <div
+        id="order-summary-content"
+        className={cn('p-6 pt-2 lg:pt-6', !isExpanded && 'hidden lg:block')}
+      >
         {/* Product Image */}
         {product.checkout.image && (
           <div className="mb-4 overflow-hidden rounded-lg">
