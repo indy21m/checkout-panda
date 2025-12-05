@@ -39,16 +39,13 @@ export function CouponInput({ productSlug, onCouponApplied }: CouponInputProps) 
         setIsValid(true)
         setAppliedCode(data.couponId || code.toUpperCase())
 
-        const displayText = data.discountType === 'percent'
-          ? `${data.discountAmount}% off`
-          : `$${(data.discountAmount / 100).toFixed(2)} off`
+        const displayText =
+          data.discountType === 'percent'
+            ? `${data.discountAmount}% off`
+            : `$${(data.discountAmount / 100).toFixed(2)} off`
         setDiscountDisplay(displayText)
 
-        onCouponApplied(
-          data.couponId || code.toUpperCase(),
-          data.discountType,
-          data.discountAmount
-        )
+        onCouponApplied(data.couponId || code.toUpperCase(), data.discountType, data.discountAmount)
       } else {
         setIsValid(false)
         setError(data.error || 'Invalid coupon code')
@@ -75,9 +72,7 @@ export function CouponInput({ productSlug, onCouponApplied }: CouponInputProps) 
       <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3">
         <div className="flex items-center gap-2">
           <Tag className="h-4 w-4 text-green-600" />
-          <span className="text-sm font-medium text-green-800">
-            {appliedCode}
-          </span>
+          <span className="text-sm font-medium text-green-800">{appliedCode}</span>
           <span className="text-sm text-green-600">({discountDisplay})</span>
         </div>
         <button
@@ -107,7 +102,7 @@ export function CouponInput({ productSlug, onCouponApplied }: CouponInputProps) 
             )}
           />
           {isValid !== null && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div className="absolute top-1/2 right-3 -translate-y-1/2">
               {isValid ? (
                 <Check className="h-4 w-4 text-green-500" />
               ) : (

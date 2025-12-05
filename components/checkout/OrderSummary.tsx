@@ -41,13 +41,15 @@ export function OrderSummary({
   }
 
   // Calculate display totals
-  const displaySubtotal = includeOrderBump && product.orderBump?.enabled && !breakdown
-    ? subtotal + product.orderBump.stripe.priceAmount
-    : subtotal
+  const displaySubtotal =
+    includeOrderBump && product.orderBump?.enabled && !breakdown
+      ? subtotal + product.orderBump.stripe.priceAmount
+      : subtotal
 
-  const displayTotal = includeOrderBump && product.orderBump?.enabled && !breakdown
-    ? total + product.orderBump.stripe.priceAmount
-    : total
+  const displayTotal =
+    includeOrderBump && product.orderBump?.enabled && !breakdown
+      ? total + product.orderBump.stripe.priceAmount
+      : total
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white shadow-lg">
@@ -64,10 +66,7 @@ export function OrderSummary({
           </span>
         </div>
         <ChevronDown
-          className={cn(
-            'h-5 w-5 text-gray-400 transition-transform',
-            isExpanded && 'rotate-180'
-          )}
+          className={cn('h-5 w-5 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
         />
       </button>
 
@@ -95,7 +94,9 @@ export function OrderSummary({
           {displayItems.map((item, index) => (
             <div key={index} className="flex justify-between text-sm">
               <span className="text-gray-600">{item.name}</span>
-              <span className="font-medium text-gray-900">{formatMoney(item.amount, currency)}</span>
+              <span className="font-medium text-gray-900">
+                {formatMoney(item.amount, currency)}
+              </span>
             </div>
           ))}
         </div>
@@ -103,7 +104,9 @@ export function OrderSummary({
         {/* Subtotal */}
         <div className="flex justify-between border-b border-gray-100 py-3 text-sm">
           <span className="text-gray-600">Subtotal</span>
-          <span className="font-medium text-gray-900">{formatMoney(displaySubtotal, currency)}</span>
+          <span className="font-medium text-gray-900">
+            {formatMoney(displaySubtotal, currency)}
+          </span>
         </div>
 
         {/* Coupon Discount */}

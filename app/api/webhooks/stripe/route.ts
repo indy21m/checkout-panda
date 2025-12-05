@@ -22,11 +22,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
-    )
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET || '')
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
@@ -68,8 +64,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         }
 
         // Send to Zapier webhook
-        const zapierUrl =
-          product?.integrations?.zapierWebhookUrl || process.env.ZAPIER_WEBHOOK_URL
+        const zapierUrl = product?.integrations?.zapierWebhookUrl || process.env.ZAPIER_WEBHOOK_URL
 
         if (zapierUrl) {
           try {
@@ -130,6 +125,42 @@ export async function POST(req: Request): Promise<NextResponse> {
           paymentIntent.id,
           paymentIntent.last_payment_error?.message
         )
+        break
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as { subscription?: string | Stripe.Subscription }
+        const subscriptionId =
+          typeof invoice.subscription === 'string' ? invoice.subscription : null
+
+        // Only process if subscription has auto-cancel metadata
+        if (subscriptionId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+
+          if (subscription.metadata.autoCancel === 'true') {
+            const paymentsProcessed = parseInt(subscription.metadata.paymentsProcessed || '0') + 1
+            const installmentCount = parseInt(subscription.metadata.installmentCount || '3')
+
+            if (paymentsProcessed >= installmentCount) {
+              // Cancel subscription after final payment
+              await stripe.subscriptions.cancel(subscriptionId)
+              console.log(
+                `Auto-cancelled subscription ${subscriptionId} after ${paymentsProcessed} payments`
+              )
+            } else {
+              // Update payment counter
+              await stripe.subscriptions.update(subscriptionId, {
+                metadata: {
+                  ...subscription.metadata,
+                  paymentsProcessed: String(paymentsProcessed),
+                },
+              })
+              console.log(
+                `Updated subscription ${subscriptionId} - payment ${paymentsProcessed}/${installmentCount}`
+              )
+            }
+          }
+        }
         break
       }
 

@@ -35,20 +35,14 @@ export function UpsellOffer({
       <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-3">
         <div className="flex items-center justify-center gap-2">
           <Zap className="h-5 w-5 text-white" />
-          <p className="text-center font-semibold text-white">
-            WAIT! One-Time Exclusive Offer
-          </p>
+          <p className="text-center font-semibold text-white">WAIT! One-Time Exclusive Offer</p>
         </div>
       </div>
 
       <div className="p-8">
         {/* Title */}
-        <h1 className="text-center text-2xl font-bold text-gray-900 md:text-3xl">
-          {upsell.title}
-        </h1>
-        {upsell.subtitle && (
-          <p className="mt-2 text-center text-gray-600">{upsell.subtitle}</p>
-        )}
+        <h1 className="text-center text-2xl font-bold text-gray-900 md:text-3xl">{upsell.title}</h1>
+        {upsell.subtitle && <p className="mt-2 text-center text-gray-600">{upsell.subtitle}</p>}
 
         {/* Image */}
         {upsell.image && (
@@ -117,9 +111,7 @@ export function UpsellOffer({
                 Adding to your order...
               </>
             ) : (
-              <>
-                Yes! Add for {formatMoney(upsell.stripe.priceAmount, currency)}
-              </>
+              <>Yes! Add for {formatMoney(upsell.stripe.priceAmount, currency)}</>
             )}
           </Button>
 
@@ -136,9 +128,7 @@ export function UpsellOffer({
         {/* Urgency Text - always show expiry warning */}
         <div className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-gray-400">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-          <span>
-            {upsell.urgencyText || 'This offer expires when you leave this page'}
-          </span>
+          <span>{upsell.urgencyText || 'This offer expires when you leave this page'}</span>
         </div>
       </div>
     </motion.div>

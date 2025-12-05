@@ -5,12 +5,29 @@
 // Currency types
 export type Currency = 'USD' | 'EUR' | 'DKK'
 
+// Pricing tier for products with multiple payment options
+export interface PricingTier {
+  id: string // e.g., 'one-time', 'installment-3'
+  label: string // e.g., 'Pay in Full', '3 Monthly Payments'
+  priceId: string // Stripe price ID
+  priceAmount: number // Total amount in cents/øre
+  originalPrice?: number // For strikethrough display
+  isDefault?: boolean // Which option is selected by default
+  description?: string // e.g., 'Save 100 kr compared to installment plan'
+  installments?: {
+    count: number // Number of payments (e.g., 3)
+    intervalLabel: string // e.g., 'month'
+    amountPerPayment: number // Amount per payment in cents/øre
+  }
+}
+
 // Stripe configuration for a product/price
 export interface StripeConfig {
   productId: string // prod_xxx
-  priceId: string // price_xxx
-  priceAmount: number // Amount in cents
+  priceId: string // price_xxx (default/fallback price)
+  priceAmount: number // Amount in cents (default/fallback amount)
   currency: Currency
+  pricingTiers?: PricingTier[] // Optional: Multiple pricing options (one-time vs installments)
 }
 
 // Testimonial displayed on checkout
@@ -70,7 +87,8 @@ export interface CheckoutContent {
   subtitle?: string
   image: string
   benefits: string[]
-  testimonial?: Testimonial
+  testimonial?: Testimonial // Single testimonial (backward compatibility)
+  testimonials?: Testimonial[] // Multiple testimonials (new)
   guarantee: string
   guaranteeDays?: number
   faq?: FAQItem[]
@@ -133,6 +151,7 @@ export interface CreatePaymentIntentRequest {
   vatNumber?: string | null
   couponCode?: string | null
   includeOrderBump?: boolean
+  priceTierId?: string // Selected pricing tier ID (e.g., 'one-time', 'installment-3')
 }
 
 export interface PriceBreakdown {
@@ -203,6 +222,7 @@ export interface CheckoutState {
   product: Product
   customer: CustomerInfo
   includeOrderBump: boolean
+  selectedPriceTierId?: string // Selected pricing tier ID
   couponCode?: string | null
   couponDiscount?: number
   clientSecret?: string | null

@@ -6,6 +6,7 @@ import { StripeProvider } from './StripeProvider'
 import { CheckoutForm } from './CheckoutForm'
 import { ProductInfo } from './ProductInfo'
 import { OrderSummary } from './OrderSummary'
+import { PricingSelector } from './PricingSelector'
 import { Guarantee } from './Guarantee'
 import { TrustBadges } from './TrustBadges'
 import { Lock } from 'lucide-react'
@@ -21,6 +22,11 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
 
   // Checkout state
   const [includeOrderBump, setIncludeOrderBump] = useState(false)
+  const [selectedPriceTierId, setSelectedPriceTierId] = useState<string>(
+    product.stripe.pricingTiers?.find((tier) => tier.isDefault)?.id ||
+      product.stripe.pricingTiers?.[0]?.id ||
+      'default'
+  )
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
   const [breakdown, setBreakdown] = useState<PriceBreakdown | null>(null)
@@ -49,6 +55,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
             country: country || 'US',
             includeOrderBump,
             couponCode,
+            priceTierId: selectedPriceTierId,
           }),
         })
 
@@ -67,7 +74,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
         setIsLoading(false)
       }
     },
-    [product.slug, includeOrderBump, couponCode]
+    [product.slug, includeOrderBump, couponCode, selectedPriceTierId]
   )
 
   // Handle successful payment
@@ -134,9 +141,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
               <span className="text-xl font-bold text-gray-900">Secure Checkout</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="hidden text-sm text-gray-500 sm:block">
-                Step 1 of {totalSteps}
-              </span>
+              <span className="hidden text-sm text-gray-500 sm:block">Step 1 of {totalSteps}</span>
               <TrustBadges variant="compact" />
             </div>
           </div>
@@ -150,8 +155,23 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
             {/* Product Info */}
             <ProductInfo product={product} />
 
+            {/* Pricing Selector - only show if multiple pricing tiers */}
+            {product.stripe.pricingTiers && product.stripe.pricingTiers.length > 1 && (
+              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+                <PricingSelector
+                  tiers={product.stripe.pricingTiers}
+                  selectedTierId={selectedPriceTierId}
+                  currency={product.stripe.currency}
+                  onChange={setSelectedPriceTierId}
+                />
+              </div>
+            )}
+
             {/* Checkout Form with Stripe */}
-            <div id="checkout-form" className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+            <div
+              id="checkout-form"
+              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg"
+            >
               <StripeProvider
                 clientSecret={clientSecret || undefined}
                 amount={displayTotal}
@@ -174,24 +194,46 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
 
             {/* Guarantee - positioned after payment form for trust */}
             {product.checkout.guarantee && (
-              <Guarantee
-                text={product.checkout.guarantee}
-                days={product.checkout.guaranteeDays}
-              />
+              <Guarantee text={product.checkout.guarantee} days={product.checkout.guaranteeDays} />
             )}
 
-            {/* Single Testimonial - only shown on checkout, brief */}
-            {product.checkout.testimonial && (
-              <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
-                <p className="text-sm italic text-gray-600">
-                  &ldquo;{product.checkout.testimonial.quote}&rdquo;
-                </p>
-                <p className="mt-2 text-xs font-medium text-gray-900">
-                  — {product.checkout.testimonial.author}
-                  {product.checkout.testimonial.role && (
-                    <span className="text-gray-500">, {product.checkout.testimonial.role}</span>
-                  )}
-                </p>
+            {/* Testimonials - support multiple testimonials or single */}
+            {(product.checkout.testimonials || product.checkout.testimonial) && (
+              <div className="space-y-4">
+                {product.checkout.testimonials
+                  ? // Multiple testimonials
+                    product.checkout.testimonials.map((testimonial, index) => (
+                      <div
+                        key={index}
+                        className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm"
+                      >
+                        <p className="text-sm text-gray-600 italic">
+                          &ldquo;{testimonial.quote}&rdquo;
+                        </p>
+                        <p className="mt-2 text-xs font-medium text-gray-900">
+                          — {testimonial.author}
+                          {testimonial.role && (
+                            <span className="text-gray-500">, {testimonial.role}</span>
+                          )}
+                        </p>
+                      </div>
+                    ))
+                  : // Single testimonial (backward compatibility)
+                    product.checkout.testimonial && (
+                      <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+                        <p className="text-sm text-gray-600 italic">
+                          &ldquo;{product.checkout.testimonial.quote}&rdquo;
+                        </p>
+                        <p className="mt-2 text-xs font-medium text-gray-900">
+                          — {product.checkout.testimonial.author}
+                          {product.checkout.testimonial.role && (
+                            <span className="text-gray-500">
+                              , {product.checkout.testimonial.role}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
               </div>
             )}
           </div>
@@ -221,7 +263,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
       </footer>
 
       {/* Mobile Sticky Bottom CTA Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden">
+      <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-lg lg:hidden">
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm">
             <span className="text-gray-500">Total:</span>{' '}

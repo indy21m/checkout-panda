@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe/config'
 import { getProduct } from '@/config/products'
 import { calculateTax, validateVATFormat, isEUCountry } from '@/lib/vat'
@@ -15,6 +16,7 @@ const requestSchema = z.object({
   vatNumber: z.string().optional().nullable(),
   couponCode: z.string().optional().nullable(),
   includeOrderBump: z.boolean().default(false),
+  priceTierId: z.string().optional(),
 })
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -28,10 +30,49 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
+    // Determine which price to use based on selected tier
+    let selectedPrice: { priceId: string; priceAmount: number }
+    let isInstallmentPlan = false
+    let installmentDetails: { count: number; amountPerPayment: number } | undefined
+
+    if (data.priceTierId && product.stripe.pricingTiers) {
+      const selectedTier = product.stripe.pricingTiers.find((tier) => tier.id === data.priceTierId)
+      if (selectedTier) {
+        selectedPrice = {
+          priceId: selectedTier.priceId,
+          priceAmount: selectedTier.priceAmount,
+        }
+        if (selectedTier.installments) {
+          isInstallmentPlan = true
+          installmentDetails = {
+            count: selectedTier.installments.count,
+            amountPerPayment: selectedTier.installments.amountPerPayment,
+          }
+        }
+      } else {
+        // Fallback to default
+        selectedPrice = {
+          priceId: product.stripe.priceId,
+          priceAmount: product.stripe.priceAmount,
+        }
+      }
+    } else {
+      // No tier selected, use default
+      selectedPrice = {
+        priceId: product.stripe.priceId,
+        priceAmount: product.stripe.priceAmount,
+      }
+    }
+
     // Calculate base amount
-    let subtotal = product.stripe.priceAmount
+    let subtotal = selectedPrice.priceAmount
     const items: Array<{ name: string; amount: number }> = [
-      { name: product.name, amount: product.stripe.priceAmount },
+      {
+        name: isInstallmentPlan
+          ? `${product.name} (${installmentDetails!.count} payments)`
+          : product.name,
+        amount: selectedPrice.priceAmount,
+      },
     ]
 
     // Add order bump if selected and enabled
@@ -111,33 +152,96 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       customerId = customer.id
     }
 
-    // Create payment intent with setup_future_usage to save card for upsells
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: total,
-      currency: product.stripe.currency.toLowerCase(),
-      customer: customerId,
-      setup_future_usage: 'off_session', // Save card for one-click upsells
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        productSlug: data.productSlug,
-        productId: product.stripe.productId,
-        productName: product.name,
-        email: data.email,
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
-        country: data.country,
-        vatNumber: data.vatNumber || '',
-        couponCode: data.couponCode || '',
-        couponId: couponId || '',
-        includeOrderBump: String(data.includeOrderBump),
-        subtotal: String(subtotal),
-        discount: String(discount),
-        tax: String(taxCalc.taxAmount),
-        taxRate: String(taxCalc.taxRate),
-        reverseCharge: String(taxCalc.reverseCharge),
-        isEU: String(isEU),
-      },
-    })
+    // Branch: Create Subscription for installments, PaymentIntent for one-time
+    let clientSecret: string
+    let paymentIntentId: string
+
+    if (isInstallmentPlan && installmentDetails) {
+      // For installment plans: Create Stripe Subscription
+
+      // If order bump is included, add it as a one-time invoice item on first payment
+      if (data.includeOrderBump && product.orderBump?.enabled) {
+        await stripe.invoiceItems.create({
+          customer: customerId,
+          amount: product.orderBump.stripe.priceAmount,
+          currency: product.stripe.currency.toLowerCase(),
+          description: product.orderBump.title,
+        })
+      }
+
+      // Create subscription
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: selectedPrice.priceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: {
+          payment_method_types: ['card'],
+          save_default_payment_method: 'on_subscription',
+        },
+        expand: ['latest_invoice.payment_intent'],
+        metadata: {
+          productSlug: data.productSlug,
+          productId: product.stripe.productId,
+          productName: product.name,
+          priceId: selectedPrice.priceId,
+          priceTierId: data.priceTierId || '',
+          isInstallmentPlan: 'true',
+          installmentCount: String(installmentDetails.count),
+          paymentsProcessed: '0',
+          autoCancel: 'true', // Flag for webhook to auto-cancel after final payment
+          email: data.email,
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          country: data.country,
+          vatNumber: data.vatNumber || '',
+          couponCode: data.couponCode || '',
+          couponId: couponId || '',
+          includeOrderBump: String(data.includeOrderBump),
+        },
+      })
+
+      const invoice = subscription.latest_invoice as unknown as {
+        payment_intent: Stripe.PaymentIntent
+      }
+      const paymentIntent = invoice.payment_intent
+
+      clientSecret = paymentIntent.client_secret || ''
+      paymentIntentId = paymentIntent.id
+    } else {
+      // For one-time payments: Create PaymentIntent (existing logic)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: total,
+        currency: product.stripe.currency.toLowerCase(),
+        customer: customerId,
+        setup_future_usage: 'off_session', // Save card for one-click upsells
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          productSlug: data.productSlug,
+          productId: product.stripe.productId,
+          productName: product.name,
+          priceId: selectedPrice.priceId,
+          priceTierId: data.priceTierId || '',
+          isInstallmentPlan: 'false',
+          email: data.email,
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          country: data.country,
+          vatNumber: data.vatNumber || '',
+          couponCode: data.couponCode || '',
+          couponId: couponId || '',
+          includeOrderBump: String(data.includeOrderBump),
+          subtotal: String(subtotal),
+          discount: String(discount),
+          tax: String(taxCalc.taxAmount),
+          taxRate: String(taxCalc.taxRate),
+          reverseCharge: String(taxCalc.reverseCharge),
+          isEU: String(isEU),
+        },
+      })
+
+      clientSecret = paymentIntent.client_secret || ''
+      paymentIntentId = paymentIntent.id
+    }
 
     const breakdown: PriceBreakdown = {
       subtotal,
@@ -152,9 +256,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const response: CreatePaymentIntentResponse = {
-      clientSecret: paymentIntent.client_secret || '',
+      clientSecret,
       customerId,
-      paymentIntentId: paymentIntent.id,
+      paymentIntentId,
       breakdown,
     }
 

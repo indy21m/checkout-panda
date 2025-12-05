@@ -149,4 +149,3 @@ export function validateCurrencyConsistency(items: Array<{ currency: string; amo
 
   return { valid: true, currency: firstCurrency }
 }
-

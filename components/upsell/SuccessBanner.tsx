@@ -21,8 +21,8 @@ export function SuccessBanner({ productName }: SuccessBannerProps) {
         <div>
           <h2 className="text-lg font-semibold text-green-900">Your Order is Confirmed!</h2>
           <p className="text-sm text-green-700">
-            Thank you for purchasing <span className="font-medium">{productName}</span>.
-            Check your email for access details.
+            Thank you for purchasing <span className="font-medium">{productName}</span>. Check your
+            email for access details.
           </p>
         </div>
       </div>

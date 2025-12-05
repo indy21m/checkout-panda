@@ -1,5 +1,6 @@
 import type { Product } from '@/types'
 import { exampleCourse } from './example-course'
+import { investingDenmarkCourse } from './investing-denmark-course'
 
 /**
  * All products registry
@@ -13,8 +14,7 @@ import { exampleCourse } from './example-course'
  */
 export const products: Record<string, Product> = {
   'example-course': exampleCourse,
-  // Add more products here:
-  // 'another-product': anotherProduct,
+  'investing-denmark': investingDenmarkCourse,
 }
 
 /**
@@ -46,4 +46,4 @@ export function productExists(slug: string): boolean {
 }
 
 // Re-export individual products for direct imports if needed
-export { exampleCourse }
+export { exampleCourse, investingDenmarkCourse }

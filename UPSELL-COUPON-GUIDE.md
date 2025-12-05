@@ -141,12 +141,14 @@ Customers enter coupon codes on the checkout page via the `CouponInput` componen
 ### Coupon Types
 
 **Percentage Off:**
+
 ```typescript
 // Stripe: 20% off
-discount = subtotal * 0.20
+discount = subtotal * 0.2
 ```
 
 **Fixed Amount:**
+
 ```typescript
 // Stripe: 100 DKK off
 discount = min(10000, subtotal) // 100 DKK in cents
@@ -161,6 +163,7 @@ discount = min(10000, subtotal) // 100 DKK in cents
 ### Example Coupon Configurations
 
 **Limited Time Offer:**
+
 ```
 Name: Black Friday 2024
 ID: BLACKFRIDAY2024
@@ -172,6 +175,7 @@ Max redemptions: 100
 ```
 
 **Influencer Discount:**
+
 ```
 Name: Affiliate Partner - John
 ID: JOHN15
@@ -182,6 +186,7 @@ Max redemptions: (unlimited)
 ```
 
 **First-Time Customer:**
+
 ```
 Name: Welcome Discount
 ID: WELCOME50
@@ -194,6 +199,7 @@ Max redemptions: 1000
 ### Tracking Coupon Usage
 
 Coupon usage is automatically tracked in:
+
 1. **Stripe Dashboard** → Coupons → Click coupon → View "Times redeemed"
 2. **Payment Intent metadata** - includes `couponCode` and `couponId`
 3. **Webhook events** - sent to Zapier with coupon details
@@ -215,6 +221,7 @@ Coupon usage is automatically tracked in:
 ## Advanced: Coupon + Upsell Strategies
 
 ### Strategy 1: Main Product Discount
+
 ```typescript
 // Product: 1099 DKK
 // Coupon: SAVE20 (20% off)
@@ -224,6 +231,7 @@ Coupon usage is automatically tracked in:
 ```
 
 ### Strategy 2: Downsell-Only Coupons
+
 Create separate "recovery" coupons for downsell pages by sending customers to a specific URL:
 
 ```
@@ -233,6 +241,7 @@ Create separate "recovery" coupons for downsell pages by sending customers to a 
 Pre-fill the coupon input and auto-validate.
 
 ### Strategy 3: Order Bump Incentives
+
 Coupons apply to order bump too:
 
 ```typescript
@@ -250,12 +259,14 @@ This incentivizes adding the order bump.
 ## Summary
 
 **Upsell Chains:**
+
 - Define in product config file
 - Create matching route files for each upsell
 - Use one-click charging with saved payment methods
 - Chain as many upsells as you want (just add more routes)
 
 **Coupons:**
+
 - Managed entirely in Stripe Dashboard
 - No code changes needed to add/remove coupons
 - Validated via API on checkout
@@ -263,5 +274,6 @@ This incentivizes adding the order bump.
 - Tracked automatically in Stripe
 
 **Key Difference:**
+
 - Upsells = Additional products in the funnel
 - Coupons = Discounts on the initial purchase

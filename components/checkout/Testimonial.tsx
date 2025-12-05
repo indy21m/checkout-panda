@@ -16,7 +16,7 @@ export function Testimonial({ quote, author, role, avatar, className }: Testimon
     <div className={cn('rounded-xl bg-white p-6 shadow-md', className)}>
       <div className="mb-3 flex items-center gap-2">
         <Quote className="h-5 w-5 text-blue-400" />
-        <span className="text-xs font-medium uppercase tracking-wider text-gray-400">
+        <span className="text-xs font-medium tracking-wider text-gray-400 uppercase">
           What Others Say
         </span>
       </div>

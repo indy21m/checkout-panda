@@ -105,9 +105,7 @@ export function DownsellPage({
 
           <div className="p-8">
             {/* Title */}
-            <h1 className="text-center text-2xl font-bold text-gray-900">
-              {downsell.title}
-            </h1>
+            <h1 className="text-center text-2xl font-bold text-gray-900">{downsell.title}</h1>
             {downsell.subtitle && (
               <p className="mt-2 text-center text-gray-600">{downsell.subtitle}</p>
             )}

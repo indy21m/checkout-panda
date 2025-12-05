@@ -90,8 +90,8 @@ export function ThankYouPage({
             <div>
               <h3 className="font-semibold text-blue-900">Check Your Email</h3>
               <p className="mt-1 text-sm text-blue-700">
-                We&apos;ve sent your receipt and access instructions to your email.
-                If you don&apos;t see it, check your spam folder.
+                We&apos;ve sent your receipt and access instructions to your email. If you
+                don&apos;t see it, check your spam folder.
               </p>
             </div>
           </div>
