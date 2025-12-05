@@ -6,6 +6,13 @@ import type { StripePaymentElementOptions } from '@stripe/stripe-js'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { OrderBump } from './OrderBump'
 import { CouponInput } from './CouponInput'
 import { Loader2, CreditCard, ChevronRight, Lock } from 'lucide-react'
@@ -51,6 +58,8 @@ export function CheckoutForm({
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [country, setCountry] = useState('DK')
+  const [address, setAddress] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [hasInitialized, setHasInitialized] = useState(false)
@@ -65,8 +74,8 @@ export function CheckoutForm({
     }
 
     setHasInitialized(true)
-    await onInitializePayment(email, firstName, lastName)
-  }, [email, firstName, lastName, hasInitialized, onInitializePayment])
+    await onInitializePayment(email, firstName, lastName, country)
+  }, [email, firstName, lastName, country, hasInitialized, onInitializePayment])
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,7 +90,7 @@ export function CheckoutForm({
 
     // If not initialized, do it now
     if (!clientSecret) {
-      await onInitializePayment(email, firstName, lastName)
+      await onInitializePayment(email, firstName, lastName, country)
       return
     }
 
@@ -112,6 +121,10 @@ export function CheckoutForm({
             billing_details: {
               name: [firstName, lastName].filter(Boolean).join(' ') || undefined,
               email,
+              address: {
+                line1: address || undefined,
+                country: country || undefined,
+              },
             },
           },
         },
@@ -210,6 +223,51 @@ export function CheckoutForm({
               className="mt-1"
             />
           </div>
+        </div>
+
+        <div>
+          <Label htmlFor="country" className="text-sm font-medium text-gray-700">
+            Country
+          </Label>
+          <Select value={country} onValueChange={setCountry}>
+            <SelectTrigger id="country" className="mt-1">
+              <SelectValue placeholder="Select country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="DK">Denmark</SelectItem>
+              <SelectItem value="SE">Sweden</SelectItem>
+              <SelectItem value="NO">Norway</SelectItem>
+              <SelectItem value="DE">Germany</SelectItem>
+              <SelectItem value="FR">France</SelectItem>
+              <SelectItem value="ES">Spain</SelectItem>
+              <SelectItem value="IT">Italy</SelectItem>
+              <SelectItem value="NL">Netherlands</SelectItem>
+              <SelectItem value="BE">Belgium</SelectItem>
+              <SelectItem value="AT">Austria</SelectItem>
+              <SelectItem value="PL">Poland</SelectItem>
+              <SelectItem value="FI">Finland</SelectItem>
+              <SelectItem value="IE">Ireland</SelectItem>
+              <SelectItem value="PT">Portugal</SelectItem>
+              <SelectItem value="GB">United Kingdom</SelectItem>
+              <SelectItem value="US">United States</SelectItem>
+              <SelectItem value="CA">Canada</SelectItem>
+              <SelectItem value="AU">Australia</SelectItem>
+              <SelectItem value="NZ">New Zealand</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="address" className="text-sm font-medium text-gray-700">
+            Address
+          </Label>
+          <Input
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Street address"
+            className="mt-1"
+          />
         </div>
       </div>
 

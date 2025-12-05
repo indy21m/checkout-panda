@@ -9,7 +9,6 @@ import { OrderSummary } from './OrderSummary'
 import { PricingSelector } from './PricingSelector'
 import { Guarantee } from './Guarantee'
 import { TrustBadges } from './TrustBadges'
-import { Lock } from 'lucide-react'
 import { formatMoney } from '@/lib/currency'
 import type { Product, PriceBreakdown } from '@/types'
 
@@ -126,28 +125,8 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
     [breakdown]
   )
 
-  // Determine if there are upsells (for step indicator)
-  const hasUpsells = product.upsells && product.upsells.length > 0
-  const totalSteps = hasUpsells ? 2 : 1
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-green-600" />
-              <span className="text-xl font-bold text-gray-900">Secure Checkout</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="hidden text-sm text-gray-500 sm:block">Step 1 of {totalSteps}</span>
-              <TrustBadges variant="compact" />
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Left Column - Product Info & Form */}
