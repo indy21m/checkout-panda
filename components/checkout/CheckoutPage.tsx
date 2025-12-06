@@ -32,7 +32,10 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
 
   // Get selected tier for amount calculation
   const selectedTier = product.stripe.pricingTiers?.find((t) => t.id === selectedPriceTierId)
-  const displayTotal = breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount
+  const baseAmount = selectedTier?.priceAmount ?? product.stripe.priceAmount
+  const orderBumpAmount =
+    includeOrderBump && product.orderBump?.enabled ? product.orderBump.stripe.priceAmount : 0
+  const displayTotal = breakdown?.total ?? baseAmount + orderBumpAmount
 
   // Initialize payment (called when email is entered)
   const handleInitializePayment = useCallback(

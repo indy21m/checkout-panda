@@ -40,9 +40,13 @@ export function ProductCard({
   const isInstallment = selectedTier?.installments
 
   // Calculate display amount
+  const baseAmount = selectedTier?.priceAmount ?? product.stripe.priceAmount
+  const orderBumpAmount =
+    includeOrderBump && product.orderBump?.enabled ? product.orderBump.stripe.priceAmount : 0
+
   const displayAmount = isInstallment
     ? (selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount)
-    : (breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount)
+    : breakdown?.total ?? baseAmount + orderBumpAmount
 
   // Show first 7 benefits by default, rest on expand
   const visibleBenefits = showAllBenefits

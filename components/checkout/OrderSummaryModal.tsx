@@ -41,6 +41,7 @@ export function OrderSummaryModal({
             breakdown={breakdown}
             includeOrderBump={includeOrderBump}
             couponCode={couponCode}
+            isModal
           />
         </div>
       </DialogContent>

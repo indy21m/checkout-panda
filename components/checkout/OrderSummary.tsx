@@ -11,6 +11,8 @@ interface OrderSummaryProps {
   includeOrderBump: boolean
   breakdown: PriceBreakdown | null
   couponCode: string | null
+  /** When true, renders a simplified view without collapsible behavior (for modals) */
+  isModal?: boolean
 }
 
 export function OrderSummary({
@@ -18,8 +20,12 @@ export function OrderSummary({
   includeOrderBump,
   breakdown,
   couponCode,
+  isModal = false,
 }: OrderSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+
+  // In modal mode, always show expanded content
+  const showContent = isModal || isExpanded
   const currency = product.stripe.currency
 
   // Calculate amounts from breakdown or defaults
@@ -52,38 +58,45 @@ export function OrderSummary({
       : total
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-lg">
-      {/* Mobile Collapsible Header */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between border-b border-gray-100 p-4 transition-colors hover:bg-gray-50 lg:hidden"
-        aria-expanded={isExpanded}
-        aria-controls="order-summary-content"
-        aria-label={isExpanded ? 'Hide order summary' : 'Show order summary'}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">
-            {isExpanded ? 'Hide' : 'Show'} order summary
+    <div className={cn(!isModal && 'rounded-2xl border border-gray-100 bg-white shadow-lg')}>
+      {/* Mobile Collapsible Header - hidden in modal mode */}
+      {!isModal && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex w-full items-center justify-between border-b border-gray-100 p-4 transition-colors hover:bg-gray-50 lg:hidden"
+          aria-expanded={isExpanded}
+          aria-controls="order-summary-content"
+          aria-label={isExpanded ? 'Hide order summary' : 'Show order summary'}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">
+              {isExpanded ? 'Hide' : 'Show'} order summary
+            </span>
+            <ChevronDown
+              className={cn('h-4 w-4 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
+            />
+          </div>
+          <span className="text-lg font-bold text-gray-900">
+            {formatMoney(displayTotal, currency)}
           </span>
-          <ChevronDown
-            className={cn('h-4 w-4 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
-          />
-        </div>
-        <span className="text-lg font-bold text-gray-900">
-          {formatMoney(displayTotal, currency)}
-        </span>
-      </button>
+        </button>
+      )}
 
-      {/* Desktop Header (always visible) */}
-      <h3 className="hidden p-6 pb-0 text-xl font-bold text-gray-900 lg:block">
-        Complete Your Purchase
-      </h3>
+      {/* Desktop Header (always visible) - hidden in modal mode (modal has its own header) */}
+      {!isModal && (
+        <h3 className="hidden p-6 pb-0 text-xl font-bold text-gray-900 lg:block">
+          Complete Your Purchase
+        </h3>
+      )}
 
-      {/* Collapsible Content */}
+      {/* Content - always visible in modal mode */}
       <div
         id="order-summary-content"
-        className={cn('p-6 pt-2 lg:pt-6', !isExpanded && 'hidden lg:block')}
+        className={cn(
+          isModal ? 'pt-2' : 'p-6 pt-2 lg:pt-6',
+          !isModal && !showContent && 'hidden lg:block'
+        )}
       >
         {/* Line Items */}
         <div className="space-y-3 border-b border-gray-100 pb-4">

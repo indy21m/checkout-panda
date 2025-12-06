@@ -67,8 +67,11 @@ export function PaymentSection({
   const selectedTier = product.stripe.pricingTiers?.find((t) => t.id === selectedPriceTierId)
   const isInstallment = selectedTier?.installments
 
-  // Calculate display amount
-  const displayAmount = breakdown?.total ?? selectedTier?.priceAmount ?? product.stripe.priceAmount
+  // Calculate display amount (include order bump estimate when breakdown not yet available)
+  const baseAmount = selectedTier?.priceAmount ?? product.stripe.priceAmount
+  const orderBumpAmount =
+    includeOrderBump && product.orderBump?.enabled ? product.orderBump.stripe.priceAmount : 0
+  const displayAmount = breakdown?.total ?? baseAmount + orderBumpAmount
   const currency = product.stripe.currency
 
   // Initialize payment when we have email and country (for tax calculation)
