@@ -124,7 +124,7 @@ export const investingDenmarkCourse: Product = {
     },
     title: 'Wealth Deep Dive Extended',
     description:
-      "Transform from beginner to confident investor faster with Mario's personal 1-on-1 portfolio review template, advanced tax optimization worksheets, and lifetime access to quarterly market update webinars. See exactly what the top 10% of Danish investors do differently.",
+      "Get Mario's personal portfolio review template, advanced tax worksheets, and lifetime quarterly webinar access. Learn what top Danish investors do differently.",
     savingsPercent: 40,
   },
 

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { StripeProvider } from './StripeProvider'
 import { ProductCard } from './ProductCard'
 import { PaymentSection } from './PaymentSection'
-import { OrderBump } from './OrderBump'
 import { formatMoney } from '@/lib/currency'
 import { Star } from 'lucide-react'
 import type { Product, PriceBreakdown } from '@/types'
@@ -125,15 +124,6 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Logo */}
-      <header className="border-b border-gray-200 bg-white py-4">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-400">
-            <span className="text-lg">🐼</span>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Left Column - Product Card & Testimonials */}
@@ -146,17 +136,8 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
               onCouponApplied={handleCouponApplied}
               breakdown={breakdown}
               includeOrderBump={includeOrderBump}
+              onOrderBumpChange={setIncludeOrderBump}
             />
-
-            {/* Order Bump - Below product card */}
-            {product.orderBump?.enabled && (
-              <OrderBump
-                orderBump={product.orderBump}
-                currency={product.stripe.currency}
-                checked={includeOrderBump}
-                onChange={setIncludeOrderBump}
-              />
-            )}
 
             {/* Testimonials */}
             {(product.checkout.testimonials || product.checkout.testimonial) && (

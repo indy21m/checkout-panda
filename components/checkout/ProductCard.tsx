@@ -7,6 +7,7 @@ import { formatMoney } from '@/lib/currency'
 import { Heart, CheckCircle, ChevronDown } from 'lucide-react'
 import { PricingSelector } from './PricingSelector'
 import { CouponInput } from './CouponInput'
+import { OrderBump } from './OrderBump'
 import type { Product, PriceBreakdown } from '@/types'
 
 interface ProductCardProps {
@@ -16,6 +17,7 @@ interface ProductCardProps {
   onCouponApplied: (code: string, discountType: 'percent' | 'fixed', discountAmount: number) => void
   breakdown: PriceBreakdown | null
   includeOrderBump: boolean
+  onOrderBumpChange: (checked: boolean) => void
 }
 
 export function ProductCard({
@@ -25,6 +27,7 @@ export function ProductCard({
   onCouponApplied,
   breakdown,
   includeOrderBump,
+  onOrderBumpChange,
 }: ProductCardProps) {
   const [showAllBenefits, setShowAllBenefits] = useState(false)
   const currency = product.stripe.currency
@@ -109,6 +112,18 @@ export function ProductCard({
                 />
               </button>
             )}
+          </div>
+        )}
+
+        {/* Order Bump */}
+        {product.orderBump && (
+          <div className="mt-4">
+            <OrderBump
+              orderBump={product.orderBump}
+              currency={currency}
+              checked={includeOrderBump}
+              onChange={onOrderBumpChange}
+            />
           </div>
         )}
 

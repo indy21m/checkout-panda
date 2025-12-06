@@ -56,7 +56,6 @@ export function PaymentSection({
   const [fullName, setFullName] = useState('')
   const [country, setCountry] = useState(DEFAULT_COUNTRY)
   const [address, setAddress] = useState('')
-  const [businessName, setBusinessName] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
@@ -278,21 +277,6 @@ export function PaymentSection({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="123 Main Street"
-            className="mt-1.5"
-          />
-        </div>
-
-        {/* Business Name (Optional) */}
-        <div>
-          <Label htmlFor="businessName" className="text-sm font-medium text-gray-700">
-            Business name <span className="font-normal text-gray-400">(Optional)</span>
-          </Label>
-          <Input
-            id="businessName"
-            type="text"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            placeholder="Your company name"
             className="mt-1.5"
           />
         </div>
