@@ -180,19 +180,17 @@ export function ProductCard({
           </div>
         </div>
 
-        {/* View order details link */}
-        {(breakdown?.items && breakdown.items.length > 1) || includeOrderBump ? (
-          <OrderSummaryModal
-            product={product}
-            breakdown={breakdown}
-            includeOrderBump={includeOrderBump}
-            couponCode={couponCode}
-          >
-            <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
-              View order details
-            </button>
-          </OrderSummaryModal>
-        ) : null}
+        {/* View order details link - always visible */}
+        <OrderSummaryModal
+          product={product}
+          breakdown={breakdown}
+          includeOrderBump={includeOrderBump}
+          couponCode={couponCode}
+        >
+          <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
+            View order details
+          </button>
+        </OrderSummaryModal>
       </div>
     </div>
   )

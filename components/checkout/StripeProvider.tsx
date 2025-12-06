@@ -114,16 +114,10 @@ export function StripeProvider({
   quoteId,
 }: StripeProviderProps) {
   // Create a unique key for the Elements provider to force remount
+  // Note: amount is intentionally excluded to prevent card reset when switching pricing tiers
   const elementsKey = React.useMemo(() => {
-    return [
-      clientSecret || 'deferred',
-      amount || 0,
-      currency,
-      mode,
-      country,
-      quoteId || 'no-quote',
-    ].join(':')
-  }, [clientSecret, amount, currency, mode, country, quoteId])
+    return [clientSecret || 'deferred', currency, mode, country, quoteId || 'no-quote'].join(':')
+  }, [clientSecret, currency, mode, country, quoteId])
 
   const options: StripeElementsOptions = React.useMemo(() => {
     const baseOptions = {

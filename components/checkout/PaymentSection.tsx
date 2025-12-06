@@ -24,6 +24,7 @@ import type { Product, PriceBreakdown } from '@/types'
 interface PaymentSectionProps {
   product: Product
   selectedPriceTierId: string
+  includeOrderBump: boolean
   onInitializePayment: (
     email: string,
     firstName?: string,
@@ -41,6 +42,7 @@ interface PaymentSectionProps {
 export function PaymentSection({
   product,
   selectedPriceTierId,
+  includeOrderBump,
   onInitializePayment,
   onPaymentSuccess,
   clientSecret,
@@ -95,6 +97,18 @@ export function PaymentSection({
     }
     return undefined
   }, [email, clientSecret, isLoading, initializePaymentIfNeeded])
+
+  // Re-initialize when order bump or price tier changes to update breakdown
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (email && emailRegex.test(email)) {
+      const nameParts = fullName.trim().split(' ')
+      const firstName = nameParts[0] || undefined
+      const lastName = nameParts.slice(1).join(' ') || undefined
+      onInitializePayment(email, firstName, lastName, country, address)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includeOrderBump, selectedPriceTierId])
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,7 +220,7 @@ export function PaymentSection({
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-6 text-xl font-bold text-gray-900">Payment details</h2>
+      <h2 className="mb-6 text-xl font-bold text-gray-900">Payment Details</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Payment Element - Always visible */}
@@ -214,28 +228,26 @@ export function PaymentSection({
           <PaymentElement options={paymentElementOptions} onReady={() => setIsPaymentReady(true)} />
         </div>
 
-        {/* Email (hidden field synced with payment element, or shown if needed) */}
-        {!clientSecret && (
-          <div>
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="mt-1.5"
-            />
-          </div>
-        )}
+        {/* Email Address - always visible */}
+        <div>
+          <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+            Email Address
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            className="mt-1.5"
+          />
+        </div>
 
         {/* Full Name */}
         <div>
           <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
-            Full name
+            Full Name
           </Label>
           <Input
             id="fullName"
@@ -250,7 +262,7 @@ export function PaymentSection({
         {/* Country/Region */}
         <div>
           <Label htmlFor="country" className="text-sm font-medium text-gray-700">
-            Country or region
+            Country or Region
           </Label>
           <Select value={country} onValueChange={setCountry}>
             <SelectTrigger id="country" className="mt-1.5">
@@ -269,7 +281,7 @@ export function PaymentSection({
         {/* Address Line 1 */}
         <div>
           <Label htmlFor="address" className="text-sm font-medium text-gray-700">
-            Address line 1
+            Address Line 1
           </Label>
           <Input
             id="address"

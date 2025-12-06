@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { StripeProvider } from './StripeProvider'
 import { ProductCard } from './ProductCard'
@@ -122,15 +122,6 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
     [breakdown]
   )
 
-  // Re-initialize payment when order bump changes to force price update
-  useEffect(() => {
-    if (clientSecret) {
-      // Clear payment intent to trigger re-initialization with updated includeOrderBump
-      setClientSecret(null)
-      setBreakdown(null)
-    }
-  }, [includeOrderBump])
-
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-6xl px-4 py-8">
@@ -221,6 +212,7 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
                 <PaymentSection
                   product={product}
                   selectedPriceTierId={selectedPriceTierId}
+                  includeOrderBump={includeOrderBump}
                   onInitializePayment={handleInitializePayment}
                   onPaymentSuccess={handlePaymentSuccess}
                   clientSecret={clientSecret}

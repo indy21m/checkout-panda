@@ -85,18 +85,6 @@ export function OrderSummary({
         id="order-summary-content"
         className={cn('p-6 pt-2 lg:pt-6', !isExpanded && 'hidden lg:block')}
       >
-        {/* Product Image */}
-        {product.checkout.image && (
-          <div className="mb-4 overflow-hidden rounded-lg">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={product.checkout.image}
-              alt={product.name}
-              className="h-40 w-full object-cover"
-            />
-          </div>
-        )}
-
         {/* Line Items */}
         <div className="space-y-3 border-b border-gray-100 pb-4">
           {displayItems.map((item, index) => (
