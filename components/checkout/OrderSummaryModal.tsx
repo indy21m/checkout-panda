@@ -16,6 +16,7 @@ interface OrderSummaryModalProps {
   breakdown: PriceBreakdown | null
   includeOrderBump: boolean
   couponCode: string | null
+  selectedPriceTierId: string
   children: React.ReactNode // The trigger button
 }
 
@@ -24,6 +25,7 @@ export function OrderSummaryModal({
   breakdown,
   includeOrderBump,
   couponCode,
+  selectedPriceTierId,
   children,
 }: OrderSummaryModalProps) {
   const [open, setOpen] = useState(false)
@@ -41,6 +43,7 @@ export function OrderSummaryModal({
             breakdown={breakdown}
             includeOrderBump={includeOrderBump}
             couponCode={couponCode}
+            selectedPriceTierId={selectedPriceTierId}
             isModal
           />
         </div>

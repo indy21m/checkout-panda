@@ -44,9 +44,32 @@ export function ProductCard({
   const orderBumpAmount =
     includeOrderBump && product.orderBump?.enabled ? product.orderBump.stripe.priceAmount : 0
 
+  // For installments: today = first installment + order bump
+  // For one-time: today = total (or base + order bump if no breakdown)
   const displayAmount = isInstallment
-    ? (selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount)
+    ? (selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount) + orderBumpAmount
     : breakdown?.total ?? baseAmount + orderBumpAmount
+
+  // Calculate next payment date for installments
+  const getNextPaymentDate = (): string => {
+    const today = new Date()
+    const nextDate = new Date(today)
+    const intervalLabel = selectedTier?.installments?.intervalLabel ?? 'month'
+
+    if (intervalLabel === 'month') {
+      nextDate.setMonth(nextDate.getMonth() + 1)
+    } else if (intervalLabel === 'week') {
+      nextDate.setDate(nextDate.getDate() + 7)
+    } else {
+      nextDate.setMonth(nextDate.getMonth() + 1)
+    }
+
+    return nextDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    })
+  }
 
   // Show first 7 benefits by default, rest on expand
   const visibleBenefits = showAllBenefits
@@ -164,37 +187,43 @@ export function ProductCard({
         </div>
 
         {/* Total Due Today */}
-        <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
-          <div>
-            <span className="text-sm font-medium text-gray-700">Total due today</span>
-            {breakdown?.discount && breakdown.discount > 0 && (
-              <p className="text-xs text-green-600">
-                Discount applied: -{formatMoney(breakdown.discount, currency)}
-              </p>
-            )}
+        <div className="mt-6 border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-gray-700">Total due today</span>
+              {breakdown?.discount && breakdown.discount > 0 && (
+                <p className="text-xs text-green-600">
+                  Discount applied: -{formatMoney(breakdown.discount, currency)}
+                </p>
+              )}
+            </div>
+            <div className="text-right">
+              <span className="text-xl font-bold text-gray-900">
+                {formatMoney(displayAmount, currency)}
+              </span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-xl font-bold text-gray-900">
-              {formatMoney(displayAmount, currency)}
-              {isInstallment && <span className="text-sm font-normal text-gray-500">.</span>}
-            </span>
-            {isInstallment && breakdown && (
-              <p className="text-xs text-gray-500">{selectedTier.installments?.count}x payments</p>
-            )}
-          </div>
-        </div>
 
-        {/* View order details link - always visible */}
-        <OrderSummaryModal
-          product={product}
-          breakdown={breakdown}
-          includeOrderBump={includeOrderBump}
-          couponCode={couponCode}
-        >
-          <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
-            View order details
-          </button>
-        </OrderSummaryModal>
+          {/* View order details link */}
+          <OrderSummaryModal
+            product={product}
+            breakdown={breakdown}
+            includeOrderBump={includeOrderBump}
+            couponCode={couponCode}
+            selectedPriceTierId={selectedPriceTierId}
+          >
+            <button type="button" className="mt-1 text-xs text-blue-600 hover:underline">
+              View order details
+            </button>
+          </OrderSummaryModal>
+
+          {/* Next payment date - only shown for installments */}
+          {isInstallment && (
+            <p className="mt-2 text-sm text-gray-500">
+              Next payment: {getNextPaymentDate()}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )
