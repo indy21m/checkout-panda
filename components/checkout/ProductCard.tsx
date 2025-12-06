@@ -8,6 +8,7 @@ import { Heart, CheckCircle, ChevronDown } from 'lucide-react'
 import { PricingSelector } from './PricingSelector'
 import { CouponInput } from './CouponInput'
 import { OrderBump } from './OrderBump'
+import { OrderSummaryModal } from './OrderSummaryModal'
 import type { Product, PriceBreakdown } from '@/types'
 
 interface ProductCardProps {
@@ -18,6 +19,7 @@ interface ProductCardProps {
   breakdown: PriceBreakdown | null
   includeOrderBump: boolean
   onOrderBumpChange: (checked: boolean) => void
+  couponCode: string | null
 }
 
 export function ProductCard({
@@ -28,6 +30,7 @@ export function ProductCard({
   breakdown,
   includeOrderBump,
   onOrderBumpChange,
+  couponCode,
 }: ProductCardProps) {
   const [showAllBenefits, setShowAllBenefits] = useState(false)
   const currency = product.stripe.currency
@@ -179,9 +182,16 @@ export function ProductCard({
 
         {/* View order details link */}
         {(breakdown?.items && breakdown.items.length > 1) || includeOrderBump ? (
-          <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
-            View order details
-          </button>
+          <OrderSummaryModal
+            product={product}
+            breakdown={breakdown}
+            includeOrderBump={includeOrderBump}
+            couponCode={couponCode}
+          >
+            <button type="button" className="mt-2 text-xs text-blue-600 hover:underline">
+              View order details
+            </button>
+          </OrderSummaryModal>
         ) : null}
       </div>
     </div>
