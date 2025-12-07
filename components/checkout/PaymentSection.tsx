@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { COUNTRIES, DEFAULT_COUNTRY } from '@/lib/countries'
+import { COUNTRIES } from '@/lib/countries'
 import { Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -37,6 +37,17 @@ interface PaymentSectionProps {
   breakdown: PriceBreakdown | null
   isLoading: boolean
   error: string | null
+  // Form state lifted to parent to survive Elements remount
+  email: string
+  setEmail: (email: string) => void
+  fullName: string
+  setFullName: (name: string) => void
+  country: string
+  setCountry: (country: string) => void
+  address: string
+  setAddress: (address: string) => void
+  agreedToTerms: boolean
+  setAgreedToTerms: (agreed: boolean) => void
 }
 
 export function PaymentSection({
@@ -49,16 +60,22 @@ export function PaymentSection({
   breakdown,
   isLoading,
   error,
+  // Form state from parent
+  email,
+  setEmail,
+  fullName,
+  setFullName,
+  country,
+  setCountry,
+  address,
+  setAddress,
+  agreedToTerms,
+  setAgreedToTerms,
 }: PaymentSectionProps) {
   const stripe = useStripe()
   const elements = useElements()
 
-  // Form state
-  const [email, setEmail] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [country, setCountry] = useState(DEFAULT_COUNTRY)
-  const [address, setAddress] = useState('')
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  // Local UI state only (these can reset on remount - they're transient)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isPaymentReady, setIsPaymentReady] = useState(false)

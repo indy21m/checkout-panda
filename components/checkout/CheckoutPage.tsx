@@ -6,6 +6,7 @@ import { StripeProvider } from './StripeProvider'
 import { ProductCard } from './ProductCard'
 import { PaymentSection } from './PaymentSection'
 import { formatMoney } from '@/lib/currency'
+import { DEFAULT_COUNTRY } from '@/lib/countries'
 import { Star } from 'lucide-react'
 import type { Product, PriceBreakdown } from '@/types'
 
@@ -29,6 +30,13 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
   const [couponCode, setCouponCode] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Form state - lifted here to survive Stripe Elements remount
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [country, setCountry] = useState(DEFAULT_COUNTRY)
+  const [address, setAddress] = useState('')
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   // Get selected tier for amount calculation
   const selectedTier = product.stripe.pricingTiers?.find((t) => t.id === selectedPriceTierId)
@@ -236,6 +244,17 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
                   breakdown={breakdown}
                   isLoading={isLoading}
                   error={error}
+                  // Form state lifted to parent to survive Elements remount
+                  email={email}
+                  setEmail={setEmail}
+                  fullName={fullName}
+                  setFullName={setFullName}
+                  country={country}
+                  setCountry={setCountry}
+                  address={address}
+                  setAddress={setAddress}
+                  agreedToTerms={agreedToTerms}
+                  setAgreedToTerms={setAgreedToTerms}
                 />
               </StripeProvider>
             </div>
