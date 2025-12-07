@@ -60,7 +60,10 @@ export function ThankYouPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
-      <main className="mx-auto max-w-2xl px-4 py-16">
+      <main
+        className="mx-auto px-4 py-16"
+        style={{ maxWidth: '42rem', width: '100%' }}
+      >
         {/* Success Header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

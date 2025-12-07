@@ -101,18 +101,6 @@ export function PaymentSection({
     return undefined
   }, [email, clientSecret, isLoading, initializePaymentIfNeeded])
 
-  // Re-initialize when order bump or price tier changes to update breakdown
-  useEffect(() => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (email && emailRegex.test(email)) {
-      const nameParts = fullName.trim().split(' ')
-      const firstName = nameParts[0] || undefined
-      const lastName = nameParts.slice(1).join(' ') || undefined
-      onInitializePayment(email, firstName, lastName, country, address)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeOrderBump, selectedPriceTierId])
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

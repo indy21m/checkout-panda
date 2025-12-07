@@ -103,6 +103,20 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
     [product.slug, product.upsells, customerId, includeOrderBump, router]
   )
 
+  // Handle pricing tier change - clear stale breakdown and client secret
+  const handlePriceTierChange = useCallback((tierId: string) => {
+    setSelectedPriceTierId(tierId)
+    setBreakdown(null) // Clear stale breakdown so fallback calculation is used
+    setClientSecret(null) // Clear client secret to prevent stale payment intent
+  }, [])
+
+  // Handle order bump change - clear stale breakdown and client secret
+  const handleOrderBumpChange = useCallback((include: boolean) => {
+    setIncludeOrderBump(include)
+    setBreakdown(null)
+    setClientSecret(null)
+  }, [])
+
   // Handle coupon applied
   const handleCouponApplied = useCallback(
     (code: string, discountType: 'percent' | 'fixed', discountAmount: number) => {
@@ -135,11 +149,11 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
             <ProductCard
               product={product}
               selectedPriceTierId={selectedPriceTierId}
-              onPriceTierChange={setSelectedPriceTierId}
+              onPriceTierChange={handlePriceTierChange}
               onCouponApplied={handleCouponApplied}
               breakdown={breakdown}
               includeOrderBump={includeOrderBump}
-              onOrderBumpChange={setIncludeOrderBump}
+              onOrderBumpChange={handleOrderBumpChange}
               couponCode={couponCode}
             />
 
