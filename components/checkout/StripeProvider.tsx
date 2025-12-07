@@ -106,34 +106,30 @@ const appearance: Appearance = {
 
 export function StripeProvider({
   children,
-  clientSecret,
+  clientSecret: _clientSecret, // Not used for Elements options - passed to confirmPayment instead
   amount,
   currency = 'USD',
   mode = 'payment',
   country = 'US',
   quoteId,
 }: StripeProviderProps) {
-  // Create a unique key for the Elements provider to force remount
-  // Note: amount is intentionally excluded to prevent card reset when switching pricing tiers
+  // CRITICAL: Do NOT include clientSecret in the key!
+  // Changing clientSecret should NOT remount Elements - this causes form data loss.
+  // clientSecret is only needed at payment confirmation time, not for rendering.
   const elementsKey = React.useMemo(() => {
-    return [clientSecret || 'deferred', currency, mode, country, quoteId || 'no-quote'].join(':')
-  }, [clientSecret, currency, mode, country, quoteId])
+    return [currency, mode, country, quoteId || 'no-quote'].join(':')
+  }, [currency, mode, country, quoteId])
 
+  // ALWAYS use deferred mode - never switch to clientSecret mode
+  // This prevents Elements from remounting when clientSecret changes
+  // clientSecret will be passed directly to stripe.confirmPayment() instead
   const options: StripeElementsOptions = React.useMemo(() => {
     const baseOptions = {
       appearance,
       loader: 'auto' as const,
     }
 
-    // If we have a client secret, use it (for PaymentIntent/SetupIntent)
-    if (clientSecret) {
-      return {
-        ...baseOptions,
-        clientSecret,
-      } as StripeElementsOptions
-    }
-
-    // For deferred mode (subscriptions or dynamic amounts)
+    // For subscriptions or setup mode
     if (mode === 'subscription' || mode === 'setup') {
       return {
         ...baseOptions,
@@ -144,24 +140,14 @@ export function StripeProvider({
       } as StripeElementsOptions
     }
 
-    // Payment mode with amount
-    if (amount && amount > 0) {
-      return {
-        ...baseOptions,
-        mode: 'payment' as const,
-        amount,
-        currency: currency.toLowerCase(),
-      } as StripeElementsOptions
-    }
-
-    // Default to deferred payment mode
+    // Payment mode - always use deferred with amount
     return {
       ...baseOptions,
       mode: 'payment' as const,
-      amount: 1000, // $10.00 placeholder
+      amount: amount || 1000, // Use actual amount or placeholder
       currency: currency.toLowerCase(),
     } as StripeElementsOptions
-  }, [clientSecret, amount, currency, mode])
+  }, [amount, currency, mode])
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
     console.error('Stripe publishable key is not configured')

@@ -166,8 +166,11 @@ export function PaymentSection({
       }
 
       // Confirm the payment
+      // clientSecret is passed here (required for deferred mode)
+      // Elements stays in deferred mode to prevent remounting on clientSecret change
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
+        clientSecret: clientSecret!, // Required for deferred mode - we know it exists at this point
         confirmParams: {
           return_url: `${window.location.origin}/${product.slug}/thank-you`,
           receipt_email: email,
