@@ -82,13 +82,19 @@ export function PaymentSection({
 
   // Get selected tier for display
   const selectedTier = product.stripe.pricingTiers?.find((t) => t.id === selectedPriceTierId)
-  const isInstallment = selectedTier?.installments
+  const isInstallment = !!selectedTier?.installments
+  const installmentAmount = selectedTier?.installments?.amountPerPayment ?? 0
 
-  // Calculate display amount (include order bump estimate when breakdown not yet available)
+  // Calculate display amount correctly for installments vs one-time
   const baseAmount = selectedTier?.priceAmount ?? product.stripe.priceAmount
   const orderBumpAmount =
     includeOrderBump && product.orderBump?.enabled ? product.orderBump.stripe.priceAmount : 0
-  const displayAmount = breakdown?.total ?? baseAmount + orderBumpAmount
+
+  // For installments: show first payment + order bump (what's due TODAY)
+  // For one-time: show breakdown total (includes tax) or fallback
+  const displayAmount = isInstallment
+    ? installmentAmount + orderBumpAmount
+    : breakdown?.total ?? baseAmount + orderBumpAmount
   const currency = product.stripe.currency
 
   // Initialize payment when we have email and country (for tax calculation)
