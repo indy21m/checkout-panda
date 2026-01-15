@@ -176,40 +176,35 @@ export async function validateVATNumber(vatNumber: string): Promise<VATValidatio
 
 /**
  * Calculate tax for a transaction
+ *
+ * IMPORTANT: For EU B2C sales, prices displayed to consumers MUST be VAT-inclusive
+ * by law. This function assumes prices are already VAT-inclusive and does NOT
+ * add additional tax on top.
+ *
+ * The subtotal IS the total - no tax is added.
  */
 export function calculateTax({
   amount,
-  customerCountry,
-  businessCountry = 'US', // Default business location
+  customerCountry: _customerCountry, // Reserved for future use (country-specific VAT logic)
+  businessCountry = 'DK', // Business is in Denmark
   vatNumber,
   isB2B = false,
   currency = 'USD',
 }: {
-  amount: number // Amount in minor units (cents)
+  amount: number // Amount in minor units (cents) - VAT INCLUSIVE
   customerCountry: string
   businessCountry?: string
   vatNumber?: string | null
   isB2B?: boolean
   currency?: string
 }): TaxCalculation {
-  // No tax for non-EU customers when business is outside EU
-  if (!isEUCountry(customerCountry) && !isEUCountry(businessCountry)) {
-    return {
-      subtotal: amount,
-      taxRate: 0,
-      taxAmount: 0,
-      total: amount,
-      reverseCharge: false,
-      taxLabel: 'No Tax',
-      currency,
-    }
-  }
-
-  // B2B with valid VAT number - reverse charge applies
+  // For B2B with valid VAT number in EU (not same country) - reverse charge
+  // In this case, the business would need to handle VAT differently
+  // But for simplicity, we're treating all prices as final (VAT-inclusive)
   if (isB2B && vatNumber && validateVATFormat(vatNumber)) {
     const vatCountry = extractCountryFromVAT(vatNumber)
 
-    // Cross-border B2B in EU - reverse charge
+    // Cross-border B2B in EU - reverse charge notation
     if (vatCountry && vatCountry !== businessCountry && isEUCountry(vatCountry)) {
       return {
         subtotal: amount,
@@ -223,17 +218,18 @@ export function calculateTax({
     }
   }
 
-  // Standard VAT applies
-  const vatRate = EU_VAT_RATES[customerCountry] || 0
-  const taxAmount = Math.round(amount * (vatRate / 100))
-
+  // For all other cases: price is VAT-inclusive, no additional tax
+  // This applies to:
+  // - EU B2C customers (VAT included in displayed price)
+  // - Non-EU customers (no EU VAT applies)
+  // - B2B without valid VAT number (treated as B2C)
   return {
     subtotal: amount,
-    taxRate: vatRate,
-    taxAmount,
-    total: amount + taxAmount,
+    taxRate: 0,
+    taxAmount: 0,
+    total: amount, // No additional tax - price is VAT-inclusive
     reverseCharge: false,
-    taxLabel: `VAT (${vatRate}%)`,
+    taxLabel: 'VAT Included',
     currency,
   }
 }

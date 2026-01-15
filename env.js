@@ -7,6 +7,10 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    // Database (optional at build time, required for admin routes at runtime)
+    DATABASE_URL: z.string().url().optional(),
+    // Admin access (comma-separated emails)
+    ADMIN_EMAILS: z.string().optional(),
     // Clerk (minimal - kept for infrastructure)
     CLERK_SECRET_KEY: z.string(),
     // Stripe
@@ -36,6 +40,8 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL: process.env.DATABASE_URL,
+    ADMIN_EMAILS: process.env.ADMIN_EMAILS,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,

@@ -220,6 +220,7 @@ export function PaymentSection({
   // Payment element options
   const paymentElementOptions: StripePaymentElementOptions = {
     layout: 'tabs',
+    paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
     defaultValues: {
       billingDetails: {
         email,

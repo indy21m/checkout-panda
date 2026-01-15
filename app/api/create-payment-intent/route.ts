@@ -19,6 +19,28 @@ const requestSchema = z.object({
   priceTierId: z.string().optional(),
 })
 
+/**
+ * Detects placeholder Stripe IDs that haven't been replaced with real ones.
+ * Real Stripe IDs follow specific patterns:
+ * - price_XXXXXXXXXXXXXX (14+ alphanumeric chars after underscore)
+ * - prod_XXXXXXXXXXXXXX
+ */
+function isPlaceholderStripeId(id: string): boolean {
+  // Real Stripe IDs have at least 14 characters after the prefix
+  // and only contain alphanumeric characters
+  const realPricePattern = /^price_[A-Za-z0-9]{14,}$/
+  const realProdPattern = /^prod_[A-Za-z0-9]{14,}$/
+
+  if (id.startsWith('price_') && !realPricePattern.test(id)) {
+    return true // It's a placeholder like 'price_3month_266dkk'
+  }
+  if (id.startsWith('prod_') && !realProdPattern.test(id)) {
+    return true // It's a placeholder like 'prod_InvestingDK'
+  }
+
+  return false
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json()
@@ -158,6 +180,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (isInstallmentPlan && installmentDetails) {
       // For installment plans: Create Stripe Subscription
+
+      // IMPORTANT: Check for placeholder price IDs before attempting Stripe API call
+      if (isPlaceholderStripeId(selectedPrice.priceId)) {
+        return NextResponse.json(
+          {
+            error:
+              'Installment payments are not yet configured. Please use the one-time payment option, or contact support.',
+            details:
+              'The recurring price ID needs to be set up in Stripe Dashboard and configured in the product settings.',
+          },
+          { status: 400 }
+        )
+      }
 
       // If order bump is included, add it as a one-time invoice item on first payment
       if (data.includeOrderBump && product.orderBump?.enabled) {
