@@ -141,11 +141,13 @@ export function StripeProvider({
     }
 
     // Payment mode - always use deferred with amount
+    // Include setup_future_usage to match PaymentIntent (for saving card for upsells)
     return {
       ...baseOptions,
       mode: 'payment' as const,
       amount: amount || 1000, // Use actual amount or placeholder
       currency: currency.toLowerCase(),
+      setup_future_usage: 'off_session',
     } as StripeElementsOptions
   }, [amount, currency, mode])
 
