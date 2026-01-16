@@ -226,6 +226,15 @@ export function PaymentSection({
       spacedAccordionItems: true,
     },
     paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
+    fields: {
+      billingDetails: {
+        name: 'never',
+        email: 'never',
+        address: {
+          country: 'never',
+        },
+      },
+    },
     defaultValues: {
       billingDetails: {
         email,
