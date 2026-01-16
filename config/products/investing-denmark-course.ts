@@ -128,8 +128,32 @@ export const investingDenmarkCourse: Product = {
     savingsPercent: 40,
   },
 
-  // No upsells for this product (can add later if needed)
-  upsells: [],
+  // Upsell offer - shown after successful checkout
+  upsells: [
+    {
+      id: 'portfolio-coaching',
+      slug: 'upsell-1',
+      stripe: {
+        productId: 'prod_PortfolioCoaching', // Replace with real Stripe ID
+        priceId: 'price_coaching_999dkk', // Replace with real Stripe ID
+        priceAmount: 99900, // 999 DKK
+        currency: 'DKK',
+      },
+      title: 'Exclusive: 1-on-1 Portfolio Coaching Call',
+      subtitle: 'Limited spots available',
+      description:
+        "Get 45 minutes of personalized guidance on your investment strategy. I'll review your current portfolio and give you specific recommendations tailored to your goals and risk tolerance.",
+      benefits: [
+        '45-minute private video call with Mario',
+        'Personalized portfolio review and feedback',
+        'Custom investment recommendations for your situation',
+        'Recording of the call to revisit anytime',
+        'Priority email support for 30 days after',
+      ],
+      originalPrice: 199900, // 1999 DKK crossed out
+      urgencyText: 'This one-time offer disappears when you leave this page',
+    },
+  ],
 
   thankYou: {
     headline: 'Welcome to Your Investing Journey!',
