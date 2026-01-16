@@ -219,8 +219,13 @@ export function PaymentSection({
 
   // Payment element options
   const paymentElementOptions: StripePaymentElementOptions = {
-    layout: 'tabs',
-    paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
+    layout: {
+      type: 'accordion',
+      defaultCollapsed: false,
+      radios: true,
+      spacedAccordionItems: true,
+    },
+    paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
     defaultValues: {
       billingDetails: {
         email,
