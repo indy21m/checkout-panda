@@ -10,26 +10,26 @@ You are an expert-level senior software engineer specializing in modern TypeScri
 
 ## 🎯 Project Overview
 
-Checkout Panda is an elite, conversion-focused checkout platform that transforms standard payment transactions into visually stunning, highly profitable customer journeys. Built with Next.js 15, TypeScript, and modern edge infrastructure, it provides knowledge entrepreneurs with a powerful alternative to the limited checkout systems in platforms like Circle and Kajabi.
+Checkout Panda is a focused checkout platform for selling digital products (courses, templates, memberships). It provides high-converting checkout pages with Stripe integration, multiple pricing tiers, order bumps, and integrations with ConvertKit/Circle via Zapier.
+
+**Current State:** Static checkout pages with admin UI for product management. Products sync to Stripe automatically.
 
 ## 🛠️ Tech Stack & Commands
 
 ### Core Technologies
 
 - **Language:** TypeScript 5.3+ (STRICT MODE ENFORCED)
-- **Framework:** Next.js 15+ (App Router ONLY)
-- **Authentication:** Clerk (`@clerk/nextjs@latest`)
-- **Database:** Neon Serverless Postgres (`@neondatabase/serverless@latest`)
-- **ORM:** Drizzle (`drizzle-orm@latest`)
-- **API Layer:** tRPC (`@trpc/server@latest`) with React Query
+- **Framework:** Next.js 16+ (App Router ONLY)
+- **Payments:** Stripe (`stripe` + `@stripe/react-stripe-js`)
+- **Authentication:** Clerk (`@clerk/nextjs`) - for admin only
+- **Database:** Neon Serverless Postgres (`@neondatabase/serverless`)
+- **ORM:** Drizzle (`drizzle-orm`)
 - **Styling:** Tailwind CSS 4.0+ (NEVER downgrade to v3)
-- **UI Components:** Radix UI + shadcn/ui patterns (latest versions)
-- **Animation:** Framer Motion (`framer-motion@latest`)
-- **Forms:** React Hook Form + Zod (latest versions)
-- **Data Visualization:** Recharts (`recharts@latest`)
-- **Notifications:** Sonner (`sonner@latest`)
-- **State Management:** URL state + Server Components + React Query (NO Zustand by default)
-- **Deployment:** Vercel Edge Functions
+- **UI Components:** Radix UI + shadcn/ui patterns
+- **Animation:** Framer Motion (`framer-motion`)
+- **Forms:** React Hook Form + Zod
+- **Notifications:** Sonner (`sonner`)
+- **Deployment:** Vercel
 - **Package Manager:** pnpm
 
 ### Dependency Management Rules
@@ -55,20 +55,31 @@ pnpm drizzle-kit generate:pg: Generate migration SQL files
 ## 📂 Project Structure
 
 ```
-src/
-├── app/              # Next.js App Router (pages, layouts, routes)
-├── components/
-│   ├── ui/          # Base components (Button, Card, Dialog) with CVA
-│   ├── features/    # Feature-specific components
-│   └── sections/    # Page sections (Hero, Features, etc.)
-├── lib/             # Utilities, helpers, API clients
-├── server/
-│   ├── api/         # tRPC routers
-│   └── db/          # Database schema and queries
-├── types/           # TypeScript type definitions
-└── hooks/           # Custom React hooks
-migrations/           # SQL migration files (YYYY-MM-DD_description.sql)
-Design-Guidelines.md  # Comprehensive design system reference
+app/
+├── [product]/        # Dynamic product routes
+│   ├── checkout/     # Main checkout page
+│   ├── thank-you/    # Post-purchase page
+│   ├── upsell-1/     # Upsell flow
+│   └── downsell/     # Downsell flow
+├── admin/            # Product management UI (Clerk protected)
+├── api/
+│   ├── admin/products/  # Product CRUD + Stripe sync
+│   ├── create-payment-intent/
+│   ├── charge-upsell/
+│   ├── validate-coupon/
+│   └── webhooks/stripe/
+├── (auth)/           # Sign in/up pages
+components/
+├── admin/            # Admin UI (ProductsTable, ProductEditDialog)
+├── checkout/         # Checkout components
+├── ui/               # Base components (shadcn/ui)
+config/products/      # Product config files (fallback)
+lib/
+├── db/               # Drizzle schema + Neon connection
+├── stripe/           # Stripe configuration
+types/                # TypeScript type definitions
+migrations/           # SQL migration files
+docs/                 # Documentation
 ```
 
 ## 💎 TypeScript Excellence Standards
