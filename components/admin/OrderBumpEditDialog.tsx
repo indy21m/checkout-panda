@@ -13,7 +13,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { OrderBump, Currency } from '@/types'
+import { Copy } from 'lucide-react'
+
+interface OrderBumpWithProduct extends OrderBump {
+  productName: string
+}
 
 interface OrderBumpEditDialogProps {
   orderBump: OrderBump | null
@@ -22,6 +34,7 @@ interface OrderBumpEditDialogProps {
   onSave: (orderBump: OrderBump) => void
   isNew?: boolean
   defaultCurrency?: Currency
+  existingOrderBumps?: OrderBumpWithProduct[]
 }
 
 interface OrderBumpFormData {
@@ -44,13 +57,13 @@ function createEmptyFormData(currency: Currency): OrderBumpFormData {
   }
 }
 
-function orderBumpToFormData(orderBump: OrderBump): OrderBumpFormData {
+function orderBumpToFormData(orderBump: OrderBump, currency?: Currency): OrderBumpFormData {
   return {
     enabled: orderBump.enabled,
     title: orderBump.title,
     description: orderBump.description,
     priceAmount: orderBump.stripe.priceAmount / 100,
-    currency: orderBump.stripe.currency,
+    currency: currency ?? orderBump.stripe.currency,
     savingsPercent: orderBump.savingsPercent ?? 0,
   }
 }
@@ -62,8 +75,8 @@ function formDataToOrderBump(data: OrderBumpFormData): OrderBump {
     description: data.description,
     savingsPercent: data.savingsPercent > 0 ? data.savingsPercent : undefined,
     stripe: {
-      productId: '', // Will be populated by Stripe sync
-      priceId: '', // Will be populated by Stripe sync
+      productId: '',
+      priceId: '',
       priceAmount: Math.round(data.priceAmount * 100),
       currency: data.currency,
     },
@@ -77,6 +90,7 @@ export function OrderBumpEditDialog({
   onSave,
   isNew = false,
   defaultCurrency = 'DKK',
+  existingOrderBumps = [],
 }: OrderBumpEditDialogProps) {
   const [formData, setFormData] = useState<OrderBumpFormData>(
     createEmptyFormData(defaultCurrency)
@@ -99,6 +113,13 @@ export function OrderBumpEditDialog({
     value: OrderBumpFormData[K]
   ): void {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  function handleCopyFrom(productName: string): void {
+    const source = existingOrderBumps.find(ob => ob.productName === productName)
+    if (source) {
+      setFormData(orderBumpToFormData(source, defaultCurrency))
+    }
   }
 
   function handleSave(): void {
@@ -128,6 +149,28 @@ export function OrderBumpEditDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Copy from existing */}
+          {isNew && existingOrderBumps.length > 0 && (
+            <div className="space-y-1">
+              <Label className="flex items-center gap-1 text-xs">
+                <Copy className="h-3 w-3" />
+                Copy from existing
+              </Label>
+              <Select onValueChange={handleCopyFrom}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select an order bump to copy..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingOrderBumps.map(ob => (
+                    <SelectItem key={ob.productName} value={ob.productName}>
+                      {ob.title} ({ob.productName})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Enabled Toggle */}
           <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
             <div>

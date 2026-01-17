@@ -593,6 +593,9 @@ export function ProductsTable({ products }: ProductsTableProps) {
         isNew={dialogState.type === 'upsell' ? dialogState.isNew : false}
         defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
         upsellIndex={dialogState.type === 'upsell' ? dialogState.upsellIndex : 1}
+        existingUpsells={products.flatMap(p =>
+          (p.config.upsells ?? []).map(u => ({ ...u, productName: p.name }))
+        )}
       />
 
       {/* Order Bump Edit Dialog */}
@@ -603,6 +606,9 @@ export function ProductsTable({ products }: ProductsTableProps) {
         onSave={handleSaveOrderBump}
         isNew={dialogState.type === 'orderBump' ? dialogState.isNew : false}
         defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
+        existingOrderBumps={products
+          .filter(p => p.config.orderBump)
+          .map(p => ({ ...p.config.orderBump!, productName: p.name }))}
       />
 
       {/* Downsell Edit Dialog */}
@@ -613,6 +619,9 @@ export function ProductsTable({ products }: ProductsTableProps) {
         onSave={handleSaveDownsell}
         isNew={dialogState.type === 'downsell' ? dialogState.isNew : false}
         defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
+        existingDownsells={products
+          .filter(p => p.config.downsell)
+          .map(p => ({ ...p.config.downsell!, productName: p.name }))}
       />
 
       {/* Delete Confirmation Dialog */}

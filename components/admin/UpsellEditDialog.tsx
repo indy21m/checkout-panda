@@ -12,7 +12,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { Upsell, Currency } from '@/types'
+import { Copy } from 'lucide-react'
+
+interface UpsellWithProduct extends Upsell {
+  productName: string
+}
 
 interface UpsellEditDialogProps {
   upsell: Upsell | null
@@ -22,6 +34,7 @@ interface UpsellEditDialogProps {
   isNew?: boolean
   defaultCurrency?: Currency
   upsellIndex?: number
+  existingUpsells?: UpsellWithProduct[]
 }
 
 interface UpsellFormData {
@@ -52,7 +65,7 @@ function createEmptyFormData(currency: Currency, index: number): UpsellFormData 
   }
 }
 
-function upsellToFormData(upsell: Upsell): UpsellFormData {
+function upsellToFormData(upsell: Upsell, currency?: Currency): UpsellFormData {
   return {
     id: upsell.id,
     slug: upsell.slug,
@@ -62,7 +75,7 @@ function upsellToFormData(upsell: Upsell): UpsellFormData {
     benefits: upsell.benefits.join('\n'),
     priceAmount: upsell.stripe.priceAmount / 100,
     originalPrice: (upsell.originalPrice ?? 0) / 100,
-    currency: upsell.stripe.currency,
+    currency: currency ?? upsell.stripe.currency,
     urgencyText: upsell.urgencyText ?? '',
   }
 }
@@ -83,8 +96,8 @@ function formDataToUpsell(data: UpsellFormData): Upsell {
     originalPrice: data.originalPrice > 0 ? Math.round(data.originalPrice * 100) : undefined,
     urgencyText: data.urgencyText || undefined,
     stripe: {
-      productId: '', // Will be populated by Stripe sync
-      priceId: '', // Will be populated by Stripe sync
+      productId: '',
+      priceId: '',
       priceAmount: Math.round(data.priceAmount * 100),
       currency: data.currency,
     },
@@ -99,6 +112,7 @@ export function UpsellEditDialog({
   isNew = false,
   defaultCurrency = 'DKK',
   upsellIndex = 1,
+  existingUpsells = [],
 }: UpsellEditDialogProps) {
   const [formData, setFormData] = useState<UpsellFormData>(
     createEmptyFormData(defaultCurrency, upsellIndex)
@@ -121,6 +135,18 @@ export function UpsellEditDialog({
     value: UpsellFormData[K]
   ): void {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  function handleCopyFrom(sourceId: string): void {
+    const source = existingUpsells.find(u => `${u.productName}:${u.id}` === sourceId)
+    if (source) {
+      // Copy content but keep current ID/slug and use target currency
+      setFormData(prev => ({
+        ...upsellToFormData(source, defaultCurrency),
+        id: prev.id,
+        slug: prev.slug,
+      }))
+    }
   }
 
   function handleSave(): void {
@@ -150,6 +176,28 @@ export function UpsellEditDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Copy from existing */}
+          {isNew && existingUpsells.length > 0 && (
+            <div className="space-y-1">
+              <Label className="flex items-center gap-1 text-xs">
+                <Copy className="h-3 w-3" />
+                Copy from existing
+              </Label>
+              <Select onValueChange={handleCopyFrom}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select an upsell to copy..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingUpsells.map(u => (
+                    <SelectItem key={`${u.productName}:${u.id}`} value={`${u.productName}:${u.id}`}>
+                      {u.title} ({u.productName})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Title */}
           <div className="space-y-1">
             <Label className="text-xs">Title</Label>
@@ -196,7 +244,7 @@ export function UpsellEditDialog({
             />
           </div>
 
-          {/* Pricing - simplified to just price and original price */}
+          {/* Pricing */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Price ({formData.currency})</Label>
