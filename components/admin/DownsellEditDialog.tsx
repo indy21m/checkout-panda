@@ -13,13 +13,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { Downsell, Currency } from '@/types'
 
 interface DownsellEditDialogProps {
@@ -28,11 +21,11 @@ interface DownsellEditDialogProps {
   onClose: () => void
   onSave: (downsell: Downsell) => void
   isNew?: boolean
+  defaultCurrency?: Currency
 }
 
 interface DownsellFormData {
   enabled: boolean
-  slug: string
   title: string
   subtitle: string
   description: string
@@ -40,30 +33,24 @@ interface DownsellFormData {
   priceAmount: number
   originalPrice: number
   currency: Currency
-  productId: string
-  priceId: string
 }
 
-function createEmptyFormData(): DownsellFormData {
+function createEmptyFormData(currency: Currency): DownsellFormData {
   return {
     enabled: true,
-    slug: 'downsell',
     title: '',
     subtitle: '',
     description: '',
     benefits: '',
     priceAmount: 0,
     originalPrice: 0,
-    currency: 'DKK',
-    productId: '',
-    priceId: '',
+    currency,
   }
 }
 
 function downsellToFormData(downsell: Downsell): DownsellFormData {
   return {
     enabled: downsell.enabled,
-    slug: downsell.slug,
     title: downsell.title,
     subtitle: downsell.subtitle ?? '',
     description: downsell.description,
@@ -71,8 +58,6 @@ function downsellToFormData(downsell: Downsell): DownsellFormData {
     priceAmount: downsell.stripe.priceAmount / 100,
     originalPrice: (downsell.originalPrice ?? 0) / 100,
     currency: downsell.stripe.currency,
-    productId: downsell.stripe.productId,
-    priceId: downsell.stripe.priceId,
   }
 }
 
@@ -84,15 +69,15 @@ function formDataToDownsell(data: DownsellFormData): Downsell {
 
   return {
     enabled: data.enabled,
-    slug: data.slug,
+    slug: 'downsell', // Always 'downsell' - there's only one per product
     title: data.title,
     subtitle: data.subtitle || undefined,
     description: data.description,
     benefits,
     originalPrice: data.originalPrice > 0 ? Math.round(data.originalPrice * 100) : undefined,
     stripe: {
-      productId: data.productId,
-      priceId: data.priceId,
+      productId: '', // Will be populated by Stripe sync
+      priceId: '', // Will be populated by Stripe sync
       priceAmount: Math.round(data.priceAmount * 100),
       currency: data.currency,
     },
@@ -105,8 +90,11 @@ export function DownsellEditDialog({
   onClose,
   onSave,
   isNew = false,
+  defaultCurrency = 'DKK',
 }: DownsellEditDialogProps) {
-  const [formData, setFormData] = useState<DownsellFormData>(createEmptyFormData())
+  const [formData, setFormData] = useState<DownsellFormData>(
+    createEmptyFormData(defaultCurrency)
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -114,11 +102,11 @@ export function DownsellEditDialog({
       if (downsell) {
         setFormData(downsellToFormData(downsell))
       } else {
-        setFormData(createEmptyFormData())
+        setFormData(createEmptyFormData(defaultCurrency))
       }
       setError(null)
     }
-  }, [open, downsell])
+  }, [open, downsell, defaultCurrency])
 
   function updateField<K extends keyof DownsellFormData>(
     field: K,
@@ -166,17 +154,6 @@ export function DownsellEditDialog({
             />
           </div>
 
-          {/* Slug */}
-          <div className="space-y-1">
-            <Label className="text-xs">Slug (URL)</Label>
-            <Input
-              value={formData.slug}
-              onChange={e => updateField('slug', e.target.value)}
-              placeholder="downsell"
-              className="h-8 text-sm"
-            />
-          </div>
-
           {/* Title */}
           <div className="space-y-1">
             <Label className="text-xs">Title</Label>
@@ -184,7 +161,7 @@ export function DownsellEditDialog({
               value={formData.title}
               onChange={e => updateField('title', e.target.value)}
               placeholder="Wait! Special Offer Just For You"
-              className="h-8 text-sm"
+              className="h-9 text-sm"
             />
           </div>
 
@@ -195,7 +172,7 @@ export function DownsellEditDialog({
               value={formData.subtitle}
               onChange={e => updateField('subtitle', e.target.value)}
               placeholder="Last chance at this price"
-              className="h-8 text-sm"
+              className="h-9 text-sm"
             />
           </div>
 
@@ -207,7 +184,7 @@ export function DownsellEditDialog({
               onChange={e => updateField('description', e.target.value)}
               placeholder="Get a simplified version at a reduced price..."
               className="text-sm"
-              rows={3}
+              rows={2}
             />
           </div>
 
@@ -219,68 +196,30 @@ export function DownsellEditDialog({
               onChange={e => updateField('benefits', e.target.value)}
               placeholder="Core templates included&#10;Basic support&#10;Lifetime access"
               className="text-sm"
-              rows={4}
+              rows={3}
             />
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Price</Label>
+              <Label className="text-xs">Price ({formData.currency})</Label>
               <Input
                 type="number"
                 value={formData.priceAmount || ''}
                 onChange={e => updateField('priceAmount', parseFloat(e.target.value) || 0)}
                 placeholder="499"
-                className="h-8 text-sm"
+                className="h-9 text-sm"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Original Price</Label>
+              <Label className="text-xs">Original Price (optional)</Label>
               <Input
                 type="number"
                 value={formData.originalPrice || ''}
                 onChange={e => updateField('originalPrice', parseFloat(e.target.value) || 0)}
                 placeholder="999"
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Currency</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(v: Currency) => updateField('currency', v)}
-              >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DKK">DKK</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Stripe IDs */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Stripe Product ID</Label>
-              <Input
-                value={formData.productId}
-                onChange={e => updateField('productId', e.target.value)}
-                placeholder="prod_xxx"
-                className="h-8 text-sm font-mono"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Stripe Price ID</Label>
-              <Input
-                value={formData.priceId}
-                onChange={e => updateField('priceId', e.target.value)}
-                placeholder="price_xxx"
-                className="h-8 text-sm font-mono"
+                className="h-9 text-sm"
               />
             </div>
           </div>

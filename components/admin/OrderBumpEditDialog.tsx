@@ -13,13 +13,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { OrderBump, Currency } from '@/types'
 
 interface OrderBumpEditDialogProps {
@@ -28,6 +21,7 @@ interface OrderBumpEditDialogProps {
   onClose: () => void
   onSave: (orderBump: OrderBump) => void
   isNew?: boolean
+  defaultCurrency?: Currency
 }
 
 interface OrderBumpFormData {
@@ -36,20 +30,16 @@ interface OrderBumpFormData {
   description: string
   priceAmount: number
   currency: Currency
-  productId: string
-  priceId: string
   savingsPercent: number
 }
 
-function createEmptyFormData(): OrderBumpFormData {
+function createEmptyFormData(currency: Currency): OrderBumpFormData {
   return {
     enabled: true,
     title: '',
     description: '',
     priceAmount: 0,
-    currency: 'DKK',
-    productId: '',
-    priceId: '',
+    currency,
     savingsPercent: 0,
   }
 }
@@ -61,8 +51,6 @@ function orderBumpToFormData(orderBump: OrderBump): OrderBumpFormData {
     description: orderBump.description,
     priceAmount: orderBump.stripe.priceAmount / 100,
     currency: orderBump.stripe.currency,
-    productId: orderBump.stripe.productId,
-    priceId: orderBump.stripe.priceId,
     savingsPercent: orderBump.savingsPercent ?? 0,
   }
 }
@@ -74,8 +62,8 @@ function formDataToOrderBump(data: OrderBumpFormData): OrderBump {
     description: data.description,
     savingsPercent: data.savingsPercent > 0 ? data.savingsPercent : undefined,
     stripe: {
-      productId: data.productId,
-      priceId: data.priceId,
+      productId: '', // Will be populated by Stripe sync
+      priceId: '', // Will be populated by Stripe sync
       priceAmount: Math.round(data.priceAmount * 100),
       currency: data.currency,
     },
@@ -88,8 +76,11 @@ export function OrderBumpEditDialog({
   onClose,
   onSave,
   isNew = false,
+  defaultCurrency = 'DKK',
 }: OrderBumpEditDialogProps) {
-  const [formData, setFormData] = useState<OrderBumpFormData>(createEmptyFormData())
+  const [formData, setFormData] = useState<OrderBumpFormData>(
+    createEmptyFormData(defaultCurrency)
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -97,11 +88,11 @@ export function OrderBumpEditDialog({
       if (orderBump) {
         setFormData(orderBumpToFormData(orderBump))
       } else {
-        setFormData(createEmptyFormData())
+        setFormData(createEmptyFormData(defaultCurrency))
       }
       setError(null)
     }
-  }, [open, orderBump])
+  }, [open, orderBump, defaultCurrency])
 
   function updateField<K extends keyof OrderBumpFormData>(
     field: K,
@@ -156,7 +147,7 @@ export function OrderBumpEditDialog({
               value={formData.title}
               onChange={e => updateField('title', e.target.value)}
               placeholder="Add the Template Bundle"
-              className="h-8 text-sm"
+              className="h-9 text-sm"
             />
           </div>
 
@@ -168,68 +159,30 @@ export function OrderBumpEditDialog({
               onChange={e => updateField('description', e.target.value)}
               placeholder="Get instant access to all premium templates..."
               className="text-sm"
-              rows={3}
+              rows={2}
             />
           </div>
 
           {/* Pricing */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">Price</Label>
+              <Label className="text-xs">Price ({formData.currency})</Label>
               <Input
                 type="number"
                 value={formData.priceAmount || ''}
                 onChange={e => updateField('priceAmount', parseFloat(e.target.value) || 0)}
                 placeholder="199"
-                className="h-8 text-sm"
+                className="h-9 text-sm"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Currency</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(v: Currency) => updateField('currency', v)}
-              >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DKK">DKK</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Savings %</Label>
+              <Label className="text-xs">Savings % (optional)</Label>
               <Input
                 type="number"
                 value={formData.savingsPercent || ''}
                 onChange={e => updateField('savingsPercent', parseInt(e.target.value) || 0)}
                 placeholder="30"
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Stripe IDs */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Stripe Product ID</Label>
-              <Input
-                value={formData.productId}
-                onChange={e => updateField('productId', e.target.value)}
-                placeholder="prod_xxx"
-                className="h-8 text-sm font-mono"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Stripe Price ID</Label>
-              <Input
-                value={formData.priceId}
-                onChange={e => updateField('priceId', e.target.value)}
-                placeholder="price_xxx"
-                className="h-8 text-sm font-mono"
+                className="h-9 text-sm"
               />
             </div>
           </div>

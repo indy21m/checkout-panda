@@ -3,13 +3,21 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { ProductEditDialog } from './ProductEditDialog'
 import { UpsellEditDialog } from './UpsellEditDialog'
 import { OrderBumpEditDialog } from './OrderBumpEditDialog'
 import { DownsellEditDialog } from './DownsellEditDialog'
 import type { ProductRecord, ProductConfig } from '@/lib/db/schema'
 import type { Upsell, OrderBump, Downsell } from '@/types'
-import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react'
+import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 interface ProductsTableProps {
@@ -52,9 +60,10 @@ function SyncStatusBadge({ status }: { status: string | null }) {
 // Dialog state types
 type DialogState =
   | { type: 'none' }
-  | { type: 'upsell'; upsell: Upsell | null; isNew: boolean }
+  | { type: 'upsell'; upsell: Upsell | null; isNew: boolean; upsellIndex: number }
   | { type: 'orderBump'; orderBump: OrderBump | null; isNew: boolean }
   | { type: 'downsell'; downsell: Downsell | null; isNew: boolean }
+  | { type: 'confirmDelete'; target: 'upsell' | 'orderBump' | 'downsell'; upsellId?: string; title: string }
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const router = useRouter()
@@ -196,6 +205,19 @@ export function ProductsTable({ products }: ProductsTableProps) {
     setExpandedProductId(prev => (prev === productId ? null : productId))
   }
 
+  function handleConfirmDelete(): void {
+    if (dialogState.type !== 'confirmDelete' || !expandedProduct) return
+
+    if (dialogState.target === 'upsell' && dialogState.upsellId) {
+      handleDeleteUpsell(dialogState.upsellId)
+    } else if (dialogState.target === 'orderBump') {
+      handleDeleteOrderBump()
+    } else if (dialogState.target === 'downsell') {
+      handleDeleteDownsell()
+    }
+    setDialogState({ type: 'none' })
+  }
+
   return (
     <>
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -239,7 +261,17 @@ export function ProductsTable({ products }: ProductsTableProps) {
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-500">/{product.slug}</p>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-gray-500">/{product.slug}</span>
+                          <Link
+                            href={`/${product.slug}/checkout`}
+                            target="_blank"
+                            onClick={e => e.stopPropagation()}
+                            className="text-gray-400 hover:text-blue-600"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -358,7 +390,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     variant="ghost"
                                     size="sm"
                                     className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                    onClick={() => handleDeleteOrderBump()}
+                                    onClick={() =>
+                                      setDialogState({
+                                        type: 'confirmDelete',
+                                        target: 'orderBump',
+                                        title: product.config.orderBump?.title ?? 'Order Bump',
+                                      })
+                                    }
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
@@ -382,6 +420,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     type: 'upsell',
                                     upsell: null,
                                     isNew: true,
+                                    upsellIndex: (product.config.upsells?.length ?? 0) + 1,
                                   })
                                 }
                               >
@@ -419,6 +458,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                             type: 'upsell',
                                             upsell,
                                             isNew: false,
+                                            upsellIndex: 0,
                                           })
                                         }
                                       >
@@ -428,7 +468,14 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         variant="ghost"
                                         size="sm"
                                         className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                        onClick={() => handleDeleteUpsell(upsell.id)}
+                                        onClick={() =>
+                                          setDialogState({
+                                            type: 'confirmDelete',
+                                            target: 'upsell',
+                                            upsellId: upsell.id,
+                                            title: upsell.title,
+                                          })
+                                        }
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
@@ -503,7 +550,13 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     variant="ghost"
                                     size="sm"
                                     className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                    onClick={() => handleDeleteDownsell()}
+                                    onClick={() =>
+                                      setDialogState({
+                                        type: 'confirmDelete',
+                                        target: 'downsell',
+                                        title: product.config.downsell?.title ?? 'Downsell',
+                                      })
+                                    }
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
@@ -538,6 +591,8 @@ export function ProductsTable({ products }: ProductsTableProps) {
         onClose={() => setDialogState({ type: 'none' })}
         onSave={handleSaveUpsell}
         isNew={dialogState.type === 'upsell' ? dialogState.isNew : false}
+        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
+        upsellIndex={dialogState.type === 'upsell' ? dialogState.upsellIndex : 1}
       />
 
       {/* Order Bump Edit Dialog */}
@@ -547,6 +602,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
         onClose={() => setDialogState({ type: 'none' })}
         onSave={handleSaveOrderBump}
         isNew={dialogState.type === 'orderBump' ? dialogState.isNew : false}
+        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
       />
 
       {/* Downsell Edit Dialog */}
@@ -556,7 +612,32 @@ export function ProductsTable({ products }: ProductsTableProps) {
         onClose={() => setDialogState({ type: 'none' })}
         onSave={handleSaveDownsell}
         isNew={dialogState.type === 'downsell' ? dialogState.isNew : false}
+        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={dialogState.type === 'confirmDelete'}
+        onOpenChange={isOpen => !isOpen && setDialogState({ type: 'none' })}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete {dialogState.type === 'confirmDelete' ? dialogState.target : ''}?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Are you sure you want to delete &quot;{dialogState.type === 'confirmDelete' ? dialogState.title : ''}&quot;?
+            This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogState({ type: 'none' })}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
