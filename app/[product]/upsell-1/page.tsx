@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { getProduct } from '@/config/products'
+import { getProductFromDb } from '@/config/products'
 import { UpsellPage } from '@/components/upsell'
 import type { Metadata } from 'next'
 
@@ -12,9 +12,12 @@ interface PageProps {
   }>
 }
 
+// Force dynamic rendering to always fetch from database
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { product: slug } = await params
-  const product = getProduct(slug)
+  const product = await getProductFromDb(slug)
 
   if (!product || !product.upsells?.[0]) {
     return { title: 'Special Offer' }
@@ -31,7 +34,7 @@ export default async function ProductUpsell1Page({ params, searchParams }: PageP
   const { product: slug } = await params
   const { customer_id, payment_method, purchases } = await searchParams
 
-  const product = getProduct(slug)
+  const product = await getProductFromDb(slug)
 
   // Verify product and upsell exist
   if (!product || !product.upsells?.[0]) {
