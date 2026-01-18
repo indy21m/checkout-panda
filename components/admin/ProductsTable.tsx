@@ -74,6 +74,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [syncingProductId, setSyncingProductId] = useState<string | null>(null)
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'offers' | 'pages'>('offers')
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'none' })
   const [savingProductId, setSavingProductId] = useState<string | null>(null)
 
@@ -346,323 +347,340 @@ export function ProductsTable({ products }: ProductsTableProps) {
                   {isExpanded && (
                     <tr key={`${product.id}-expanded`}>
                       <td colSpan={5} className="bg-gray-50 px-4 py-4">
-                        <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
-                          {isSaving && (
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <RefreshCw className="h-3 w-3 animate-spin" />
-                              Saving...
-                            </div>
-                          )}
-
-                          {/* Order Bump Section */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Order Bump</h4>
-                              {!product.config.orderBump && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                  onClick={() =>
-                                    setDialogState({
-                                      type: 'orderBump',
-                                      orderBump: null,
-                                      isNew: true,
-                                    })
-                                  }
-                                >
-                                  <Plus className="mr-1 h-3 w-3" />
-                                  Add
-                                </Button>
-                              )}
-                            </div>
-                            {product.config.orderBump ? (
-                              <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                                <div>
-                                  <span className="text-sm text-gray-900">
-                                    {product.config.orderBump.title}
-                                  </span>
-                                  <span className="ml-2 text-sm text-gray-500">
-                                    {formatPrice(
-                                      product.config.orderBump.stripe.priceAmount,
-                                      product.config.orderBump.stripe.currency
-                                    )}
-                                  </span>
-                                  {!product.config.orderBump.enabled && (
-                                    <Badge
-                                      variant="outline"
-                                      className="ml-2 text-xs text-gray-400"
-                                    >
-                                      Disabled
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() =>
-                                      setDialogState({
-                                        type: 'orderBump',
-                                        orderBump: product.config.orderBump ?? null,
-                                        isNew: false,
-                                      })
-                                    }
-                                  >
-                                    <Pencil className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                    onClick={() =>
-                                      setDialogState({
-                                        type: 'confirmDelete',
-                                        target: 'orderBump',
-                                        title: product.config.orderBump?.title ?? 'Order Bump',
-                                      })
-                                    }
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
+                        <div className="rounded-lg border border-gray-200 bg-white">
+                          {/* Tabs */}
+                          <div className="flex border-b border-gray-200">
+                            <button
+                              onClick={() => setActiveTab('offers')}
+                              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                activeTab === 'offers'
+                                  ? 'border-b-2 border-gray-900 text-gray-900'
+                                  : 'text-gray-500 hover:text-gray-700'
+                              }`}
+                            >
+                              Offers
+                            </button>
+                            <button
+                              onClick={() => setActiveTab('pages')}
+                              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                activeTab === 'pages'
+                                  ? 'border-b-2 border-gray-900 text-gray-900'
+                                  : 'text-gray-500 hover:text-gray-700'
+                              }`}
+                            >
+                              Pages
+                            </button>
+                            {isSaving && (
+                              <div className="ml-auto flex items-center gap-2 px-4 text-sm text-gray-500">
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Saving...
                               </div>
-                            ) : (
-                              <p className="text-sm text-gray-400">No order bump configured</p>
                             )}
                           </div>
 
-                          {/* Upsells Section */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Upsells</h4>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() =>
-                                  setDialogState({
-                                    type: 'upsell',
-                                    upsell: null,
-                                    isNew: true,
-                                    upsellIndex: (product.config.upsells?.length ?? 0) + 1,
-                                  })
-                                }
-                              >
-                                <Plus className="mr-1 h-3 w-3" />
-                                Add
-                              </Button>
-                            </div>
-                            {product.config.upsells && product.config.upsells.length > 0 ? (
-                              <div className="space-y-1">
-                                {product.config.upsells.map(upsell => (
-                                  <div
-                                    key={upsell.id}
-                                    className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
-                                  >
-                                    <div>
-                                      <span className="text-sm text-gray-900">{upsell.title}</span>
-                                      <span className="ml-2 text-sm text-gray-500">
-                                        {formatPrice(
-                                          upsell.stripe.priceAmount,
-                                          upsell.stripe.currency
-                                        )}
-                                      </span>
-                                      <span className="ml-2 text-xs text-gray-400">
-                                        {upsell.benefits.length} benefit
-                                        {upsell.benefits.length !== 1 ? 's' : ''}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
+                          {/* Tab Content */}
+                          <div className="p-4">
+                            {activeTab === 'offers' && (
+                              <div className="space-y-4">
+                                {/* Order Bump */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-700">Order Bump</h4>
+                                    {!product.config.orderBump && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 w-7 p-0"
+                                        className="h-7 text-xs"
                                         onClick={() =>
                                           setDialogState({
-                                            type: 'upsell',
-                                            upsell,
-                                            isNew: false,
-                                            upsellIndex: 0,
+                                            type: 'orderBump',
+                                            orderBump: null,
+                                            isNew: true,
                                           })
                                         }
                                       >
-                                        <Pencil className="h-3 w-3" />
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        Add
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                        onClick={() =>
-                                          setDialogState({
-                                            type: 'confirmDelete',
-                                            target: 'upsell',
-                                            upsellId: upsell.id,
-                                            title: upsell.title,
-                                          })
-                                        }
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
+                                    )}
                                   </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-400">No upsells configured</p>
-                            )}
-                          </div>
+                                  {product.config.orderBump ? (
+                                    <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
+                                      <div>
+                                        <span className="text-sm text-gray-900">
+                                          {product.config.orderBump.title}
+                                        </span>
+                                        <span className="ml-2 text-sm text-gray-500">
+                                          {formatPrice(
+                                            product.config.orderBump.stripe.priceAmount,
+                                            product.config.orderBump.stripe.currency
+                                          )}
+                                        </span>
+                                        {!product.config.orderBump.enabled && (
+                                          <Badge
+                                            variant="outline"
+                                            className="ml-2 text-xs text-gray-400"
+                                          >
+                                            Disabled
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'orderBump',
+                                              orderBump: product.config.orderBump ?? null,
+                                              isNew: false,
+                                            })
+                                          }
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'confirmDelete',
+                                              target: 'orderBump',
+                                              title: product.config.orderBump?.title ?? 'Order Bump',
+                                            })
+                                          }
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-400">No order bump configured</p>
+                                  )}
+                                </div>
 
-                          {/* Downsell Section */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Downsell</h4>
-                              {!product.config.downsell && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-xs"
+                                {/* Upsells */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-700">Upsells</h4>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={() =>
+                                        setDialogState({
+                                          type: 'upsell',
+                                          upsell: null,
+                                          isNew: true,
+                                          upsellIndex: (product.config.upsells?.length ?? 0) + 1,
+                                        })
+                                      }
+                                    >
+                                      <Plus className="mr-1 h-3 w-3" />
+                                      Add
+                                    </Button>
+                                  </div>
+                                  {product.config.upsells && product.config.upsells.length > 0 ? (
+                                    <div className="space-y-1">
+                                      {product.config.upsells.map(upsell => (
+                                        <div
+                                          key={upsell.id}
+                                          className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
+                                        >
+                                          <div>
+                                            <span className="text-sm text-gray-900">{upsell.title}</span>
+                                            <span className="ml-2 text-sm text-gray-500">
+                                              {formatPrice(
+                                                upsell.stripe.priceAmount,
+                                                upsell.stripe.currency
+                                              )}
+                                            </span>
+                                            <span className="ml-2 text-xs text-gray-400">
+                                              {upsell.benefits.length} benefit
+                                              {upsell.benefits.length !== 1 ? 's' : ''}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 w-7 p-0"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'upsell',
+                                                  upsell,
+                                                  isNew: false,
+                                                  upsellIndex: 0,
+                                                })
+                                              }
+                                            >
+                                              <Pencil className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'confirmDelete',
+                                                  target: 'upsell',
+                                                  upsellId: upsell.id,
+                                                  title: upsell.title,
+                                                })
+                                              }
+                                            >
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-400">No upsells configured</p>
+                                  )}
+                                </div>
+
+                                {/* Downsell */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-700">Downsell</h4>
+                                    {!product.config.downsell && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() =>
+                                          setDialogState({
+                                            type: 'downsell',
+                                            downsell: null,
+                                            isNew: true,
+                                          })
+                                        }
+                                      >
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        Add
+                                      </Button>
+                                    )}
+                                  </div>
+                                  {product.config.downsell ? (
+                                    <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
+                                      <div>
+                                        <span className="text-sm text-gray-900">
+                                          {product.config.downsell.title}
+                                        </span>
+                                        <span className="ml-2 text-sm text-gray-500">
+                                          {formatPrice(
+                                            product.config.downsell.stripe.priceAmount,
+                                            product.config.downsell.stripe.currency
+                                          )}
+                                        </span>
+                                        {!product.config.downsell.enabled && (
+                                          <Badge
+                                            variant="outline"
+                                            className="ml-2 text-xs text-gray-400"
+                                          >
+                                            Disabled
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'downsell',
+                                              downsell: product.config.downsell ?? null,
+                                              isNew: false,
+                                            })
+                                          }
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'confirmDelete',
+                                              target: 'downsell',
+                                              title: product.config.downsell?.title ?? 'Downsell',
+                                            })
+                                          }
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-gray-400">No downsell configured</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {activeTab === 'pages' && (
+                              <div className="grid gap-4 sm:grid-cols-2">
+                                {/* Checkout Page */}
+                                <div
+                                  className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
                                   onClick={() =>
                                     setDialogState({
-                                      type: 'downsell',
-                                      downsell: null,
-                                      isNew: true,
+                                      type: 'checkoutContent',
+                                      content: product.config.checkout,
                                     })
                                   }
                                 >
-                                  <Plus className="mr-1 h-3 w-3" />
-                                  Add
-                                </Button>
-                              )}
-                            </div>
-                            {product.config.downsell ? (
-                              <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                                <div>
-                                  <span className="text-sm text-gray-900">
-                                    {product.config.downsell.title}
-                                  </span>
-                                  <span className="ml-2 text-sm text-gray-500">
-                                    {formatPrice(
-                                      product.config.downsell.stripe.priceAmount,
-                                      product.config.downsell.stripe.currency
-                                    )}
-                                  </span>
-                                  {!product.config.downsell.enabled && (
-                                    <Badge
-                                      variant="outline"
-                                      className="ml-2 text-xs text-gray-400"
-                                    >
-                                      Disabled
-                                    </Badge>
+                                  <div className="mb-2 flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-900">Checkout Page</h4>
+                                    <Pencil className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <p className="text-sm text-gray-700">{product.config.checkout.title}</p>
+                                  {product.config.checkout.subtitle && (
+                                    <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
                                   )}
+                                  <p className="mt-2 text-xs text-gray-400">
+                                    {product.config.checkout.benefits.length} benefits
+                                    {product.config.checkout.testimonials && product.config.checkout.testimonials.length > 0
+                                      ? ` · ${product.config.checkout.testimonials.length} testimonials`
+                                      : product.config.checkout.testimonial
+                                        ? ' · 1 testimonial'
+                                        : ''}
+                                    {product.config.checkout.faq && product.config.checkout.faq.length > 0
+                                      ? ` · ${product.config.checkout.faq.length} FAQ`
+                                      : ''}
+                                  </p>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={() =>
-                                      setDialogState({
-                                        type: 'downsell',
-                                        downsell: product.config.downsell ?? null,
-                                        isNew: false,
-                                      })
-                                    }
-                                  >
-                                    <Pencil className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                    onClick={() =>
-                                      setDialogState({
-                                        type: 'confirmDelete',
-                                        target: 'downsell',
-                                        title: product.config.downsell?.title ?? 'Downsell',
-                                      })
-                                    }
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
+
+                                {/* Thank You Page */}
+                                <div
+                                  className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                                  onClick={() =>
+                                    setDialogState({
+                                      type: 'thankYouContent',
+                                      content: product.config.thankYou,
+                                    })
+                                  }
+                                >
+                                  <div className="mb-2 flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-900">Thank You Page</h4>
+                                    <Pencil className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <p className="text-sm text-gray-700">{product.config.thankYou.headline}</p>
+                                  {product.config.thankYou.subheadline && (
+                                    <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
+                                  )}
+                                  <p className="mt-2 text-xs text-gray-400">
+                                    {product.config.thankYou.steps.length} steps
+                                    {product.config.thankYou.ctaButton ? ' · Has CTA' : ''}
+                                  </p>
                                 </div>
                               </div>
-                            ) : (
-                              <p className="text-sm text-gray-400">No downsell configured</p>
                             )}
-                          </div>
-
-                          {/* Divider */}
-                          <hr className="border-gray-200" />
-
-                          {/* Checkout Page Content */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Checkout Page</h4>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() =>
-                                  setDialogState({
-                                    type: 'checkoutContent',
-                                    content: product.config.checkout,
-                                  })
-                                }
-                              >
-                                <Pencil className="mr-1 h-3 w-3" />
-                                Edit
-                              </Button>
-                            </div>
-                            <div className="rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                              <p className="text-sm text-gray-900">{product.config.checkout.title}</p>
-                              {product.config.checkout.subtitle && (
-                                <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
-                              )}
-                              <p className="mt-1 text-xs text-gray-400">
-                                {product.config.checkout.benefits.length} benefits
-                                {product.config.checkout.testimonials && product.config.checkout.testimonials.length > 0
-                                  ? ` · ${product.config.checkout.testimonials.length} testimonials`
-                                  : product.config.checkout.testimonial
-                                    ? ' · 1 testimonial'
-                                    : ''}
-                                {product.config.checkout.faq && product.config.checkout.faq.length > 0
-                                  ? ` · ${product.config.checkout.faq.length} FAQ items`
-                                  : ''}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Thank You Page Content */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-medium text-gray-700">Thank You Page</h4>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() =>
-                                  setDialogState({
-                                    type: 'thankYouContent',
-                                    content: product.config.thankYou,
-                                  })
-                                }
-                              >
-                                <Pencil className="mr-1 h-3 w-3" />
-                                Edit
-                              </Button>
-                            </div>
-                            <div className="rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                              <p className="text-sm text-gray-900">{product.config.thankYou.headline}</p>
-                              {product.config.thankYou.subheadline && (
-                                <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
-                              )}
-                              <p className="mt-1 text-xs text-gray-400">
-                                {product.config.thankYou.steps.length} steps
-                                {product.config.thankYou.ctaButton ? ' · Has CTA button' : ''}
-                              </p>
-                            </div>
                           </div>
                         </div>
                       </td>
