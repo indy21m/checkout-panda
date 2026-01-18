@@ -14,8 +14,10 @@ import { ProductEditDialog } from './ProductEditDialog'
 import { UpsellEditDialog } from './UpsellEditDialog'
 import { OrderBumpEditDialog } from './OrderBumpEditDialog'
 import { DownsellEditDialog } from './DownsellEditDialog'
+import { CheckoutContentEditDialog } from './CheckoutContentEditDialog'
+import { ThankYouContentEditDialog } from './ThankYouContentEditDialog'
 import type { ProductRecord, ProductConfig } from '@/lib/db/schema'
-import type { Upsell, OrderBump, Downsell } from '@/types'
+import type { Upsell, OrderBump, Downsell, CheckoutContent, ThankYouContent } from '@/types'
 import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -63,6 +65,8 @@ type DialogState =
   | { type: 'upsell'; upsell: Upsell | null; isNew: boolean; upsellIndex: number }
   | { type: 'orderBump'; orderBump: OrderBump | null; isNew: boolean }
   | { type: 'downsell'; downsell: Downsell | null; isNew: boolean }
+  | { type: 'checkoutContent'; content: CheckoutContent }
+  | { type: 'thankYouContent'; content: ThankYouContent }
   | { type: 'confirmDelete'; target: 'upsell' | 'orderBump' | 'downsell'; upsellId?: string; title: string }
 
 export function ProductsTable({ products }: ProductsTableProps) {
@@ -196,6 +200,28 @@ export function ProductsTable({ products }: ProductsTableProps) {
     const updatedConfig: ProductConfig = {
       ...expandedProduct.config,
       downsell: undefined,
+    }
+
+    void saveProductConfig(expandedProduct.id, updatedConfig)
+  }
+
+  function handleSaveCheckoutContent(content: CheckoutContent): void {
+    if (!expandedProduct) return
+
+    const updatedConfig: ProductConfig = {
+      ...expandedProduct.config,
+      checkout: content,
+    }
+
+    void saveProductConfig(expandedProduct.id, updatedConfig)
+  }
+
+  function handleSaveThankYouContent(content: ThankYouContent): void {
+    if (!expandedProduct) return
+
+    const updatedConfig: ProductConfig = {
+      ...expandedProduct.config,
+      thankYou: content,
     }
 
     void saveProductConfig(expandedProduct.id, updatedConfig)
@@ -566,6 +592,78 @@ export function ProductsTable({ products }: ProductsTableProps) {
                               <p className="text-sm text-gray-400">No downsell configured</p>
                             )}
                           </div>
+
+                          {/* Divider */}
+                          <hr className="border-gray-200" />
+
+                          {/* Checkout Page Content */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-700">Checkout Page</h4>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() =>
+                                  setDialogState({
+                                    type: 'checkoutContent',
+                                    content: product.config.checkout,
+                                  })
+                                }
+                              >
+                                <Pencil className="mr-1 h-3 w-3" />
+                                Edit
+                              </Button>
+                            </div>
+                            <div className="rounded border border-gray-100 bg-gray-50 px-3 py-2">
+                              <p className="text-sm text-gray-900">{product.config.checkout.title}</p>
+                              {product.config.checkout.subtitle && (
+                                <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
+                              )}
+                              <p className="mt-1 text-xs text-gray-400">
+                                {product.config.checkout.benefits.length} benefits
+                                {product.config.checkout.testimonials && product.config.checkout.testimonials.length > 0
+                                  ? ` · ${product.config.checkout.testimonials.length} testimonials`
+                                  : product.config.checkout.testimonial
+                                    ? ' · 1 testimonial'
+                                    : ''}
+                                {product.config.checkout.faq && product.config.checkout.faq.length > 0
+                                  ? ` · ${product.config.checkout.faq.length} FAQ items`
+                                  : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Thank You Page Content */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-700">Thank You Page</h4>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() =>
+                                  setDialogState({
+                                    type: 'thankYouContent',
+                                    content: product.config.thankYou,
+                                  })
+                                }
+                              >
+                                <Pencil className="mr-1 h-3 w-3" />
+                                Edit
+                              </Button>
+                            </div>
+                            <div className="rounded border border-gray-100 bg-gray-50 px-3 py-2">
+                              <p className="text-sm text-gray-900">{product.config.thankYou.headline}</p>
+                              {product.config.thankYou.subheadline && (
+                                <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
+                              )}
+                              <p className="mt-1 text-xs text-gray-400">
+                                {product.config.thankYou.steps.length} steps
+                                {product.config.thankYou.ctaButton ? ' · Has CTA button' : ''}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -622,6 +720,22 @@ export function ProductsTable({ products }: ProductsTableProps) {
         existingDownsells={products
           .filter(p => p.config.downsell)
           .map(p => ({ ...p.config.downsell!, productName: p.name }))}
+      />
+
+      {/* Checkout Content Edit Dialog */}
+      <CheckoutContentEditDialog
+        content={dialogState.type === 'checkoutContent' ? dialogState.content : null}
+        open={dialogState.type === 'checkoutContent'}
+        onClose={() => setDialogState({ type: 'none' })}
+        onSave={handleSaveCheckoutContent}
+      />
+
+      {/* Thank You Content Edit Dialog */}
+      <ThankYouContentEditDialog
+        content={dialogState.type === 'thankYouContent' ? dialogState.content : null}
+        open={dialogState.type === 'thankYouContent'}
+        onClose={() => setDialogState({ type: 'none' })}
+        onSave={handleSaveThankYouContent}
       />
 
       {/* Delete Confirmation Dialog */}
