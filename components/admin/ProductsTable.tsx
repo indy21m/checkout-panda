@@ -74,7 +74,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [syncingProductId, setSyncingProductId] = useState<string | null>(null)
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'offers' | 'pages'>('offers')
+  const [activeTab, setActiveTab] = useState<'offers' | 'pages' | 'settings'>('offers')
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'none' })
   const [savingProductId, setSavingProductId] = useState<string | null>(null)
 
@@ -319,14 +319,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                       <SyncStatusBadge status={product.stripeSyncStatus} />
                     </td>
                     <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setEditingProductId(product.id)}
-                        >
-                          Edit
-                        </Button>
+                      <div className="flex items-center justify-end">
                         <Button
                           variant="outline"
                           size="sm"
@@ -369,6 +362,16 @@ export function ProductsTable({ products }: ProductsTableProps) {
                               }`}
                             >
                               Pages
+                            </button>
+                            <button
+                              onClick={() => setActiveTab('settings')}
+                              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                activeTab === 'settings'
+                                  ? 'border-b-2 border-gray-900 text-gray-900'
+                                  : 'text-gray-500 hover:text-gray-700'
+                              }`}
+                            >
+                              Settings
                             </button>
                             {isSaving && (
                               <div className="ml-auto flex items-center gap-2 px-4 text-sm text-gray-500">
@@ -677,6 +680,27 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                   <p className="mt-2 text-xs text-gray-400">
                                     {product.config.thankYou.steps.length} steps
                                     {product.config.thankYou.ctaButton ? ' · Has CTA' : ''}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {activeTab === 'settings' && (
+                              <div
+                                className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                                onClick={() => setEditingProductId(product.id)}
+                              >
+                                <div className="mb-2 flex items-center justify-between">
+                                  <h4 className="text-sm font-medium text-gray-900">Product Settings</h4>
+                                  <Pencil className="h-3 w-3 text-gray-400" />
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm text-gray-700">{product.name}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {product.config.stripe.currency} · {formatPrice(product.config.stripe.priceAmount, product.config.stripe.currency)}
+                                    {product.config.stripe.pricingTiers && product.config.stripe.pricingTiers.length > 1
+                                      ? ` · ${product.config.stripe.pricingTiers.length} pricing tiers`
+                                      : ''}
                                   </p>
                                 </div>
                               </div>
