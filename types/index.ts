@@ -5,6 +5,12 @@
 // Currency types
 export type Currency = 'USD' | 'EUR' | 'DKK'
 
+// Product type - determines what kind of product this is
+export type ProductType = 'main' | 'upsell' | 'downsell' | 'bump'
+
+// Offer role in the product_offers junction table
+export type OfferRole = 'upsell' | 'downsell' | 'bump'
+
 // Pricing tier for products with multiple payment options
 export interface PricingTier {
   id: string // e.g., 'one-time', 'installment-3'
@@ -243,4 +249,40 @@ export interface UpsellFlowState {
   productSlug: string
   purchasedItems: string[] // ['main', 'bump', 'upsell-1', etc.]
   currentStep: 'upsell-1' | 'upsell-2' | 'downsell' | 'thank-you'
+}
+
+// ============================================
+// Unified Product Architecture Types
+// ============================================
+
+/**
+ * Linked offer - represents an offer product linked to a main product
+ */
+export interface LinkedOffer {
+  id: string
+  productId: string // The offer product's ID
+  slug: string
+  name: string
+  role: OfferRole
+  position: number
+  enabled: boolean
+  config: {
+    stripe: StripeConfig
+    title: string
+    subtitle?: string
+    description: string
+    benefits: string[]
+    originalPrice?: number
+    image?: string
+    urgencyText?: string
+    savingsPercent?: number
+    enabled?: boolean
+  }
+}
+
+/**
+ * Assembled product - main product with its linked offers resolved
+ */
+export interface AssembledProduct extends Product {
+  linkedOffers?: LinkedOffer[]
 }

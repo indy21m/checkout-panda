@@ -2,54 +2,88 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { stripe } from '@/lib/stripe/config'
-import { getProduct } from '@/config/products'
+import { getProductFromDb } from '@/config/products'
 import type { ChargeUpsellResponse, StripeConfig } from '@/types'
 
 const requestSchema = z.object({
   customerId: z.string().min(1),
   paymentMethodId: z.string().min(1),
   productSlug: z.string().min(1),
-  upsellId: z.string().min(1), // Can be 'upsell-1', 'upsell-2', or 'downsell'
+  upsellId: z.string().min(1), // Can be offer product ID, slug, 'upsell-1', 'upsell-2', or 'downsell'
 })
+
+/**
+ * Try to find offer product directly from database (unified architecture)
+ */
+async function findOfferProductFromDb(offerId: string): Promise<{
+  stripe: StripeConfig
+  title: string
+  type: 'upsell' | 'downsell' | 'bump'
+} | null> {
+  try {
+    const { db } = await import('@/lib/db')
+    const { products } = await import('@/lib/db/schema')
+    const { eq, or } = await import('drizzle-orm')
+
+    // Try to find offer product by ID or slug
+    const offerProduct = await db.query.products.findFirst({
+      where: or(eq(products.id, offerId), eq(products.slug, offerId)),
+    })
+
+    if (offerProduct && offerProduct.type !== 'main' && offerProduct.isActive) {
+      return {
+        stripe: {
+          productId: offerProduct.config.stripe.productId ?? offerProduct.stripeProductId ?? '',
+          priceId: offerProduct.config.stripe.priceId ?? '',
+          priceAmount: offerProduct.config.stripe.priceAmount,
+          currency: offerProduct.config.stripe.currency,
+        },
+        title: offerProduct.config.title ?? offerProduct.name,
+        type: offerProduct.type as 'upsell' | 'downsell' | 'bump',
+      }
+    }
+  } catch (error) {
+    console.error('Error finding offer product from DB:', error)
+  }
+  return null
+}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json()
     const data = requestSchema.parse(body)
 
-    // Get product configuration
-    const product = getProduct(data.productSlug)
-    if (!product) {
-      return NextResponse.json(
-        { success: false, error: 'Product not found' } satisfies ChargeUpsellResponse,
-        { status: 404 }
-      )
-    }
+    // First, try to find the offer product directly (unified architecture)
+    let offerConfig = await findOfferProductFromDb(data.upsellId)
 
-    // Find the upsell or downsell config
-    let offerConfig: {
-      stripe: StripeConfig
-      title: string
-      type: 'upsell' | 'downsell'
-    } | null = null
-
-    // Check upsells
-    const upsell = product.upsells?.find((u) => u.id === data.upsellId || u.slug === data.upsellId)
-    if (upsell) {
-      offerConfig = {
-        stripe: upsell.stripe,
-        title: upsell.title,
-        type: 'upsell',
+    // If not found directly, get the main product and look in its assembled offers
+    if (!offerConfig) {
+      const product = await getProductFromDb(data.productSlug)
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: 'Product not found' } satisfies ChargeUpsellResponse,
+          { status: 404 }
+        )
       }
-    }
 
-    // Check downsell
-    if (!offerConfig && product.downsell?.enabled) {
-      if (data.upsellId === 'downsell' || data.upsellId === product.downsell.slug) {
+      // Check upsells (these may be assembled from linked offer products)
+      const upsell = product.upsells?.find((u) => u.id === data.upsellId || u.slug === data.upsellId)
+      if (upsell) {
         offerConfig = {
-          stripe: product.downsell.stripe,
-          title: product.downsell.title,
-          type: 'downsell',
+          stripe: upsell.stripe,
+          title: upsell.title,
+          type: 'upsell',
+        }
+      }
+
+      // Check downsell
+      if (!offerConfig && product.downsell?.enabled) {
+        if (data.upsellId === 'downsell' || data.upsellId === product.downsell.slug) {
+          offerConfig = {
+            stripe: product.downsell.stripe,
+            title: product.downsell.title,
+            type: 'downsell',
+          }
         }
       }
     }

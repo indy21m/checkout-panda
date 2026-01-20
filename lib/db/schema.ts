@@ -1,4 +1,5 @@
-import { pgTable, text, boolean, timestamp, jsonb, integer } from 'drizzle-orm/pg-core'
+import { pgTable, text, boolean, timestamp, jsonb, integer, uuid } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import type {
   CheckoutContent,
   OrderBump,
@@ -11,7 +12,80 @@ import type {
 } from '@/types'
 
 /**
- * Product config stored as JSONB (excludes id, slug, name which are columns)
+ * Product type - determines what kind of product this is
+ */
+export type ProductType = 'main' | 'upsell' | 'downsell' | 'bump'
+
+/**
+ * Offer config for upsell/downsell products (stored in JSONB config)
+ */
+export interface OfferConfig {
+  stripe: {
+    productId: string | null
+    priceId: string | null
+    priceAmount: number
+    currency: Currency
+  }
+  title: string
+  subtitle?: string
+  description: string
+  benefits: string[]
+  originalPrice?: number
+  image?: string
+  urgencyText?: string // For upsells
+  enabled?: boolean // For downsells
+}
+
+/**
+ * Bump config for order bump products (stored in JSONB config)
+ */
+export interface BumpConfig {
+  stripe: {
+    productId: string | null
+    priceId: string | null
+    priceAmount: number
+    currency: Currency
+  }
+  title: string
+  description: string
+  savingsPercent?: number
+  image?: string
+  enabled: boolean
+}
+
+/**
+ * Main product config stored as JSONB (excludes id, slug, name which are columns)
+ */
+export interface MainProductConfig {
+  stripe: {
+    productId: string | null // null = not yet synced to Stripe
+    priceId: string | null
+    priceAmount: number
+    currency: Currency
+    pricingTiers?: Array<{
+      id: string
+      label: string
+      priceId: string | null // null = not yet synced
+      priceAmount: number
+      originalPrice?: number
+      isDefault?: boolean
+      description?: string
+      installments?: {
+        count: number
+        intervalLabel: string
+        amountPerPayment: number
+      }
+    }>
+  }
+  checkout: CheckoutContent
+  thankYou: ThankYouContent
+  integrations?: IntegrationConfig
+  meta?: SEOMeta
+}
+
+/**
+ * Product config stored as JSONB - varies by product type
+ * For backward compatibility during migration, we keep the old fields as optional
  */
 export interface ProductConfig {
   stripe: {
@@ -34,22 +108,36 @@ export interface ProductConfig {
       }
     }>
   }
-  checkout: CheckoutContent
+  // Main product fields
+  checkout?: CheckoutContent
+  thankYou?: ThankYouContent
+  integrations?: IntegrationConfig
+  meta?: SEOMeta
+  // Legacy nested offers (kept for backward compatibility during migration)
   orderBump?: OrderBump
   upsells?: Upsell[]
   downsell?: Downsell
-  thankYou: ThankYouContent
-  integrations?: IntegrationConfig
-  meta?: SEOMeta
+  // Offer/Bump specific fields (for upsell/downsell/bump product types)
+  title?: string
+  subtitle?: string
+  description?: string
+  benefits?: string[]
+  originalPrice?: number
+  image?: string
+  urgencyText?: string
+  savingsPercent?: number
+  enabled?: boolean
 }
 
 /**
  * Products table - stores full product config as JSONB
+ * Products can be of type: 'main' (full products), 'upsell', 'downsell', or 'bump'
  */
 export const products = pgTable('products', {
   id: text('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
+  type: text('type').$type<ProductType>().notNull().default('main'),
   config: jsonb('config').notNull().$type<ProductConfig>(),
   stripeProductId: text('stripe_product_id'),
   stripeSyncedAt: timestamp('stripe_synced_at', { withTimezone: true }),
@@ -58,6 +146,45 @@ export const products = pgTable('products', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
+
+/**
+ * Product offers junction table - links main products to their offers (upsells, downsells, bumps)
+ */
+export const productOffers = pgTable('product_offers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  offerId: text('offer_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  role: text('role').$type<'upsell' | 'downsell' | 'bump'>().notNull(),
+  position: integer('position').notNull().default(1),
+  enabled: boolean('enabled').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})
+
+/**
+ * Relations for products
+ */
+export const productsRelations = relations(products, ({ many }) => ({
+  // Offers this product has (when it's a main product)
+  offers: many(productOffers, { relationName: 'productToOffers' }),
+  // Products this offer is linked to (when it's an offer product)
+  linkedTo: many(productOffers, { relationName: 'offerToProducts' }),
+}))
+
+/**
+ * Relations for product offers
+ */
+export const productOffersRelations = relations(productOffers, ({ one }) => ({
+  product: one(products, {
+    fields: [productOffers.productId],
+    references: [products.id],
+    relationName: 'productToOffers',
+  }),
+  offer: one(products, {
+    fields: [productOffers.offerId],
+    references: [products.id],
+    relationName: 'offerToProducts',
+  }),
+}))
 
 /**
  * Stripe prices table - tracks Stripe price IDs for each tier
@@ -77,5 +204,7 @@ export const stripePrices = pgTable('stripe_prices', {
 
 export type ProductRecord = typeof products.$inferSelect
 export type NewProduct = typeof products.$inferInsert
+export type ProductOfferRecord = typeof productOffers.$inferSelect
+export type NewProductOffer = typeof productOffers.$inferInsert
 export type StripePriceRecord = typeof stripePrices.$inferSelect
 export type NewStripePrice = typeof stripePrices.$inferInsert

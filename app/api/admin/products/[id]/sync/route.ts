@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { products, stripePrices, type ProductConfig } from '@/lib/db/schema'
+import { products, stripePrices, type ProductConfig, type ProductType } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { getStripe } from '@/lib/stripe/config'
 
@@ -31,8 +31,12 @@ export async function POST(
       .set({ stripeSyncStatus: 'pending' })
       .where(eq(products.id, id))
 
-    // Sync to Stripe
-    await syncProductToStripe(id, product.name, product.config)
+    // Sync to Stripe based on product type
+    if (product.type === 'main') {
+      await syncMainProductToStripe(id, product.name, product.config)
+    } else {
+      await syncOfferProductToStripe(id, product.name, product.type, product.config)
+    }
 
     // Update sync status
     await db.update(products)
@@ -67,9 +71,9 @@ export async function POST(
 }
 
 /**
- * Sync product and prices to Stripe
+ * Sync main product and pricing tiers to Stripe
  */
-async function syncProductToStripe(
+async function syncMainProductToStripe(
   productId: string,
   productName: string,
   config: ProductConfig
@@ -87,12 +91,12 @@ async function syncProductToStripe(
   if (stripeProductId) {
     await stripe.products.update(stripeProductId, {
       name: productName,
-      metadata: { checkoutPandaId: productId },
+      metadata: { checkoutPandaId: productId, type: 'main' },
     })
   } else {
     const stripeProduct = await stripe.products.create({
       name: productName,
-      metadata: { checkoutPandaId: productId },
+      metadata: { checkoutPandaId: productId, type: 'main' },
     })
     stripeProductId = stripeProduct.id
 
@@ -176,6 +180,101 @@ async function syncProductToStripe(
       productId: stripeProductId,
       priceId: defaultTier?.priceId ?? null,
       pricingTiers: updatedTiers,
+    },
+  }
+
+  await db.update(products)
+    .set({ config: updatedConfig })
+    .where(eq(products.id, productId))
+}
+
+/**
+ * Sync offer product (upsell/downsell/bump) to Stripe
+ * These products have a single price, not pricing tiers
+ */
+async function syncOfferProductToStripe(
+  productId: string,
+  productName: string,
+  productType: ProductType,
+  config: ProductConfig
+): Promise<void> {
+  const stripe = getStripe()
+
+  // Get existing Stripe product ID from database
+  const existingProduct = await db.query.products.findFirst({
+    where: eq(products.id, productId),
+  })
+
+  let stripeProductId = existingProduct?.stripeProductId
+
+  // Create or update Stripe product
+  if (stripeProductId) {
+    await stripe.products.update(stripeProductId, {
+      name: productName,
+      metadata: { checkoutPandaId: productId, type: productType },
+    })
+  } else {
+    const stripeProduct = await stripe.products.create({
+      name: productName,
+      metadata: { checkoutPandaId: productId, type: productType },
+    })
+    stripeProductId = stripeProduct.id
+
+    // Save Stripe product ID
+    await db.update(products)
+      .set({ stripeProductId })
+      .where(eq(products.id, productId))
+  }
+
+  // Create or update the single price for this offer
+  const existingPrice = await db.query.stripePrices.findFirst({
+    where: eq(stripePrices.id, `${productId}:default`),
+  })
+
+  let stripePriceId = existingPrice?.stripePriceId
+
+  // If price amount changed or no price exists, create new Stripe price
+  if (!stripePriceId || existingPrice?.amount !== config.stripe.priceAmount) {
+    const stripePrice = await stripe.prices.create({
+      product: stripeProductId,
+      unit_amount: config.stripe.priceAmount,
+      currency: config.stripe.currency.toLowerCase(),
+      metadata: {
+        checkoutPandaId: productId,
+        type: productType,
+      },
+    })
+    stripePriceId = stripePrice.id
+
+    // Upsert price record
+    await db.insert(stripePrices)
+      .values({
+        id: `${productId}:default`,
+        productId,
+        tierId: 'default',
+        stripePriceId,
+        amount: config.stripe.priceAmount,
+        currency: config.stripe.currency,
+        isRecurring: false,
+        recurringInterval: null,
+        recurringCount: null,
+      })
+      .onConflictDoUpdate({
+        target: stripePrices.id,
+        set: {
+          stripePriceId,
+          amount: config.stripe.priceAmount,
+        },
+      })
+  }
+
+  // Update config with synced Stripe IDs
+  const updatedConfig: ProductConfig = {
+    ...config,
+    stripe: {
+      ...config.stripe,
+      productId: stripeProductId,
+      priceId: stripePriceId,
     },
   }
 

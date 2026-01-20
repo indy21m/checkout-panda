@@ -11,19 +11,24 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { ProductEditDialog } from './ProductEditDialog'
-import { UpsellEditDialog } from './UpsellEditDialog'
-import { OrderBumpEditDialog } from './OrderBumpEditDialog'
-import { DownsellEditDialog } from './DownsellEditDialog'
+import { OfferProductDialog } from './OfferProductDialog'
+import { OfferLinkDialog } from './OfferLinkDialog'
 import { CheckoutContentEditDialog } from './CheckoutContentEditDialog'
 import { ThankYouContentEditDialog } from './ThankYouContentEditDialog'
 import type { ProductRecord, ProductConfig } from '@/lib/db/schema'
-import type { Upsell, OrderBump, Downsell, CheckoutContent, ThankYouContent } from '@/types'
-import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import type { CheckoutContent, ThankYouContent, OfferRole, Currency, ProductType } from '@/types'
+import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2, ExternalLink, Link2, Unlink } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+// Extended product record with usage info from API
+interface ExtendedProductRecord extends ProductRecord {
+  usedIn?: Array<{ productId: string; productName: string; role: string }>
+  linkedOffers?: Array<{ offerId: string; offerName: string; role: string; position: number; enabled: boolean }>
+}
+
 interface ProductsTableProps {
-  products: ProductRecord[]
+  products: ExtendedProductRecord[]
 }
 
 function formatPrice(amount: number, currency: string): string {
@@ -62,15 +67,18 @@ function SyncStatusBadge({ status }: { status: string | null }) {
 // Dialog state types
 type DialogState =
   | { type: 'none' }
-  | { type: 'upsell'; upsell: Upsell | null; isNew: boolean; upsellIndex: number }
-  | { type: 'orderBump'; orderBump: OrderBump | null; isNew: boolean }
-  | { type: 'downsell'; downsell: Downsell | null; isNew: boolean }
+  | { type: 'offerProduct'; product: ProductRecord | null; isNew: boolean; productType: 'upsell' | 'downsell' | 'bump' }
+  | { type: 'linkOffer'; productId: string; role: OfferRole }
   | { type: 'checkoutContent'; content: CheckoutContent }
   | { type: 'thankYouContent'; content: ThankYouContent }
-  | { type: 'confirmDelete'; target: 'upsell' | 'orderBump' | 'downsell'; productId: string; upsellId?: string; title: string }
+  | { type: 'confirmDelete'; productId: string; productName: string }
+  | { type: 'confirmUnlink'; productId: string; offerId: string; offerName: string; role: OfferRole }
+
+type TopTab = 'products' | 'upsells' | 'downsells' | 'bumps'
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const router = useRouter()
+  const [topTab, setTopTab] = useState<TopTab>('products')
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const [syncingProductId, setSyncingProductId] = useState<string | null>(null)
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null)
@@ -80,6 +88,18 @@ export function ProductsTable({ products }: ProductsTableProps) {
 
   const editingProduct = products.find(p => p.id === editingProductId)
   const expandedProduct = products.find(p => p.id === expandedProductId)
+
+  // Filter products by type based on top tab
+  const filteredProducts = products.filter(p => {
+    if (topTab === 'products') return p.type === 'main'
+    if (topTab === 'upsells') return p.type === 'upsell'
+    if (topTab === 'downsells') return p.type === 'downsell'
+    if (topTab === 'bumps') return p.type === 'bump'
+    return false
+  })
+
+  // Get available offers for linking
+  const availableOffers = products.filter(p => p.type !== 'main')
 
   async function handleSync(productId: string): Promise<void> {
     setSyncingProductId(productId)
@@ -126,49 +146,103 @@ export function ProductsTable({ products }: ProductsTableProps) {
     }
   }
 
-  function handleSaveUpsell(upsell: Upsell): void {
-    if (!expandedProduct) return
+  async function handleSaveOfferProduct(productData: {
+    id: string
+    slug: string
+    name: string
+    type: ProductType
+    config: ProductConfig
+  }): Promise<void> {
+    const existingProduct = products.find(p => p.id === productData.id)
 
-    const existingUpsells = expandedProduct.config.upsells ?? []
-    const existingIndex = existingUpsells.findIndex(u => u.id === upsell.id)
-
-    let updatedUpsells: Upsell[]
-    if (existingIndex >= 0) {
+    if (existingProduct) {
       // Update existing
-      updatedUpsells = existingUpsells.map((u, i) => (i === existingIndex ? upsell : u))
+      const response = await fetch(`/api/admin/products/${productData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: productData.name,
+          slug: productData.slug,
+          config: productData.config,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update product')
+      }
     } else {
-      // Add new
-      updatedUpsells = [...existingUpsells, upsell]
+      // Create new
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create product')
+      }
     }
 
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      upsells: updatedUpsells,
-    }
-
-    void saveProductConfig(expandedProduct.id, updatedConfig)
+    router.refresh()
   }
 
-  function handleSaveOrderBump(orderBump: OrderBump): void {
-    if (!expandedProduct) return
+  async function handleLinkOffer(offerId: string, role: OfferRole): Promise<void> {
+    if (dialogState.type !== 'linkOffer') return
 
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      orderBump,
+    const response = await fetch('/api/admin/product-offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: dialogState.productId,
+        offerId,
+        role,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to link offer')
     }
 
-    void saveProductConfig(expandedProduct.id, updatedConfig)
+    router.refresh()
   }
 
-  function handleSaveDownsell(downsell: Downsell): void {
-    if (!expandedProduct) return
+  async function handleUnlinkOffer(): Promise<void> {
+    if (dialogState.type !== 'confirmUnlink') return
 
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      downsell,
+    const response = await fetch('/api/admin/product-offers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: dialogState.productId,
+        offerId: dialogState.offerId,
+        role: dialogState.role,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('Failed to unlink:', error)
     }
 
-    void saveProductConfig(expandedProduct.id, updatedConfig)
+    setDialogState({ type: 'none' })
+    router.refresh()
+  }
+
+  async function handleDeleteProduct(): Promise<void> {
+    if (dialogState.type !== 'confirmDelete') return
+
+    const response = await fetch(`/api/admin/products/${dialogState.productId}`, {
+      method: 'DELETE',
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('Failed to delete:', error)
+    }
+
+    setDialogState({ type: 'none' })
+    router.refresh()
   }
 
   function handleSaveCheckoutContent(content: CheckoutContent): void {
@@ -197,48 +271,73 @@ export function ProductsTable({ products }: ProductsTableProps) {
     setExpandedProductId(prev => (prev === productId ? null : productId))
   }
 
-  function handleConfirmDelete(): void {
-    if (dialogState.type !== 'confirmDelete') return
-
-    const targetProduct = products.find(p => p.id === dialogState.productId)
-    if (!targetProduct) return
-
-    if (dialogState.target === 'upsell' && dialogState.upsellId) {
-      const updatedUpsells = (targetProduct.config.upsells ?? []).filter(u => u.id !== dialogState.upsellId)
-      const updatedConfig: ProductConfig = {
-        ...targetProduct.config,
-        upsells: updatedUpsells.length > 0 ? updatedUpsells : undefined,
-      }
-      void saveProductConfig(targetProduct.id, updatedConfig)
-    } else if (dialogState.target === 'orderBump') {
-      const updatedConfig: ProductConfig = {
-        ...targetProduct.config,
-        orderBump: undefined,
-      }
-      void saveProductConfig(targetProduct.id, updatedConfig)
-    } else if (dialogState.target === 'downsell') {
-      const updatedConfig: ProductConfig = {
-        ...targetProduct.config,
-        downsell: undefined,
-      }
-      void saveProductConfig(targetProduct.id, updatedConfig)
-    }
-    setDialogState({ type: 'none' })
+  const topTabLabel = {
+    products: 'Products',
+    upsells: 'Upsells',
+    downsells: 'Downsells',
+    bumps: 'Order Bumps',
   }
 
   return (
     <>
+      {/* Top Level Tabs */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex border-b border-gray-200">
+          {(['products', 'upsells', 'downsells', 'bumps'] as TopTab[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                setTopTab(tab)
+                setExpandedProductId(null)
+              }}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                topTab === tab
+                  ? 'border-b-2 border-gray-900 text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {topTabLabel[tab]}
+              <span className="ml-1 text-xs text-gray-400">
+                ({products.filter(p => tab === 'products' ? p.type === 'main' : p.type === tab.slice(0, -1)).length})
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Create New Button for offer types */}
+        {topTab !== 'products' && (
+          <Button
+            onClick={() =>
+              setDialogState({
+                type: 'offerProduct',
+                product: null,
+                isNew: true,
+                productType: topTab === 'bumps' ? 'bump' : (topTab.slice(0, -1) as 'upsell' | 'downsell'),
+              })
+            }
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            New {topTab === 'bumps' ? 'Order Bump' : topTab.slice(0, -1).charAt(0).toUpperCase() + topTab.slice(1, -1)}
+          </Button>
+        )}
+      </div>
+
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <table className="w-full">
           <thead className="border-b border-gray-200 bg-gray-50">
             <tr>
-              <th className="w-8 px-2 py-3"></th>
+              {topTab === 'products' && <th className="w-8 px-2 py-3"></th>}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Product
+                {topTab === 'products' ? 'Product' : topTabLabel[topTab].slice(0, -1)}
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                 Price
               </th>
+              {topTab !== 'products' && (
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                  Used In
+                </th>
+              )}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                 Stripe Status
               </th>
@@ -248,504 +347,470 @@ export function ProductsTable({ products }: ProductsTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {products.map(product => {
-              const isExpanded = expandedProductId === product.id
-              const isSaving = savingProductId === product.id
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan={topTab === 'products' ? 5 : 5} className="px-4 py-8 text-center text-gray-500">
+                  No {topTabLabel[topTab].toLowerCase()} found
+                </td>
+              </tr>
+            ) : (
+              filteredProducts.map(product => {
+                const isExpanded = expandedProductId === product.id
+                const isSaving = savingProductId === product.id
 
-              return (
-                <>
-                  <tr
-                    key={product.id}
-                    className={`cursor-pointer hover:bg-gray-50 ${isExpanded ? 'bg-gray-50' : ''}`}
-                    onClick={() => toggleExpand(product.id)}
-                  >
-                    <td className="px-2 py-3 text-gray-400">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm text-gray-500">/{product.slug}</span>
-                          <Link
-                            href={`/${product.slug}/checkout`}
-                            target="_blank"
-                            onClick={e => e.stopPropagation()}
-                            className="text-gray-400 hover:text-blue-600"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-900">
-                        {formatPrice(
-                          product.config.stripe.priceAmount,
-                          product.config.stripe.currency
-                        )}
-                      </p>
-                      {product.config.stripe.pricingTiers &&
-                        product.config.stripe.pricingTiers.length > 1 && (
-                          <p className="text-xs text-gray-500">
-                            {product.config.stripe.pricingTiers.length} pricing tiers
-                          </p>
-                        )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <SyncStatusBadge status={product.stripeSyncStatus} />
-                    </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSync(product.id)}
-                          disabled={syncingProductId === product.id}
-                        >
-                          {syncingProductId === product.id ? (
-                            <RefreshCw className="h-4 w-4 animate-spin" />
+                return (
+                  <>
+                    <tr
+                      key={product.id}
+                      className={`${topTab === 'products' ? 'cursor-pointer' : ''} hover:bg-gray-50 ${isExpanded ? 'bg-gray-50' : ''}`}
+                      onClick={() => topTab === 'products' && toggleExpand(product.id)}
+                    >
+                      {topTab === 'products' && (
+                        <td className="px-2 py-3 text-gray-400">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
                           ) : (
-                            'Sync'
+                            <ChevronRight className="h-4 w-4" />
                           )}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Expanded Row */}
-                  {isExpanded && (
-                    <tr key={`${product.id}-expanded`}>
-                      <td colSpan={5} className="bg-gray-50 px-4 py-4">
-                        <div className="rounded-lg border border-gray-200 bg-white">
-                          {/* Tabs */}
-                          <div className="flex border-b border-gray-200">
-                            <button
-                              onClick={() => setActiveTab('offers')}
-                              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                activeTab === 'offers'
-                                  ? 'border-b-2 border-gray-900 text-gray-900'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Offers
-                            </button>
-                            <button
-                              onClick={() => setActiveTab('pages')}
-                              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                activeTab === 'pages'
-                                  ? 'border-b-2 border-gray-900 text-gray-900'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Pages
-                            </button>
-                            <button
-                              onClick={() => setActiveTab('settings')}
-                              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                activeTab === 'settings'
-                                  ? 'border-b-2 border-gray-900 text-gray-900'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Settings
-                            </button>
-                            {isSaving && (
-                              <div className="ml-auto flex items-center gap-2 px-4 text-sm text-gray-500">
-                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                Saving...
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Tab Content */}
-                          <div className="p-4">
-                            {activeTab === 'offers' && (
-                              <div className="space-y-4">
-                                {/* Order Bump */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-700">Order Bump</h4>
-                                    {!product.config.orderBump && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs"
-                                        onClick={() =>
-                                          setDialogState({
-                                            type: 'orderBump',
-                                            orderBump: null,
-                                            isNew: true,
-                                          })
-                                        }
-                                      >
-                                        <Plus className="mr-1 h-3 w-3" />
-                                        Add
-                                      </Button>
-                                    )}
-                                  </div>
-                                  {product.config.orderBump ? (
-                                    <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                                      <div>
-                                        <span className="text-sm text-gray-900">
-                                          {product.config.orderBump.title}
-                                        </span>
-                                        <span className="ml-2 text-sm text-gray-500">
-                                          {formatPrice(
-                                            product.config.orderBump.stripe.priceAmount,
-                                            product.config.orderBump.stripe.currency
-                                          )}
-                                        </span>
-                                        {!product.config.orderBump.enabled && (
-                                          <Badge
-                                            variant="outline"
-                                            className="ml-2 text-xs text-gray-400"
-                                          >
-                                            Disabled
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'orderBump',
-                                              orderBump: product.config.orderBump ?? null,
-                                              isNew: false,
-                                            })
-                                          }
-                                        >
-                                          <Pencil className="h-3 w-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'confirmDelete',
-                                              target: 'orderBump',
-                                              productId: product.id,
-                                              title: product.config.orderBump?.title ?? 'Order Bump',
-                                            })
-                                          }
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-gray-400">No order bump configured</p>
-                                  )}
-                                </div>
-
-                                {/* Upsells */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-700">Upsells</h4>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-7 text-xs"
-                                      onClick={() =>
-                                        setDialogState({
-                                          type: 'upsell',
-                                          upsell: null,
-                                          isNew: true,
-                                          upsellIndex: (product.config.upsells?.length ?? 0) + 1,
-                                        })
-                                      }
-                                    >
-                                      <Plus className="mr-1 h-3 w-3" />
-                                      Add
-                                    </Button>
-                                  </div>
-                                  {product.config.upsells && product.config.upsells.length > 0 ? (
-                                    <div className="space-y-1">
-                                      {product.config.upsells.map(upsell => (
-                                        <div
-                                          key={upsell.id}
-                                          className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
-                                        >
-                                          <div>
-                                            <span className="text-sm text-gray-900">{upsell.title}</span>
-                                            <span className="ml-2 text-sm text-gray-500">
-                                              {formatPrice(
-                                                upsell.stripe.priceAmount,
-                                                upsell.stripe.currency
-                                              )}
-                                            </span>
-                                            <span className="ml-2 text-xs text-gray-400">
-                                              {upsell.benefits.length} benefit
-                                              {upsell.benefits.length !== 1 ? 's' : ''}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center gap-1">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-7 w-7 p-0"
-                                              onClick={() =>
-                                                setDialogState({
-                                                  type: 'upsell',
-                                                  upsell,
-                                                  isNew: false,
-                                                  upsellIndex: 0,
-                                                })
-                                              }
-                                            >
-                                              <Pencil className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                              onClick={() =>
-                                                setDialogState({
-                                                  type: 'confirmDelete',
-                                                  target: 'upsell',
-                                                  productId: product.id,
-                                                  upsellId: upsell.id,
-                                                  title: upsell.title,
-                                                })
-                                              }
-                                            >
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-gray-400">No upsells configured</p>
-                                  )}
-                                </div>
-
-                                {/* Downsell */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-700">Downsell</h4>
-                                    {!product.config.downsell && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 text-xs"
-                                        onClick={() =>
-                                          setDialogState({
-                                            type: 'downsell',
-                                            downsell: null,
-                                            isNew: true,
-                                          })
-                                        }
-                                      >
-                                        <Plus className="mr-1 h-3 w-3" />
-                                        Add
-                                      </Button>
-                                    )}
-                                  </div>
-                                  {product.config.downsell ? (
-                                    <div className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2">
-                                      <div>
-                                        <span className="text-sm text-gray-900">
-                                          {product.config.downsell.title}
-                                        </span>
-                                        <span className="ml-2 text-sm text-gray-500">
-                                          {formatPrice(
-                                            product.config.downsell.stripe.priceAmount,
-                                            product.config.downsell.stripe.currency
-                                          )}
-                                        </span>
-                                        {!product.config.downsell.enabled && (
-                                          <Badge
-                                            variant="outline"
-                                            className="ml-2 text-xs text-gray-400"
-                                          >
-                                            Disabled
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'downsell',
-                                              downsell: product.config.downsell ?? null,
-                                              isNew: false,
-                                            })
-                                          }
-                                        >
-                                          <Pencil className="h-3 w-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'confirmDelete',
-                                              target: 'downsell',
-                                              productId: product.id,
-                                              title: product.config.downsell?.title ?? 'Downsell',
-                                            })
-                                          }
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-gray-400">No downsell configured</p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {activeTab === 'pages' && (
-                              <div className="grid gap-4 sm:grid-cols-2">
-                                {/* Checkout Page */}
-                                <div
-                                  className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
-                                  onClick={() =>
-                                    setDialogState({
-                                      type: 'checkoutContent',
-                                      content: product.config.checkout,
-                                    })
-                                  }
-                                >
-                                  <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-900">Checkout Page</h4>
-                                    <Pencil className="h-3 w-3 text-gray-400" />
-                                  </div>
-                                  <p className="text-sm text-gray-700">{product.config.checkout.title}</p>
-                                  {product.config.checkout.subtitle && (
-                                    <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
-                                  )}
-                                  <p className="mt-2 text-xs text-gray-400">
-                                    {product.config.checkout.benefits.length} benefits
-                                    {product.config.checkout.testimonials && product.config.checkout.testimonials.length > 0
-                                      ? ` · ${product.config.checkout.testimonials.length} testimonials`
-                                      : product.config.checkout.testimonial
-                                        ? ' · 1 testimonial'
-                                        : ''}
-                                    {product.config.checkout.faq && product.config.checkout.faq.length > 0
-                                      ? ` · ${product.config.checkout.faq.length} FAQ`
-                                      : ''}
-                                  </p>
-                                </div>
-
-                                {/* Thank You Page */}
-                                <div
-                                  className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
-                                  onClick={() =>
-                                    setDialogState({
-                                      type: 'thankYouContent',
-                                      content: product.config.thankYou,
-                                    })
-                                  }
-                                >
-                                  <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-900">Thank You Page</h4>
-                                    <Pencil className="h-3 w-3 text-gray-400" />
-                                  </div>
-                                  <p className="text-sm text-gray-700">{product.config.thankYou.headline}</p>
-                                  {product.config.thankYou.subheadline && (
-                                    <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
-                                  )}
-                                  <p className="mt-2 text-xs text-gray-400">
-                                    {product.config.thankYou.steps.length} steps
-                                    {product.config.thankYou.ctaButton ? ' · Has CTA' : ''}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {activeTab === 'settings' && (
-                              <div
-                                className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
-                                onClick={() => setEditingProductId(product.id)}
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium text-gray-900">{product.name}</p>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm text-gray-500">/{product.slug}</span>
+                            {topTab === 'products' && (
+                              <Link
+                                href={`/${product.slug}/checkout`}
+                                target="_blank"
+                                onClick={e => e.stopPropagation()}
+                                className="text-gray-400 hover:text-blue-600"
                               >
-                                <div className="mb-2 flex items-center justify-between">
-                                  <h4 className="text-sm font-medium text-gray-900">Product Settings</h4>
-                                  <Pencil className="h-3 w-3 text-gray-400" />
-                                </div>
-                                <div className="space-y-1">
-                                  <p className="text-sm text-gray-700">{product.name}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {product.config.stripe.currency} · {formatPrice(product.config.stripe.priceAmount, product.config.stripe.currency)}
-                                    {product.config.stripe.pricingTiers && product.config.stripe.pricingTiers.length > 1
-                                      ? ` · ${product.config.stripe.pricingTiers.length} pricing tiers`
-                                      : ''}
-                                  </p>
-                                </div>
-                              </div>
+                                <ExternalLink className="h-3 w-3" />
+                              </Link>
                             )}
                           </div>
+                          {/* Show linked offers count for main products */}
+                          {topTab === 'products' && product.linkedOffers && product.linkedOffers.length > 0 && (
+                            <p className="mt-1 text-xs text-gray-400">
+                              {product.linkedOffers.length} linked offer{product.linkedOffers.length !== 1 ? 's' : ''}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-900">
+                          {formatPrice(
+                            product.config.stripe.priceAmount,
+                            product.config.stripe.currency
+                          )}
+                        </p>
+                        {topTab === 'products' && product.config.stripe.pricingTiers &&
+                          product.config.stripe.pricingTiers.length > 1 && (
+                            <p className="text-xs text-gray-500">
+                              {product.config.stripe.pricingTiers.length} pricing tiers
+                            </p>
+                          )}
+                      </td>
+                      {topTab !== 'products' && (
+                        <td className="px-4 py-3">
+                          {product.usedIn && product.usedIn.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.usedIn.map((usage, i) => (
+                                <Badge key={i} variant="outline" className="text-xs">
+                                  {usage.productName}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not linked</span>
+                          )}
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <SyncStatusBadge status={product.stripeSyncStatus} />
+                      </td>
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-2">
+                          {topTab !== 'products' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  setDialogState({
+                                    type: 'offerProduct',
+                                    product,
+                                    isNew: false,
+                                    productType: product.type as 'upsell' | 'downsell' | 'bump',
+                                  })
+                                }
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-600"
+                                onClick={() =>
+                                  setDialogState({
+                                    type: 'confirmDelete',
+                                    productId: product.id,
+                                    productName: product.name,
+                                  })
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSync(product.id)}
+                            disabled={syncingProductId === product.id}
+                          >
+                            {syncingProductId === product.id ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              'Sync'
+                            )}
+                          </Button>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </>
-              )
-            })}
+
+                    {/* Expanded Row for Main Products */}
+                    {topTab === 'products' && isExpanded && (
+                      <tr key={`${product.id}-expanded`}>
+                        <td colSpan={5} className="bg-gray-50 px-4 py-4">
+                          <div className="rounded-lg border border-gray-200 bg-white">
+                            {/* Inner Tabs */}
+                            <div className="flex border-b border-gray-200">
+                              <button
+                                onClick={() => setActiveTab('offers')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                  activeTab === 'offers'
+                                    ? 'border-b-2 border-gray-900 text-gray-900'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                              >
+                                Linked Offers
+                              </button>
+                              <button
+                                onClick={() => setActiveTab('pages')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                  activeTab === 'pages'
+                                    ? 'border-b-2 border-gray-900 text-gray-900'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                              >
+                                Pages
+                              </button>
+                              <button
+                                onClick={() => setActiveTab('settings')}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                  activeTab === 'settings'
+                                    ? 'border-b-2 border-gray-900 text-gray-900'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                              >
+                                Settings
+                              </button>
+                              {isSaving && (
+                                <div className="ml-auto flex items-center gap-2 px-4 text-sm text-gray-500">
+                                  <RefreshCw className="h-3 w-3 animate-spin" />
+                                  Saving...
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="p-4">
+                              {activeTab === 'offers' && (
+                                <div className="space-y-4">
+                                  {/* Order Bump */}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-700">Order Bump</h4>
+                                      {!product.linkedOffers?.some(o => o.role === 'bump') && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 text-xs"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'linkOffer',
+                                              productId: product.id,
+                                              role: 'bump',
+                                            })
+                                          }
+                                        >
+                                          <Link2 className="mr-1 h-3 w-3" />
+                                          Link
+                                        </Button>
+                                      )}
+                                    </div>
+                                    {product.linkedOffers?.filter(o => o.role === 'bump').map(offer => (
+                                      <div
+                                        key={offer.offerId}
+                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
+                                      >
+                                        <div>
+                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
+                                          {!offer.enabled && (
+                                            <Badge variant="outline" className="ml-2 text-xs text-gray-400">
+                                              Disabled
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'confirmUnlink',
+                                              productId: product.id,
+                                              offerId: offer.offerId,
+                                              offerName: offer.offerName,
+                                              role: 'bump',
+                                            })
+                                          }
+                                        >
+                                          <Unlink className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    {!product.linkedOffers?.some(o => o.role === 'bump') && (
+                                      <p className="text-sm text-gray-400">No order bump linked</p>
+                                    )}
+                                  </div>
+
+                                  {/* Upsells */}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-700">Upsells</h4>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() =>
+                                          setDialogState({
+                                            type: 'linkOffer',
+                                            productId: product.id,
+                                            role: 'upsell',
+                                          })
+                                        }
+                                      >
+                                        <Link2 className="mr-1 h-3 w-3" />
+                                        Link
+                                      </Button>
+                                    </div>
+                                    {product.linkedOffers?.filter(o => o.role === 'upsell').map(offer => (
+                                      <div
+                                        key={offer.offerId}
+                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-gray-400">#{offer.position}</span>
+                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
+                                          {!offer.enabled && (
+                                            <Badge variant="outline" className="text-xs text-gray-400">
+                                              Disabled
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'confirmUnlink',
+                                              productId: product.id,
+                                              offerId: offer.offerId,
+                                              offerName: offer.offerName,
+                                              role: 'upsell',
+                                            })
+                                          }
+                                        >
+                                          <Unlink className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    {!product.linkedOffers?.some(o => o.role === 'upsell') && (
+                                      <p className="text-sm text-gray-400">No upsells linked</p>
+                                    )}
+                                  </div>
+
+                                  {/* Downsell */}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-700">Downsell</h4>
+                                      {!product.linkedOffers?.some(o => o.role === 'downsell') && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 text-xs"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'linkOffer',
+                                              productId: product.id,
+                                              role: 'downsell',
+                                            })
+                                          }
+                                        >
+                                          <Link2 className="mr-1 h-3 w-3" />
+                                          Link
+                                        </Button>
+                                      )}
+                                    </div>
+                                    {product.linkedOffers?.filter(o => o.role === 'downsell').map(offer => (
+                                      <div
+                                        key={offer.offerId}
+                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
+                                      >
+                                        <div>
+                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
+                                          {!offer.enabled && (
+                                            <Badge variant="outline" className="ml-2 text-xs text-gray-400">
+                                              Disabled
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                          onClick={() =>
+                                            setDialogState({
+                                              type: 'confirmUnlink',
+                                              productId: product.id,
+                                              offerId: offer.offerId,
+                                              offerName: offer.offerName,
+                                              role: 'downsell',
+                                            })
+                                          }
+                                        >
+                                          <Unlink className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                    {!product.linkedOffers?.some(o => o.role === 'downsell') && (
+                                      <p className="text-sm text-gray-400">No downsell linked</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeTab === 'pages' && (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                  {/* Checkout Page */}
+                                  <div
+                                    className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                                    onClick={() =>
+                                      product.config.checkout &&
+                                      setDialogState({
+                                        type: 'checkoutContent',
+                                        content: product.config.checkout,
+                                      })
+                                    }
+                                  >
+                                    <div className="mb-2 flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-900">Checkout Page</h4>
+                                      <Pencil className="h-3 w-3 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-700">{product.config.checkout?.title}</p>
+                                    {product.config.checkout?.subtitle && (
+                                      <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
+                                    )}
+                                  </div>
+
+                                  {/* Thank You Page */}
+                                  <div
+                                    className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                                    onClick={() =>
+                                      product.config.thankYou &&
+                                      setDialogState({
+                                        type: 'thankYouContent',
+                                        content: product.config.thankYou,
+                                      })
+                                    }
+                                  >
+                                    <div className="mb-2 flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-900">Thank You Page</h4>
+                                      <Pencil className="h-3 w-3 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-700">{product.config.thankYou?.headline}</p>
+                                    {product.config.thankYou?.subheadline && (
+                                      <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {activeTab === 'settings' && (
+                                <div
+                                  className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                                  onClick={() => setEditingProductId(product.id)}
+                                >
+                                  <div className="mb-2 flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-900">Product Settings</h4>
+                                    <Pencil className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <p className="text-sm text-gray-700">{product.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {product.config.stripe.currency} · {formatPrice(product.config.stripe.priceAmount, product.config.stripe.currency)}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Product Edit Dialog */}
+      {/* Product Edit Dialog (for main products) */}
       <ProductEditDialog
         product={editingProduct ?? null}
         open={!!editingProductId}
         onClose={() => setEditingProductId(null)}
       />
 
-      {/* Upsell Edit Dialog */}
-      <UpsellEditDialog
-        upsell={dialogState.type === 'upsell' ? dialogState.upsell : null}
-        open={dialogState.type === 'upsell'}
+      {/* Offer Product Dialog (for upsell/downsell/bump) */}
+      <OfferProductDialog
+        product={dialogState.type === 'offerProduct' ? dialogState.product : null}
+        open={dialogState.type === 'offerProduct'}
         onClose={() => setDialogState({ type: 'none' })}
-        onSave={handleSaveUpsell}
-        isNew={dialogState.type === 'upsell' ? dialogState.isNew : false}
-        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
-        upsellIndex={dialogState.type === 'upsell' ? dialogState.upsellIndex : 1}
-        existingUpsells={products.flatMap(p =>
-          (p.config.upsells ?? []).map(u => ({ ...u, productName: p.name }))
-        )}
+        onSave={handleSaveOfferProduct}
+        isNew={dialogState.type === 'offerProduct' ? dialogState.isNew : false}
+        productType={dialogState.type === 'offerProduct' ? dialogState.productType : 'upsell'}
+        defaultCurrency={expandedProduct?.config.stripe.currency as Currency | undefined}
       />
 
-      {/* Order Bump Edit Dialog */}
-      <OrderBumpEditDialog
-        orderBump={dialogState.type === 'orderBump' ? dialogState.orderBump : null}
-        open={dialogState.type === 'orderBump'}
+      {/* Offer Link Dialog */}
+      <OfferLinkDialog
+        open={dialogState.type === 'linkOffer'}
         onClose={() => setDialogState({ type: 'none' })}
-        onSave={handleSaveOrderBump}
-        isNew={dialogState.type === 'orderBump' ? dialogState.isNew : false}
-        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
-        existingOrderBumps={products
-          .filter(p => p.config.orderBump)
-          .map(p => ({ ...p.config.orderBump!, productName: p.name }))}
-      />
-
-      {/* Downsell Edit Dialog */}
-      <DownsellEditDialog
-        downsell={dialogState.type === 'downsell' ? dialogState.downsell : null}
-        open={dialogState.type === 'downsell'}
-        onClose={() => setDialogState({ type: 'none' })}
-        onSave={handleSaveDownsell}
-        isNew={dialogState.type === 'downsell' ? dialogState.isNew : false}
-        defaultCurrency={expandedProduct?.config.stripe.currency ?? 'DKK'}
-        existingDownsells={products
-          .filter(p => p.config.downsell)
-          .map(p => ({ ...p.config.downsell!, productName: p.name }))}
+        onLink={handleLinkOffer}
+        productId={dialogState.type === 'linkOffer' ? dialogState.productId : ''}
+        role={dialogState.type === 'linkOffer' ? dialogState.role : 'upsell'}
+        availableOffers={availableOffers}
+        linkedOfferIds={
+          dialogState.type === 'linkOffer'
+            ? (products.find(p => p.id === dialogState.productId)?.linkedOffers?.map(o => o.offerId) ?? [])
+            : []
+        }
       />
 
       {/* Checkout Content Edit Dialog */}
@@ -771,18 +836,42 @@ export function ProductsTable({ products }: ProductsTableProps) {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete {dialogState.type === 'confirmDelete' ? dialogState.target : ''}?</DialogTitle>
+            <DialogTitle>Delete Product?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete &quot;{dialogState.type === 'confirmDelete' ? dialogState.title : ''}&quot;?
+            Are you sure you want to delete &quot;{dialogState.type === 'confirmDelete' ? dialogState.productName : ''}&quot;?
             This action cannot be undone.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogState({ type: 'none' })}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button variant="destructive" onClick={handleDeleteProduct}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlink Confirmation Dialog */}
+      <Dialog
+        open={dialogState.type === 'confirmUnlink'}
+        onOpenChange={isOpen => !isOpen && setDialogState({ type: 'none' })}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Unlink Offer?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Are you sure you want to unlink &quot;{dialogState.type === 'confirmUnlink' ? dialogState.offerName : ''}&quot;?
+            The offer product will not be deleted, just unlinked from this product.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogState({ type: 'none' })}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleUnlinkOffer}>
+              Unlink
             </Button>
           </DialogFooter>
         </DialogContent>
