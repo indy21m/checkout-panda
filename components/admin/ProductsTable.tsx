@@ -67,7 +67,7 @@ type DialogState =
   | { type: 'downsell'; downsell: Downsell | null; isNew: boolean }
   | { type: 'checkoutContent'; content: CheckoutContent }
   | { type: 'thankYouContent'; content: ThankYouContent }
-  | { type: 'confirmDelete'; target: 'upsell' | 'orderBump' | 'downsell'; upsellId?: string; title: string }
+  | { type: 'confirmDelete'; target: 'upsell' | 'orderBump' | 'downsell'; productId: string; upsellId?: string; title: string }
 
 export function ProductsTable({ products }: ProductsTableProps) {
   const router = useRouter()
@@ -149,19 +149,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
     void saveProductConfig(expandedProduct.id, updatedConfig)
   }
 
-  function handleDeleteUpsell(upsellId: string): void {
-    if (!expandedProduct) return
-
-    const updatedUpsells = (expandedProduct.config.upsells ?? []).filter(u => u.id !== upsellId)
-
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      upsells: updatedUpsells.length > 0 ? updatedUpsells : undefined,
-    }
-
-    void saveProductConfig(expandedProduct.id, updatedConfig)
-  }
-
   function handleSaveOrderBump(orderBump: OrderBump): void {
     if (!expandedProduct) return
 
@@ -173,34 +160,12 @@ export function ProductsTable({ products }: ProductsTableProps) {
     void saveProductConfig(expandedProduct.id, updatedConfig)
   }
 
-  function handleDeleteOrderBump(): void {
-    if (!expandedProduct) return
-
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      orderBump: undefined,
-    }
-
-    void saveProductConfig(expandedProduct.id, updatedConfig)
-  }
-
   function handleSaveDownsell(downsell: Downsell): void {
     if (!expandedProduct) return
 
     const updatedConfig: ProductConfig = {
       ...expandedProduct.config,
       downsell,
-    }
-
-    void saveProductConfig(expandedProduct.id, updatedConfig)
-  }
-
-  function handleDeleteDownsell(): void {
-    if (!expandedProduct) return
-
-    const updatedConfig: ProductConfig = {
-      ...expandedProduct.config,
-      downsell: undefined,
     }
 
     void saveProductConfig(expandedProduct.id, updatedConfig)
@@ -233,14 +198,30 @@ export function ProductsTable({ products }: ProductsTableProps) {
   }
 
   function handleConfirmDelete(): void {
-    if (dialogState.type !== 'confirmDelete' || !expandedProduct) return
+    if (dialogState.type !== 'confirmDelete') return
+
+    const targetProduct = products.find(p => p.id === dialogState.productId)
+    if (!targetProduct) return
 
     if (dialogState.target === 'upsell' && dialogState.upsellId) {
-      handleDeleteUpsell(dialogState.upsellId)
+      const updatedUpsells = (targetProduct.config.upsells ?? []).filter(u => u.id !== dialogState.upsellId)
+      const updatedConfig: ProductConfig = {
+        ...targetProduct.config,
+        upsells: updatedUpsells.length > 0 ? updatedUpsells : undefined,
+      }
+      void saveProductConfig(targetProduct.id, updatedConfig)
     } else if (dialogState.target === 'orderBump') {
-      handleDeleteOrderBump()
+      const updatedConfig: ProductConfig = {
+        ...targetProduct.config,
+        orderBump: undefined,
+      }
+      void saveProductConfig(targetProduct.id, updatedConfig)
     } else if (dialogState.target === 'downsell') {
-      handleDeleteDownsell()
+      const updatedConfig: ProductConfig = {
+        ...targetProduct.config,
+        downsell: undefined,
+      }
+      void saveProductConfig(targetProduct.id, updatedConfig)
     }
     setDialogState({ type: 'none' })
   }
@@ -451,6 +432,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                             setDialogState({
                                               type: 'confirmDelete',
                                               target: 'orderBump',
+                                              productId: product.id,
                                               title: product.config.orderBump?.title ?? 'Order Bump',
                                             })
                                           }
@@ -529,6 +511,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                                 setDialogState({
                                                   type: 'confirmDelete',
                                                   target: 'upsell',
+                                                  productId: product.id,
                                                   upsellId: upsell.id,
                                                   title: upsell.title,
                                                 })
@@ -611,6 +594,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                             setDialogState({
                                               type: 'confirmDelete',
                                               target: 'downsell',
+                                              productId: product.id,
                                               title: product.config.downsell?.title ?? 'Downsell',
                                             })
                                           }
