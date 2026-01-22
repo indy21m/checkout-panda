@@ -123,26 +123,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       if (existingLink) {
         // Check if the linked offer product still exists
-        const offerProduct = await db.query.products.findFirst({
+        const linkedOfferProduct = await db.query.products.findFirst({
           where: eq(products.id, existingLink.offerId),
         })
 
-        console.log(`[DEBUG] Found existing ${data.role} link:`, {
-          linkId: existingLink.id,
-          offerId: existingLink.offerId,
-          offerExists: !!offerProduct,
-          offerName: offerProduct?.name,
-          offerType: offerProduct?.type,
-          offerIsActive: offerProduct?.isActive,
-        })
-
-        if (!offerProduct) {
-          // Orphaned link - the offer product was deleted, clean it up
-          console.log(`[DEBUG] Cleaning up orphaned link`)
+        if (!linkedOfferProduct) {
+          // Orphaned link - the offer product was deleted, clean it up automatically
           await db.delete(productOffers).where(eq(productOffers.id, existingLink.id))
         } else {
           return NextResponse.json(
-            { error: `A ${data.role} is already linked to this product. Unlink it first. (Linked offer: ${offerProduct.name})` },
+            { error: `A ${data.role} is already linked to this product. Unlink it first. (Linked offer: ${linkedOfferProduct.name})` },
             { status: 400 }
           )
         }

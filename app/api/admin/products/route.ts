@@ -151,13 +151,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
         return {
           ...product,
-          linkedOffers: offers.map((link) => ({
-            offerId: link.offerId,
-            offerName: link.offer?.name ?? 'Unknown',
-            role: link.role,
-            position: link.position,
-            enabled: link.enabled,
-          })),
+          linkedOffers: offers
+            .filter((link) => link.offer !== null)
+            .map((link) => ({
+              offerId: link.offerId,
+              offerName: link.offer?.name ?? 'Unknown',
+              role: link.role,
+              position: link.position,
+              enabled: link.enabled,
+            })),
         }
       })
     )

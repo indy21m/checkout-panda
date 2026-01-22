@@ -5,6 +5,8 @@ import { products, stripePrices, type ProductConfig } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { getStripe } from '@/lib/stripe/config'
 
+// Flexible schema that accepts both main products and offer products (bump/upsell/downsell)
+// Uses .passthrough() to allow any additional config fields beyond stripe
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
@@ -36,39 +38,8 @@ const updateProductSchema = z.object({
           )
           .optional(),
       }),
-      checkout: z.object({
-        title: z.string(),
-        subtitle: z.string().optional(),
-        image: z.string(),
-        benefits: z.array(z.string()),
-        testimonial: z.any().optional(),
-        testimonials: z.array(z.any()).optional(),
-        guarantee: z.string(),
-        guaranteeDays: z.number().optional(),
-        faq: z.array(z.any()).optional(),
-      }),
-      orderBump: z.any().optional(),
-      upsells: z.array(z.any()).optional(),
-      downsell: z.any().optional(),
-      thankYou: z.object({
-        headline: z.string(),
-        subheadline: z.string().optional(),
-        steps: z.array(
-          z.object({
-            title: z.string(),
-            description: z.string(),
-          })
-        ),
-        ctaButton: z
-          .object({
-            text: z.string(),
-            url: z.string(),
-          })
-          .optional(),
-      }),
-      integrations: z.any().optional(),
-      meta: z.any().optional(),
     })
+    .passthrough() // Allow any additional fields (checkout, thankYou for main; title, description for offers)
     .optional(),
 })
 
