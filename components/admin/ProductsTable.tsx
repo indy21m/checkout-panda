@@ -15,16 +15,33 @@ import { OfferProductDialog } from './OfferProductDialog'
 import { OfferLinkDialog } from './OfferLinkDialog'
 import { CheckoutContentEditDialog } from './CheckoutContentEditDialog'
 import { ThankYouContentEditDialog } from './ThankYouContentEditDialog'
+import { ProductCreateDialog } from './ProductCreateDialog'
 import type { ProductRecord, ProductConfig } from '@/lib/db/schema'
 import type { CheckoutContent, ThankYouContent, OfferRole, Currency, ProductType } from '@/types'
-import { RefreshCw, ChevronRight, ChevronDown, Plus, Pencil, Trash2, ExternalLink, Link2, Unlink } from 'lucide-react'
+import {
+  RefreshCw,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Link2,
+  Unlink,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 // Extended product record with usage info from API
 interface ExtendedProductRecord extends ProductRecord {
   usedIn?: Array<{ productId: string; productName: string; role: string }>
-  linkedOffers?: Array<{ offerId: string; offerName: string; role: string; position: number; enabled: boolean }>
+  linkedOffers?: Array<{
+    offerId: string
+    offerName: string
+    role: string
+    position: number
+    enabled: boolean
+  }>
 }
 
 interface ProductsTableProps {
@@ -43,36 +60,37 @@ function formatPrice(amount: number, currency: string): string {
 function SyncStatusBadge({ status }: { status: string | null }) {
   switch (status) {
     case 'synced':
-      return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          Synced
-        </Badge>
-      )
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Synced</Badge>
     case 'error':
-      return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-          Error
-        </Badge>
-      )
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Error</Badge>
     case 'pending':
     default:
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          Pending
-        </Badge>
-      )
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>
   }
 }
 
 // Dialog state types
 type DialogState =
   | { type: 'none' }
-  | { type: 'offerProduct'; product: ProductRecord | null; isNew: boolean; productType: 'upsell' | 'downsell' | 'bump' }
+  | { type: 'createProduct' }
+  | {
+      type: 'offerProduct'
+      product: ProductRecord | null
+      isNew: boolean
+      productType: 'upsell' | 'downsell' | 'bump'
+    }
   | { type: 'linkOffer'; productId: string; role: OfferRole }
+  | { type: 'replaceOffer'; productId: string; currentOfferId: string; role: OfferRole }
   | { type: 'checkoutContent'; content: CheckoutContent }
   | { type: 'thankYouContent'; content: ThankYouContent }
   | { type: 'confirmDelete'; productId: string; productName: string }
-  | { type: 'confirmUnlink'; productId: string; offerId: string; offerName: string; role: OfferRole }
+  | {
+      type: 'confirmUnlink'
+      productId: string
+      offerId: string
+      offerName: string
+      role: OfferRole
+    }
 
 type TopTab = 'products' | 'upsells' | 'downsells' | 'bumps'
 
@@ -86,11 +104,11 @@ export function ProductsTable({ products }: ProductsTableProps) {
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'none' })
   const [savingProductId, setSavingProductId] = useState<string | null>(null)
 
-  const editingProduct = products.find(p => p.id === editingProductId)
-  const expandedProduct = products.find(p => p.id === expandedProductId)
+  const editingProduct = products.find((p) => p.id === editingProductId)
+  const expandedProduct = products.find((p) => p.id === expandedProductId)
 
   // Filter products by type based on top tab
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = products.filter((p) => {
     if (topTab === 'products') return p.type === 'main'
     if (topTab === 'upsells') return p.type === 'upsell'
     if (topTab === 'downsells') return p.type === 'downsell'
@@ -99,7 +117,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
   })
 
   // Get available offers for linking
-  const availableOffers = products.filter(p => p.type !== 'main')
+  const availableOffers = products.filter((p) => p.type !== 'main')
 
   async function handleSync(productId: string): Promise<void> {
     setSyncingProductId(productId)
@@ -122,7 +140,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
   async function saveProductConfig(productId: string, config: ProductConfig): Promise<void> {
     setSavingProductId(productId)
     try {
-      const product = products.find(p => p.id === productId)
+      const product = products.find((p) => p.id === productId)
       if (!product) return
 
       const response = await fetch(`/api/admin/products/${productId}`, {
@@ -153,7 +171,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
     type: ProductType
     config: ProductConfig
   }): Promise<void> {
-    const existingProduct = products.find(p => p.id === productData.id)
+    const existingProduct = products.find((p) => p.id === productData.id)
 
     if (existingProduct) {
       // Update existing
@@ -229,6 +247,44 @@ export function ProductsTable({ products }: ProductsTableProps) {
     router.refresh()
   }
 
+  async function handleReplaceOffer(newOfferId: string, role: OfferRole): Promise<void> {
+    if (dialogState.type !== 'replaceOffer') return
+
+    // First unlink the current offer
+    const unlinkResponse = await fetch('/api/admin/product-offers', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: dialogState.productId,
+        offerId: dialogState.currentOfferId,
+        role: dialogState.role,
+      }),
+    })
+
+    if (!unlinkResponse.ok) {
+      const error = await unlinkResponse.json()
+      throw new Error(error.error || 'Failed to unlink current offer')
+    }
+
+    // Then link the new offer
+    const linkResponse = await fetch('/api/admin/product-offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: dialogState.productId,
+        offerId: newOfferId,
+        role,
+      }),
+    })
+
+    if (!linkResponse.ok) {
+      const error = await linkResponse.json()
+      throw new Error(error.error || 'Failed to link new offer')
+    }
+
+    router.refresh()
+  }
+
   async function handleDeleteProduct(): Promise<void> {
     if (dialogState.type !== 'confirmDelete') return
 
@@ -268,7 +324,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
   }
 
   function toggleExpand(productId: string): void {
-    setExpandedProductId(prev => (prev === productId ? null : productId))
+    setExpandedProductId((prev) => (prev === productId ? null : productId))
   }
 
   const topTabLabel = {
@@ -283,7 +339,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
       {/* Top Level Tabs */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex border-b border-gray-200">
-          {(['products', 'upsells', 'downsells', 'bumps'] as TopTab[]).map(tab => (
+          {(['products', 'upsells', 'downsells', 'bumps'] as TopTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -298,26 +354,41 @@ export function ProductsTable({ products }: ProductsTableProps) {
             >
               {topTabLabel[tab]}
               <span className="ml-1 text-xs text-gray-400">
-                ({products.filter(p => tab === 'products' ? p.type === 'main' : p.type === tab.slice(0, -1)).length})
+                (
+                {
+                  products.filter((p) =>
+                    tab === 'products' ? p.type === 'main' : p.type === tab.slice(0, -1)
+                  ).length
+                }
+                )
               </span>
             </button>
           ))}
         </div>
 
-        {/* Create New Button for offer types */}
-        {topTab !== 'products' && (
+        {/* Create New Button */}
+        {topTab === 'products' ? (
+          <Button onClick={() => setDialogState({ type: 'createProduct' })}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Product
+          </Button>
+        ) : (
           <Button
             onClick={() =>
               setDialogState({
                 type: 'offerProduct',
                 product: null,
                 isNew: true,
-                productType: topTab === 'bumps' ? 'bump' : (topTab.slice(0, -1) as 'upsell' | 'downsell'),
+                productType:
+                  topTab === 'bumps' ? 'bump' : (topTab.slice(0, -1) as 'upsell' | 'downsell'),
               })
             }
           >
             <Plus className="mr-2 h-4 w-4" />
-            New {topTab === 'bumps' ? 'Order Bump' : topTab.slice(0, -1).charAt(0).toUpperCase() + topTab.slice(1, -1)}
+            New{' '}
+            {topTab === 'bumps'
+              ? 'Order Bump'
+              : topTab.slice(0, -1).charAt(0).toUpperCase() + topTab.slice(1, -1)}
           </Button>
         )}
       </div>
@@ -330,31 +401,28 @@ export function ProductsTable({ products }: ProductsTableProps) {
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                 {topTab === 'products' ? 'Product' : topTabLabel[topTab].slice(0, -1)}
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                Price
-              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Price</th>
               {topTab !== 'products' && (
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  Used In
-                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Used In</th>
               )}
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                 Stripe Status
               </th>
-              <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">
-                Actions
-              </th>
+              <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={topTab === 'products' ? 5 : 5} className="px-4 py-8 text-center text-gray-500">
+                <td
+                  colSpan={topTab === 'products' ? 5 : 5}
+                  className="px-4 py-8 text-center text-gray-500"
+                >
                   No {topTabLabel[topTab].toLowerCase()} found
                 </td>
               </tr>
             ) : (
-              filteredProducts.map(product => {
+              filteredProducts.map((product) => {
                 const isExpanded = expandedProductId === product.id
                 const isSaving = savingProductId === product.id
 
@@ -383,7 +451,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                               <Link
                                 href={`/${product.slug}/checkout`}
                                 target="_blank"
-                                onClick={e => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
                                 className="text-gray-400 hover:text-blue-600"
                               >
                                 <ExternalLink className="h-3 w-3" />
@@ -391,11 +459,14 @@ export function ProductsTable({ products }: ProductsTableProps) {
                             )}
                           </div>
                           {/* Show linked offers count for main products */}
-                          {topTab === 'products' && product.linkedOffers && product.linkedOffers.length > 0 && (
-                            <p className="mt-1 text-xs text-gray-400">
-                              {product.linkedOffers.length} linked offer{product.linkedOffers.length !== 1 ? 's' : ''}
-                            </p>
-                          )}
+                          {topTab === 'products' &&
+                            product.linkedOffers &&
+                            product.linkedOffers.length > 0 && (
+                              <p className="mt-1 text-xs text-gray-400">
+                                {product.linkedOffers.length} linked offer
+                                {product.linkedOffers.length !== 1 ? 's' : ''}
+                              </p>
+                            )}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -405,7 +476,8 @@ export function ProductsTable({ products }: ProductsTableProps) {
                             product.config.stripe.currency
                           )}
                         </p>
-                        {topTab === 'products' && product.config.stripe.pricingTiers &&
+                        {topTab === 'products' &&
+                          product.config.stripe.pricingTiers &&
                           product.config.stripe.pricingTiers.length > 1 && (
                             <p className="text-xs text-gray-500">
                               {product.config.stripe.pricingTiers.length} pricing tiers
@@ -430,7 +502,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
                       <td className="px-4 py-3">
                         <SyncStatusBadge status={product.stripeSyncStatus} />
                       </td>
-                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           {topTab !== 'products' && (
                             <>
@@ -532,8 +604,10 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                   {/* Order Bump */}
                                   <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                      <h4 className="text-sm font-medium text-gray-700">Order Bump</h4>
-                                      {!product.linkedOffers?.some(o => o.role === 'bump') && (
+                                      <h4 className="text-sm font-medium text-gray-700">
+                                        Order Bump
+                                      </h4>
+                                      {!product.linkedOffers?.some((o) => o.role === 'bump') && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -551,38 +625,63 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         </Button>
                                       )}
                                     </div>
-                                    {product.linkedOffers?.filter(o => o.role === 'bump').map(offer => (
-                                      <div
-                                        key={offer.offerId}
-                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
-                                      >
-                                        <div>
-                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
-                                          {!offer.enabled && (
-                                            <Badge variant="outline" className="ml-2 text-xs text-gray-400">
-                                              Disabled
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'confirmUnlink',
-                                              productId: product.id,
-                                              offerId: offer.offerId,
-                                              offerName: offer.offerName,
-                                              role: 'bump',
-                                            })
-                                          }
+                                    {product.linkedOffers
+                                      ?.filter((o) => o.role === 'bump')
+                                      .map((offer) => (
+                                        <div
+                                          key={offer.offerId}
+                                          className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
                                         >
-                                          <Unlink className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                    {!product.linkedOffers?.some(o => o.role === 'bump') && (
+                                          <div>
+                                            <span className="text-sm text-gray-900">
+                                              {offer.offerName}
+                                            </span>
+                                            {!offer.enabled && (
+                                              <Badge
+                                                variant="outline"
+                                                className="ml-2 text-xs text-gray-400"
+                                              >
+                                                Disabled
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 text-xs"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'replaceOffer',
+                                                  productId: product.id,
+                                                  currentOfferId: offer.offerId,
+                                                  role: 'bump',
+                                                })
+                                              }
+                                            >
+                                              <Link2 className="mr-1 h-3 w-3" />
+                                              Replace
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'confirmUnlink',
+                                                  productId: product.id,
+                                                  offerId: offer.offerId,
+                                                  offerName: offer.offerName,
+                                                  role: 'bump',
+                                                })
+                                              }
+                                            >
+                                              <Unlink className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    {!product.linkedOffers?.some((o) => o.role === 'bump') && (
                                       <p className="text-sm text-gray-400">No order bump linked</p>
                                     )}
                                   </div>
@@ -607,39 +706,48 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         Link
                                       </Button>
                                     </div>
-                                    {product.linkedOffers?.filter(o => o.role === 'upsell').map(offer => (
-                                      <div
-                                        key={offer.offerId}
-                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-gray-400">#{offer.position}</span>
-                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
-                                          {!offer.enabled && (
-                                            <Badge variant="outline" className="text-xs text-gray-400">
-                                              Disabled
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'confirmUnlink',
-                                              productId: product.id,
-                                              offerId: offer.offerId,
-                                              offerName: offer.offerName,
-                                              role: 'upsell',
-                                            })
-                                          }
+                                    {product.linkedOffers
+                                      ?.filter((o) => o.role === 'upsell')
+                                      .map((offer) => (
+                                        <div
+                                          key={offer.offerId}
+                                          className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
                                         >
-                                          <Unlink className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                    {!product.linkedOffers?.some(o => o.role === 'upsell') && (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-gray-400">
+                                              #{offer.position}
+                                            </span>
+                                            <span className="text-sm text-gray-900">
+                                              {offer.offerName}
+                                            </span>
+                                            {!offer.enabled && (
+                                              <Badge
+                                                variant="outline"
+                                                className="text-xs text-gray-400"
+                                              >
+                                                Disabled
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                            onClick={() =>
+                                              setDialogState({
+                                                type: 'confirmUnlink',
+                                                productId: product.id,
+                                                offerId: offer.offerId,
+                                                offerName: offer.offerName,
+                                                role: 'upsell',
+                                              })
+                                            }
+                                          >
+                                            <Unlink className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    {!product.linkedOffers?.some((o) => o.role === 'upsell') && (
                                       <p className="text-sm text-gray-400">No upsells linked</p>
                                     )}
                                   </div>
@@ -647,8 +755,12 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                   {/* Downsell */}
                                   <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                      <h4 className="text-sm font-medium text-gray-700">Downsell</h4>
-                                      {!product.linkedOffers?.some(o => o.role === 'downsell') && (
+                                      <h4 className="text-sm font-medium text-gray-700">
+                                        Downsell
+                                      </h4>
+                                      {!product.linkedOffers?.some(
+                                        (o) => o.role === 'downsell'
+                                      ) && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -666,38 +778,63 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         </Button>
                                       )}
                                     </div>
-                                    {product.linkedOffers?.filter(o => o.role === 'downsell').map(offer => (
-                                      <div
-                                        key={offer.offerId}
-                                        className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
-                                      >
-                                        <div>
-                                          <span className="text-sm text-gray-900">{offer.offerName}</span>
-                                          {!offer.enabled && (
-                                            <Badge variant="outline" className="ml-2 text-xs text-gray-400">
-                                              Disabled
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                                          onClick={() =>
-                                            setDialogState({
-                                              type: 'confirmUnlink',
-                                              productId: product.id,
-                                              offerId: offer.offerId,
-                                              offerName: offer.offerName,
-                                              role: 'downsell',
-                                            })
-                                          }
+                                    {product.linkedOffers
+                                      ?.filter((o) => o.role === 'downsell')
+                                      .map((offer) => (
+                                        <div
+                                          key={offer.offerId}
+                                          className="flex items-center justify-between rounded border border-gray-100 bg-gray-50 px-3 py-2"
                                         >
-                                          <Unlink className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                    {!product.linkedOffers?.some(o => o.role === 'downsell') && (
+                                          <div>
+                                            <span className="text-sm text-gray-900">
+                                              {offer.offerName}
+                                            </span>
+                                            {!offer.enabled && (
+                                              <Badge
+                                                variant="outline"
+                                                className="ml-2 text-xs text-gray-400"
+                                              >
+                                                Disabled
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 text-xs"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'replaceOffer',
+                                                  productId: product.id,
+                                                  currentOfferId: offer.offerId,
+                                                  role: 'downsell',
+                                                })
+                                              }
+                                            >
+                                              <Link2 className="mr-1 h-3 w-3" />
+                                              Replace
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                                              onClick={() =>
+                                                setDialogState({
+                                                  type: 'confirmUnlink',
+                                                  productId: product.id,
+                                                  offerId: offer.offerId,
+                                                  offerName: offer.offerName,
+                                                  role: 'downsell',
+                                                })
+                                              }
+                                            >
+                                              <Unlink className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    {!product.linkedOffers?.some((o) => o.role === 'downsell') && (
                                       <p className="text-sm text-gray-400">No downsell linked</p>
                                     )}
                                   </div>
@@ -718,12 +855,18 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     }
                                   >
                                     <div className="mb-2 flex items-center justify-between">
-                                      <h4 className="text-sm font-medium text-gray-900">Checkout Page</h4>
+                                      <h4 className="text-sm font-medium text-gray-900">
+                                        Checkout Page
+                                      </h4>
                                       <Pencil className="h-3 w-3 text-gray-400" />
                                     </div>
-                                    <p className="text-sm text-gray-700">{product.config.checkout?.title}</p>
+                                    <p className="text-sm text-gray-700">
+                                      {product.config.checkout?.title}
+                                    </p>
                                     {product.config.checkout?.subtitle && (
-                                      <p className="text-xs text-gray-500">{product.config.checkout.subtitle}</p>
+                                      <p className="text-xs text-gray-500">
+                                        {product.config.checkout.subtitle}
+                                      </p>
                                     )}
                                   </div>
 
@@ -739,12 +882,18 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                     }
                                   >
                                     <div className="mb-2 flex items-center justify-between">
-                                      <h4 className="text-sm font-medium text-gray-900">Thank You Page</h4>
+                                      <h4 className="text-sm font-medium text-gray-900">
+                                        Thank You Page
+                                      </h4>
                                       <Pencil className="h-3 w-3 text-gray-400" />
                                     </div>
-                                    <p className="text-sm text-gray-700">{product.config.thankYou?.headline}</p>
+                                    <p className="text-sm text-gray-700">
+                                      {product.config.thankYou?.headline}
+                                    </p>
                                     {product.config.thankYou?.subheadline && (
-                                      <p className="text-xs text-gray-500">{product.config.thankYou.subheadline}</p>
+                                      <p className="text-xs text-gray-500">
+                                        {product.config.thankYou.subheadline}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
@@ -756,13 +905,19 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                   onClick={() => setEditingProductId(product.id)}
                                 >
                                   <div className="mb-2 flex items-center justify-between">
-                                    <h4 className="text-sm font-medium text-gray-900">Product Settings</h4>
+                                    <h4 className="text-sm font-medium text-gray-900">
+                                      Product Settings
+                                    </h4>
                                     <Pencil className="h-3 w-3 text-gray-400" />
                                   </div>
                                   <div className="space-y-1">
                                     <p className="text-sm text-gray-700">{product.name}</p>
                                     <p className="text-xs text-gray-500">
-                                      {product.config.stripe.currency} · {formatPrice(product.config.stripe.priceAmount, product.config.stripe.currency)}
+                                      {product.config.stripe.currency} ·{' '}
+                                      {formatPrice(
+                                        product.config.stripe.priceAmount,
+                                        product.config.stripe.currency
+                                      )}
                                     </p>
                                   </div>
                                 </div>
@@ -779,6 +934,12 @@ export function ProductsTable({ products }: ProductsTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Product Create Dialog (for new main products) */}
+      <ProductCreateDialog
+        open={dialogState.type === 'createProduct'}
+        onClose={() => setDialogState({ type: 'none' })}
+      />
 
       {/* Product Edit Dialog (for main products) */}
       <ProductEditDialog
@@ -808,9 +969,27 @@ export function ProductsTable({ products }: ProductsTableProps) {
         availableOffers={availableOffers}
         linkedOfferIds={
           dialogState.type === 'linkOffer'
-            ? (products.find(p => p.id === dialogState.productId)?.linkedOffers?.map(o => o.offerId) ?? [])
+            ? (products
+                .find((p) => p.id === dialogState.productId)
+                ?.linkedOffers?.map((o) => o.offerId) ?? [])
             : []
         }
+      />
+
+      {/* Offer Replace Dialog (reuses OfferLinkDialog with different handler) */}
+      <OfferLinkDialog
+        open={dialogState.type === 'replaceOffer'}
+        onClose={() => setDialogState({ type: 'none' })}
+        onLink={handleReplaceOffer}
+        productId={dialogState.type === 'replaceOffer' ? dialogState.productId : ''}
+        role={dialogState.type === 'replaceOffer' ? dialogState.role : 'upsell'}
+        availableOffers={availableOffers}
+        linkedOfferIds={
+          dialogState.type === 'replaceOffer'
+            ? [dialogState.currentOfferId] // Exclude only the current offer being replaced
+            : []
+        }
+        isReplace
       />
 
       {/* Checkout Content Edit Dialog */}
@@ -832,15 +1011,16 @@ export function ProductsTable({ products }: ProductsTableProps) {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={dialogState.type === 'confirmDelete'}
-        onOpenChange={isOpen => !isOpen && setDialogState({ type: 'none' })}
+        onOpenChange={(isOpen) => !isOpen && setDialogState({ type: 'none' })}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Product?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete &quot;{dialogState.type === 'confirmDelete' ? dialogState.productName : ''}&quot;?
-            This action cannot be undone.
+            Are you sure you want to delete &quot;
+            {dialogState.type === 'confirmDelete' ? dialogState.productName : ''}&quot;? This action
+            cannot be undone.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogState({ type: 'none' })}>
@@ -856,15 +1036,16 @@ export function ProductsTable({ products }: ProductsTableProps) {
       {/* Unlink Confirmation Dialog */}
       <Dialog
         open={dialogState.type === 'confirmUnlink'}
-        onOpenChange={isOpen => !isOpen && setDialogState({ type: 'none' })}
+        onOpenChange={(isOpen) => !isOpen && setDialogState({ type: 'none' })}
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Unlink Offer?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Are you sure you want to unlink &quot;{dialogState.type === 'confirmUnlink' ? dialogState.offerName : ''}&quot;?
-            The offer product will not be deleted, just unlinked from this product.
+            Are you sure you want to unlink &quot;
+            {dialogState.type === 'confirmUnlink' ? dialogState.offerName : ''}&quot;? The offer
+            product will not be deleted, just unlinked from this product.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogState({ type: 'none' })}>

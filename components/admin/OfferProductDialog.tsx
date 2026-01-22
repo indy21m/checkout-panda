@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { RefreshCw, Plus, Trash2 } from 'lucide-react'
+import { RefreshCw, Plus, Trash2, Check } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ProductRecord, ProductConfig, ProductType } from '@/lib/db/schema'
 import type { Currency } from '@/types'
 
@@ -52,6 +53,8 @@ function generateSlug(name: string, type: string): string {
   return `${type}-${base || generateId()}`
 }
 
+type SaveState = 'idle' | 'saving' | 'syncing' | 'success' | 'error'
+
 export function OfferProductDialog({
   product,
   open,
@@ -61,7 +64,7 @@ export function OfferProductDialog({
   productType,
   defaultCurrency = 'DKK',
 }: OfferProductDialogProps) {
-  const [isSaving, setIsSaving] = useState(false)
+  const [saveState, setSaveState] = useState<SaveState>('idle')
 
   // Form state
   const [name, setName] = useState('')
@@ -81,6 +84,7 @@ export function OfferProductDialog({
   // Initialize form from product
   useEffect(() => {
     if (open) {
+      setSaveState('idle')
       if (product) {
         setName(product.name)
         setSlug(product.slug)
@@ -89,7 +93,9 @@ export function OfferProductDialog({
         setDescription(product.config.description ?? '')
         setBenefits(product.config.benefits ?? [''])
         setPriceAmount(product.config.stripe.priceAmount / 100) // Convert from cents
-        setOriginalPrice(product.config.originalPrice ? product.config.originalPrice / 100 : undefined)
+        setOriginalPrice(
+          product.config.originalPrice ? product.config.originalPrice / 100 : undefined
+        )
         setCurrency(product.config.stripe.currency)
         setImage(product.config.image ?? '')
         setUrgencyText(product.config.urgencyText ?? '')
@@ -138,9 +144,10 @@ export function OfferProductDialog({
   async function handleSave(): Promise<void> {
     if (!name || !title || priceAmount <= 0) return
 
-    setIsSaving(true)
+    setSaveState('saving')
     try {
-      const filteredBenefits = benefits.filter(b => b.trim() !== '')
+      const filteredBenefits = benefits.filter((b) => b.trim() !== '')
+      const productId = product?.id ?? generateId()
 
       const config: ProductConfig = {
         stripe: {
@@ -155,36 +162,55 @@ export function OfferProductDialog({
         benefits: filteredBenefits,
         originalPrice: originalPrice ? Math.round(originalPrice * 100) : undefined,
         image: image || undefined,
-        urgencyText: productType === 'upsell' ? (urgencyText || undefined) : undefined,
+        urgencyText: productType === 'upsell' ? urgencyText || undefined : undefined,
         savingsPercent: productType === 'bump' ? savingsPercent : undefined,
         enabled,
       }
 
       await onSave({
-        id: product?.id ?? generateId(),
+        id: productId,
         slug: slug || generateSlug(name, productType),
         name,
         type: productType,
         config,
       })
 
-      onClose()
+      // If creating new product, sync to Stripe
+      if (isNew) {
+        setSaveState('syncing')
+        try {
+          await fetch(`/api/admin/products/${productId}/sync`, {
+            method: 'POST',
+          })
+          toast.success('Product created and synced to Stripe')
+        } catch {
+          toast.warning('Product created but sync failed')
+        }
+      } else {
+        toast.success('Product saved and synced to Stripe')
+      }
+
+      setSaveState('success')
+      setTimeout(() => {
+        onClose()
+      }, 800)
     } catch (error) {
       console.error('Failed to save offer product:', error)
-    } finally {
-      setIsSaving(false)
+      setSaveState('error')
+      toast.error('Failed to save product')
     }
   }
 
-  const typeLabel = productType === 'bump' ? 'Order Bump' : productType.charAt(0).toUpperCase() + productType.slice(1)
+  const typeLabel =
+    productType === 'bump'
+      ? 'Order Bump'
+      : productType.charAt(0).toUpperCase() + productType.slice(1)
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>
-            {isNew ? `Create New ${typeLabel}` : `Edit ${typeLabel}`}
-          </DialogTitle>
+          <DialogTitle>{isNew ? `Create New ${typeLabel}` : `Edit ${typeLabel}`}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -195,7 +221,7 @@ export function OfferProductDialog({
               <Input
                 id="name"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 placeholder={`e.g., Portfolio Coaching ${typeLabel}`}
               />
               <p className="text-xs text-gray-500">Internal name for admin</p>
@@ -206,7 +232,7 @@ export function OfferProductDialog({
               <Input
                 id="slug"
                 value={slug}
-                onChange={e => setSlug(e.target.value)}
+                onChange={(e) => setSlug(e.target.value)}
                 placeholder="auto-generated"
               />
               <p className="text-xs text-gray-500">URL identifier</p>
@@ -219,7 +245,7 @@ export function OfferProductDialog({
             <Input
               id="title"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Title shown to customers"
             />
           </div>
@@ -230,7 +256,7 @@ export function OfferProductDialog({
               <Input
                 id="subtitle"
                 value={subtitle}
-                onChange={e => setSubtitle(e.target.value)}
+                onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Optional subtitle"
               />
             </div>
@@ -242,7 +268,7 @@ export function OfferProductDialog({
             <Textarea
               id="description"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what the customer gets..."
               rows={3}
             />
@@ -257,7 +283,7 @@ export function OfferProductDialog({
                   <div key={index} className="flex gap-2">
                     <Input
                       value={benefit}
-                      onChange={e => updateBenefit(index, e.target.value)}
+                      onChange={(e) => updateBenefit(index, e.target.value)}
                       placeholder={`Benefit ${index + 1}`}
                     />
                     {benefits.length > 1 && (
@@ -288,7 +314,7 @@ export function OfferProductDialog({
                 id="price"
                 type="number"
                 value={priceAmount || ''}
-                onChange={e => setPriceAmount(parseFloat(e.target.value) || 0)}
+                onChange={(e) => setPriceAmount(parseFloat(e.target.value) || 0)}
                 min={0}
                 step={1}
               />
@@ -301,7 +327,7 @@ export function OfferProductDialog({
                   id="originalPrice"
                   type="number"
                   value={originalPrice || ''}
-                  onChange={e => setOriginalPrice(parseFloat(e.target.value) || undefined)}
+                  onChange={(e) => setOriginalPrice(parseFloat(e.target.value) || undefined)}
                   min={0}
                   step={1}
                   placeholder="For strikethrough"
@@ -332,7 +358,7 @@ export function OfferProductDialog({
                 id="savingsPercent"
                 type="number"
                 value={savingsPercent || ''}
-                onChange={e => setSavingsPercent(parseInt(e.target.value) || undefined)}
+                onChange={(e) => setSavingsPercent(parseInt(e.target.value) || undefined)}
                 min={0}
                 max={100}
                 placeholder="e.g., 50"
@@ -347,7 +373,7 @@ export function OfferProductDialog({
             <Input
               id="image"
               value={image}
-              onChange={e => setImage(e.target.value)}
+              onChange={(e) => setImage(e.target.value)}
               placeholder="https://..."
             />
           </div>
@@ -359,7 +385,7 @@ export function OfferProductDialog({
               <Input
                 id="urgencyText"
                 value={urgencyText}
-                onChange={e => setUrgencyText(e.target.value)}
+                onChange={(e) => setUrgencyText(e.target.value)}
                 placeholder="e.g., This offer disappears when you leave"
               />
             </div>
@@ -373,29 +399,47 @@ export function OfferProductDialog({
                 When disabled, this offer won&apos;t be shown to customers
               </p>
             </div>
-            <Switch
-              id="enabled"
-              checked={enabled}
-              onCheckedChange={setEnabled}
-            />
+            <Switch id="enabled" checked={enabled} onCheckedChange={setEnabled} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={saveState === 'saving' || saveState === 'syncing'}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!name || !title || priceAmount <= 0 || isSaving}
+            disabled={
+              !name ||
+              !title ||
+              priceAmount <= 0 ||
+              saveState === 'saving' ||
+              saveState === 'syncing'
+            }
           >
-            {isSaving ? (
+            {saveState === 'saving' ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {isNew ? 'Creating...' : 'Saving...'}
               </>
+            ) : saveState === 'syncing' ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Syncing to Stripe...
+              </>
+            ) : saveState === 'success' ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                {isNew ? 'Created!' : 'Saved!'}
+              </>
+            ) : isNew ? (
+              'Create & Sync'
             ) : (
-              isNew ? 'Create' : 'Save Changes'
+              'Save & Sync'
             )}
           </Button>
         </DialogFooter>

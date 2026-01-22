@@ -21,7 +21,8 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import type { ProductRecord, ProductConfig } from '@/lib/db/schema'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus, RefreshCw, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface ProductEditDialogProps {
   product: ProductRecord | null
@@ -41,9 +42,11 @@ interface PricingTierForm {
   amountPerPayment?: number
 }
 
+type SaveState = 'idle' | 'saving' | 'success' | 'error' | 'syncError'
+
 export function ProductEditDialog({ product, open, onClose }: ProductEditDialogProps) {
   const router = useRouter()
-  const [saving, setSaving] = useState(false)
+  const [saveState, setSaveState] = useState<SaveState>('idle')
   const [error, setError] = useState<string | null>(null)
 
   // Form state
@@ -57,7 +60,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
       setName(product.name)
       setCurrency(product.config.stripe.currency)
       setPricingTiers(
-        (product.config.stripe.pricingTiers ?? []).map(tier => ({
+        (product.config.stripe.pricingTiers ?? []).map((tier) => ({
           id: tier.id,
           label: tier.label,
           priceAmount: tier.priceAmount / 100, // Convert from cents for display
@@ -66,7 +69,9 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
           description: tier.description,
           hasInstallments: !!tier.installments,
           installmentCount: tier.installments?.count,
-          amountPerPayment: tier.installments ? tier.installments.amountPerPayment / 100 : undefined,
+          amountPerPayment: tier.installments
+            ? tier.installments.amountPerPayment / 100
+            : undefined,
         }))
       )
     }
@@ -82,7 +87,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
       setName(product.name)
       setCurrency(product.config.stripe.currency)
       setPricingTiers(
-        (product.config.stripe.pricingTiers ?? []).map(tier => ({
+        (product.config.stripe.pricingTiers ?? []).map((tier) => ({
           id: tier.id,
           label: tier.label,
           priceAmount: tier.priceAmount / 100,
@@ -91,10 +96,13 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
           description: tier.description,
           hasInstallments: !!tier.installments,
           installmentCount: tier.installments?.count,
-          amountPerPayment: tier.installments ? tier.installments.amountPerPayment / 100 : undefined,
+          amountPerPayment: tier.installments
+            ? tier.installments.amountPerPayment / 100
+            : undefined,
         }))
       )
       setError(null)
+      setSaveState('idle')
     }
   }
 
@@ -114,14 +122,14 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
   const removePricingTier = (index: number) => {
     const newTiers = pricingTiers.filter((_, i) => i !== index)
     // Ensure at least one tier is default
-    if (newTiers.length > 0 && !newTiers.some(t => t.isDefault)) {
+    if (newTiers.length > 0 && !newTiers.some((t) => t.isDefault)) {
       newTiers[0]!.isDefault = true
     }
     setPricingTiers(newTiers)
   }
 
   const updatePricingTier = (index: number, updates: Partial<PricingTierForm>) => {
-    setPricingTiers(tiers =>
+    setPricingTiers((tiers) =>
       tiers.map((tier, i) => {
         if (i === index) {
           return { ...tier, ...updates }
@@ -138,12 +146,12 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
   const handleSave = async () => {
     if (!product) return
 
-    setSaving(true)
+    setSaveState('saving')
     setError(null)
 
     try {
       // Convert pricing tiers back to API format
-      const apiTiers = pricingTiers.map(tier => ({
+      const apiTiers = pricingTiers.map((tier) => ({
         id: tier.id,
         label: tier.label,
         priceId: null, // Will be set by Stripe sync
@@ -151,17 +159,18 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
         originalPrice: tier.originalPrice ? Math.round(tier.originalPrice * 100) : undefined,
         isDefault: tier.isDefault,
         description: tier.description,
-        installments: tier.hasInstallments && tier.installmentCount && tier.amountPerPayment
-          ? {
-              count: tier.installmentCount,
-              intervalLabel: 'month',
-              amountPerPayment: Math.round(tier.amountPerPayment * 100),
-            }
-          : undefined,
+        installments:
+          tier.hasInstallments && tier.installmentCount && tier.amountPerPayment
+            ? {
+                count: tier.installmentCount,
+                intervalLabel: 'month',
+                amountPerPayment: Math.round(tier.amountPerPayment * 100),
+              }
+            : undefined,
       }))
 
       // Find default tier for main price
-      const defaultTier = apiTiers.find(t => t.isDefault) ?? apiTiers[0]
+      const defaultTier = apiTiers.find((t) => t.isDefault) ?? apiTiers[0]
 
       const updatedConfig: ProductConfig = {
         ...product.config,
@@ -182,17 +191,32 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error ?? 'Failed to save product')
       }
 
-      router.refresh()
-      onClose()
+      // Check sync status from response
+      if (data.synced) {
+        setSaveState('success')
+        toast.success('Product saved and synced to Stripe')
+        setTimeout(() => {
+          onClose()
+          router.refresh()
+        }, 1000)
+      } else {
+        setSaveState('syncError')
+        toast.warning(`Saved but sync failed: ${data.syncError ?? 'Unknown error'}`)
+        setTimeout(() => {
+          onClose()
+          router.refresh()
+        }, 2000)
+      }
     } catch (err) {
+      setSaveState('error')
       setError(err instanceof Error ? err.message : 'Failed to save product')
-    } finally {
-      setSaving(false)
+      toast.error('Failed to save product')
     }
   }
 
@@ -212,7 +236,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
             <Input
               id="name"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Enter product name"
             />
           </div>
@@ -245,7 +269,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
             {pricingTiers.map((tier, index) => (
               <div
                 key={tier.id}
-                className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+                className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-3">
@@ -254,7 +278,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                       <Label className="text-xs">Label</Label>
                       <Input
                         value={tier.label}
-                        onChange={e => updatePricingTier(index, { label: e.target.value })}
+                        onChange={(e) => updatePricingTier(index, { label: e.target.value })}
                         placeholder="e.g., Pay in Full"
                         className="h-8 text-sm"
                       />
@@ -267,7 +291,11 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                         <Input
                           type="number"
                           value={tier.priceAmount || ''}
-                          onChange={e => updatePricingTier(index, { priceAmount: parseFloat(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            updatePricingTier(index, {
+                              priceAmount: parseFloat(e.target.value) || 0,
+                            })
+                          }
                           placeholder="0"
                           className="h-8 text-sm"
                         />
@@ -277,7 +305,11 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                         <Input
                           type="number"
                           value={tier.originalPrice || ''}
-                          onChange={e => updatePricingTier(index, { originalPrice: parseFloat(e.target.value) || undefined })}
+                          onChange={(e) =>
+                            updatePricingTier(index, {
+                              originalPrice: parseFloat(e.target.value) || undefined,
+                            })
+                          }
                           placeholder="Optional"
                           className="h-8 text-sm"
                         />
@@ -289,14 +321,18 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                       <label className="flex items-center gap-2 text-sm">
                         <Switch
                           checked={tier.isDefault}
-                          onCheckedChange={checked => updatePricingTier(index, { isDefault: checked })}
+                          onCheckedChange={(checked) =>
+                            updatePricingTier(index, { isDefault: checked })
+                          }
                         />
                         Default
                       </label>
                       <label className="flex items-center gap-2 text-sm">
                         <Switch
                           checked={tier.hasInstallments}
-                          onCheckedChange={checked => updatePricingTier(index, { hasInstallments: checked })}
+                          onCheckedChange={(checked) =>
+                            updatePricingTier(index, { hasInstallments: checked })
+                          }
                         />
                         Installments
                       </label>
@@ -310,7 +346,11 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                           <Input
                             type="number"
                             value={tier.installmentCount || ''}
-                            onChange={e => updatePricingTier(index, { installmentCount: parseInt(e.target.value) || undefined })}
+                            onChange={(e) =>
+                              updatePricingTier(index, {
+                                installmentCount: parseInt(e.target.value) || undefined,
+                              })
+                            }
                             placeholder="e.g., 3"
                             className="h-8 text-sm"
                           />
@@ -320,7 +360,11 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                           <Input
                             type="number"
                             value={tier.amountPerPayment || ''}
-                            onChange={e => updatePricingTier(index, { amountPerPayment: parseFloat(e.target.value) || undefined })}
+                            onChange={(e) =>
+                              updatePricingTier(index, {
+                                amountPerPayment: parseFloat(e.target.value) || undefined,
+                              })
+                            }
                             placeholder="e.g., 266.33"
                             className="h-8 text-sm"
                           />
@@ -333,7 +377,9 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
                       <Label className="text-xs">Description (optional)</Label>
                       <Input
                         value={tier.description || ''}
-                        onChange={e => updatePricingTier(index, { description: e.target.value || undefined })}
+                        onChange={(e) =>
+                          updatePricingTier(index, { description: e.target.value || undefined })
+                        }
                         placeholder="e.g., Save 100 kr"
                         className="h-8 text-sm"
                       />
@@ -360,17 +406,35 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
             )}
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
+          <Button variant="outline" onClick={onClose} disabled={saveState === 'saving'}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving || pricingTiers.length === 0}>
-            {saving ? 'Saving...' : 'Save & Sync'}
+          <Button
+            onClick={handleSave}
+            disabled={saveState === 'saving' || pricingTiers.length === 0}
+          >
+            {saveState === 'saving' ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Saving & Syncing...
+              </>
+            ) : saveState === 'success' ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Saved!
+              </>
+            ) : saveState === 'syncError' ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Saved (sync failed)
+              </>
+            ) : (
+              'Save & Sync'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

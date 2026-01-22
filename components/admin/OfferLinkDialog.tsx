@@ -29,6 +29,7 @@ interface OfferLinkDialogProps {
   role: OfferRole
   availableOffers: ProductRecord[]
   linkedOfferIds: string[]
+  isReplace?: boolean
 }
 
 export function OfferLinkDialog({
@@ -39,13 +40,14 @@ export function OfferLinkDialog({
   role,
   availableOffers,
   linkedOfferIds,
+  isReplace = false,
 }: OfferLinkDialogProps) {
   const [selectedOfferId, setSelectedOfferId] = useState<string>('')
   const [isLinking, setIsLinking] = useState(false)
 
   // Filter offers to only show those not already linked with this role
   const filteredOffers = availableOffers.filter(
-    offer => !linkedOfferIds.includes(offer.id) && offer.type === role
+    (offer) => !linkedOfferIds.includes(offer.id) && offer.type === role
   )
 
   // Reset selection when dialog opens
@@ -70,21 +72,22 @@ export function OfferLinkDialog({
   }
 
   const roleLabel = role === 'bump' ? 'Order Bump' : role.charAt(0).toUpperCase() + role.slice(1)
+  const actionLabel = isReplace ? 'Replace' : 'Link'
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Link {roleLabel}</DialogTitle>
+          <DialogTitle>
+            {actionLabel} {roleLabel}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {filteredOffers.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-500">
-                No {role} products available to link.
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
+            <div className="py-4 text-center">
+              <p className="text-sm text-gray-500">No {role} products available to link.</p>
+              <p className="mt-1 text-xs text-gray-400">
                 Create a new {role} product first, then link it here.
               </p>
             </div>
@@ -96,7 +99,7 @@ export function OfferLinkDialog({
                   <SelectValue placeholder={`Choose a ${role}...`} />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredOffers.map(offer => (
+                  {filteredOffers.map((offer) => (
                     <SelectItem key={offer.id} value={offer.id}>
                       <div className="flex flex-col">
                         <span>{offer.name}</span>
@@ -120,17 +123,14 @@ export function OfferLinkDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleLink}
-            disabled={!selectedOfferId || isLinking}
-          >
+          <Button onClick={handleLink} disabled={!selectedOfferId || isLinking}>
             {isLinking ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Linking...
+                {isReplace ? 'Replacing...' : 'Linking...'}
               </>
             ) : (
-              'Link'
+              actionLabel
             )}
           </Button>
         </DialogFooter>
