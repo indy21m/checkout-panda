@@ -117,21 +117,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // For downsell and bump, ensure only one can be linked
     if (data.role === 'downsell' || data.role === 'bump') {
-      const existing = await db.query.productOffers.findFirst({
+      const existingLink = await db.query.productOffers.findFirst({
         where: and(eq(productOffers.productId, data.productId), eq(productOffers.role, data.role)),
-        with: {
-          offer: true,
-        },
       })
 
-      if (existing) {
+      if (existingLink) {
         // Check if the linked offer product still exists
-        if (!existing.offer) {
+        const offerProduct = await db.query.products.findFirst({
+          where: eq(products.id, existingLink.offerId),
+        })
+
+        console.log(`[DEBUG] Found existing ${data.role} link:`, {
+          linkId: existingLink.id,
+          offerId: existingLink.offerId,
+          offerExists: !!offerProduct,
+          offerName: offerProduct?.name,
+          offerType: offerProduct?.type,
+          offerIsActive: offerProduct?.isActive,
+        })
+
+        if (!offerProduct) {
           // Orphaned link - the offer product was deleted, clean it up
-          await db.delete(productOffers).where(eq(productOffers.id, existing.id))
+          console.log(`[DEBUG] Cleaning up orphaned link`)
+          await db.delete(productOffers).where(eq(productOffers.id, existingLink.id))
         } else {
           return NextResponse.json(
-            { error: `A ${data.role} is already linked to this product. Unlink it first.` },
+            { error: `A ${data.role} is already linked to this product. Unlink it first. (Linked offer: ${offerProduct.name})` },
             { status: 400 }
           )
         }
