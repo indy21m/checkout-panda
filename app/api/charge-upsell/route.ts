@@ -67,7 +67,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
 
       // Check upsells (these may be assembled from linked offer products)
-      const upsell = product.upsells?.find((u) => u.id === data.upsellId || u.slug === data.upsellId)
+      const upsell = product.upsells?.find(
+        (u) => u.id === data.upsellId || u.slug === data.upsellId
+      )
       if (upsell) {
         offerConfig = {
           stripe: upsell.stripe,

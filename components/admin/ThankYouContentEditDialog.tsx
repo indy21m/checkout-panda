@@ -46,12 +46,15 @@ function contentToFormData(content: ThankYouContent): FormData {
 }
 
 function formDataToContent(data: FormData): ThankYouContent {
-  const steps = data.steps.filter(s => s.title.trim() || s.description.trim())
+  const steps = data.steps.filter((s) => s.title.trim() || s.description.trim())
 
   return {
     headline: data.headline,
     subheadline: data.subheadline || undefined,
-    steps: steps.length > 0 ? steps : [{ title: 'Check your email', description: 'Your access details are on the way.' }],
+    steps:
+      steps.length > 0
+        ? steps
+        : [{ title: 'Check your email', description: 'Your access details are on the way.' }],
     ctaButton: data.ctaText && data.ctaUrl ? { text: data.ctaText, url: data.ctaUrl } : undefined,
   }
 }
@@ -79,25 +82,25 @@ export function ThankYouContentEditDialog({
   }, [open, content])
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]): void {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   function updateStep(index: number, field: keyof StepItem, value: string): void {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       steps: prev.steps.map((step, i) => (i === index ? { ...step, [field]: value } : step)),
     }))
   }
 
   function addStep(): void {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       steps: [...prev.steps, { title: '', description: '' }],
     }))
   }
 
   function removeStep(index: number): void {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       steps: prev.steps.filter((_, i) => i !== index),
     }))
@@ -118,7 +121,7 @@ export function ThankYouContentEditDialog({
   if (!content) return null
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Thank You Page</DialogTitle>
@@ -130,7 +133,7 @@ export function ThankYouContentEditDialog({
             <Label className="text-xs">Headline</Label>
             <Input
               value={formData.headline}
-              onChange={e => updateField('headline', e.target.value)}
+              onChange={(e) => updateField('headline', e.target.value)}
               placeholder="Thank you for your purchase!"
               className="h-9 text-sm"
             />
@@ -141,7 +144,7 @@ export function ThankYouContentEditDialog({
             <Label className="text-xs">Subheadline (optional)</Label>
             <Input
               value={formData.subheadline}
-              onChange={e => updateField('subheadline', e.target.value)}
+              onChange={(e) => updateField('subheadline', e.target.value)}
               placeholder="You're on your way to mastering investing"
               className="h-9 text-sm"
             />
@@ -151,22 +154,30 @@ export function ThankYouContentEditDialog({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs">Next Steps</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={addStep} className="h-7 text-xs">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={addStep}
+                className="h-7 text-xs"
+              >
                 <Plus className="mr-1 h-3 w-3" />
                 Add Step
               </Button>
             </div>
             {formData.steps.map((step, index) => (
-              <div key={index} className="rounded-md border p-3 space-y-2">
+              <div key={index} className="space-y-2 rounded-md border p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Step {index + 1}</span>
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Step {index + 1}
+                  </span>
                   {formData.steps.length > 1 && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeStep(index)}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive h-6 w-6 p-0"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -174,13 +185,13 @@ export function ThankYouContentEditDialog({
                 </div>
                 <Input
                   value={step.title}
-                  onChange={e => updateStep(index, 'title', e.target.value)}
+                  onChange={(e) => updateStep(index, 'title', e.target.value)}
                   placeholder="Check your email"
                   className="h-8 text-sm"
                 />
                 <Textarea
                   value={step.description}
-                  onChange={e => updateStep(index, 'description', e.target.value)}
+                  onChange={(e) => updateStep(index, 'description', e.target.value)}
                   placeholder="Your access details are on the way."
                   className="text-sm"
                   rows={2}
@@ -195,13 +206,13 @@ export function ThankYouContentEditDialog({
             <div className="grid grid-cols-2 gap-2">
               <Input
                 value={formData.ctaText}
-                onChange={e => updateField('ctaText', e.target.value)}
+                onChange={(e) => updateField('ctaText', e.target.value)}
                 placeholder="Button text"
                 className="h-9 text-sm"
               />
               <Input
                 value={formData.ctaUrl}
-                onChange={e => updateField('ctaUrl', e.target.value)}
+                onChange={(e) => updateField('ctaUrl', e.target.value)}
                 placeholder="https://..."
                 className="h-9 text-sm"
               />

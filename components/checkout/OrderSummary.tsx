@@ -153,7 +153,10 @@ export function OrderSummary({
               {isExpanded ? 'Hide' : 'Show'} order summary
             </span>
             <ChevronDown
-              className={cn('h-4 w-4 text-gray-400 transition-transform', isExpanded && 'rotate-180')}
+              className={cn(
+                'h-4 w-4 text-gray-400 transition-transform',
+                isExpanded && 'rotate-180'
+              )}
             />
           </div>
           <span className="text-lg font-bold text-gray-900">
@@ -195,12 +198,8 @@ export function OrderSummary({
             {/* Order bump included note */}
             {orderBumpAmount > 0 && product.orderBump && (
               <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                <span className="text-gray-500 pl-2">
-                  Includes: {product.orderBump.title}
-                </span>
-                <span className="text-gray-500">
-                  +{formatMoney(orderBumpAmount, currency)}
-                </span>
+                <span className="pl-2 text-gray-500">Includes: {product.orderBump.title}</span>
+                <span className="text-gray-500">+{formatMoney(orderBumpAmount, currency)}</span>
               </div>
             )}
 
@@ -272,9 +271,7 @@ export function OrderSummary({
             {/* Subtotal */}
             <div className="flex justify-between border-b border-gray-100 py-3 text-sm">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium text-gray-900">
-                {formatMoney(subtotal, currency)}
-              </span>
+              <span className="font-medium text-gray-900">{formatMoney(subtotal, currency)}</span>
             </div>
 
             {/* Coupon Discount */}
@@ -286,7 +283,9 @@ export function OrderSummary({
                     Discount {couponCode && <span className="font-medium">({couponCode})</span>}
                   </span>
                 </div>
-                <span className="font-medium text-green-600">-{formatMoney(discount, currency)}</span>
+                <span className="font-medium text-green-600">
+                  -{formatMoney(discount, currency)}
+                </span>
               </div>
             )}
 

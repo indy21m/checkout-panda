@@ -5,14 +5,10 @@ import { env } from '@/env'
 function getAdminEmails(): string[] {
   const adminEmails = env.ADMIN_EMAILS
   if (!adminEmails) return []
-  return adminEmails.split(',').map(email => email.trim().toLowerCase())
+  return adminEmails.split(',').map((email) => email.trim().toLowerCase())
 }
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { userId, sessionClaims } = await auth()
 
   if (!userId) {

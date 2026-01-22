@@ -1,6 +1,7 @@
 # Zapier Integration Guide
 
 Checkout Panda sends a webhook to Zapier on every successful purchase. Use this to automatically:
+
 - Tag subscribers in ConvertKit
 - Grant access in Circle communities
 - Add contacts to your CRM
@@ -21,6 +22,7 @@ Checkout Panda sends a webhook to Zapier on every successful purchase. Use this 
 **Option A: Global webhook (all products)**
 
 Add to Vercel environment variables:
+
 ```
 ZAPIER_WEBHOOK_URL=https://hooks.zapier.com/hooks/catch/123456/abcdef/
 ```
@@ -28,6 +30,7 @@ ZAPIER_WEBHOOK_URL=https://hooks.zapier.com/hooks/catch/123456/abcdef/
 **Option B: Per-product webhook**
 
 In the product config or database, set:
+
 ```typescript
 integrations: {
   zapierWebhookUrl: 'https://hooks.zapier.com/hooks/catch/...'
@@ -76,29 +79,29 @@ Every successful payment sends this JSON:
 
 ### Field Reference
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `event` | string | Always "purchase" |
-| `email` | string | Customer's email |
-| `firstName` | string | Customer's first name |
-| `lastName` | string | Customer's last name |
-| `amount` | number | Total charged in cents/øre |
-| `currency` | string | Currency code (USD, EUR, DKK) |
-| `productSlug` | string | Product identifier |
-| `productName` | string | Product display name |
-| `purchaseType` | string | "main_purchase", "upsell", or "downsell" |
-| `isUpsell` | boolean | True if this is an upsell purchase |
-| `isDownsell` | boolean | True if this is a downsell purchase |
-| `includeOrderBump` | boolean | True if order bump was added |
-| `purchasedItems` | array | List of items: ["main", "bump", "upsell-1"] |
-| `couponCode` | string | Applied coupon code (if any) |
-| `subtotal` | number | Amount before discounts/tax |
-| `discount` | number | Discount amount applied |
-| `tax` | number | Tax amount charged |
-| `country` | string | Customer's country code |
-| `vatNumber` | string | B2B VAT number (if provided) |
-| `convertkitTags` | array | Tags to apply in ConvertKit |
-| `timestamp` | string | ISO timestamp of purchase |
+| Field              | Type    | Description                                 |
+| ------------------ | ------- | ------------------------------------------- |
+| `event`            | string  | Always "purchase"                           |
+| `email`            | string  | Customer's email                            |
+| `firstName`        | string  | Customer's first name                       |
+| `lastName`         | string  | Customer's last name                        |
+| `amount`           | number  | Total charged in cents/øre                  |
+| `currency`         | string  | Currency code (USD, EUR, DKK)               |
+| `productSlug`      | string  | Product identifier                          |
+| `productName`      | string  | Product display name                        |
+| `purchaseType`     | string  | "main_purchase", "upsell", or "downsell"    |
+| `isUpsell`         | boolean | True if this is an upsell purchase          |
+| `isDownsell`       | boolean | True if this is a downsell purchase         |
+| `includeOrderBump` | boolean | True if order bump was added                |
+| `purchasedItems`   | array   | List of items: ["main", "bump", "upsell-1"] |
+| `couponCode`       | string  | Applied coupon code (if any)                |
+| `subtotal`         | number  | Amount before discounts/tax                 |
+| `discount`         | number  | Discount amount applied                     |
+| `tax`              | number  | Tax amount charged                          |
+| `country`          | string  | Customer's country code                     |
+| `vatNumber`        | string  | B2B VAT number (if provided)                |
+| `convertkitTags`   | array   | Tags to apply in ConvertKit                 |
+| `timestamp`        | string  | ISO timestamp of purchase                   |
 
 ## Common Zap Recipes
 
@@ -153,6 +156,7 @@ If includeOrderBump is true → Apply "order-bump-purchased" tag
 ```
 
 Or check `purchasedItems` array which contains all items:
+
 - `["main"]` - Just the main product
 - `["main", "bump"]` - Main product + order bump
 - `["main", "bump", "upsell-1"]` - Main + bump + first upsell
@@ -174,6 +178,7 @@ Or check `purchasedItems` array which contains all items:
 ### Missing data in Zapier
 
 Some fields may be null if not provided during checkout:
+
 - `firstName`/`lastName` - Only if customer entered name
 - `couponCode` - Only if coupon was applied
 - `vatNumber` - Only if B2B customer entered it
@@ -181,5 +186,6 @@ Some fields may be null if not provided during checkout:
 ### Duplicate webhooks
 
 Stripe may retry webhooks if your server responds slowly. Zapier handles deduplication, but you can also:
+
 - Use `paymentIntentId` as a unique identifier
 - Add a Zapier filter to skip duplicates

@@ -83,8 +83,8 @@ function upsellToFormData(upsell: Upsell, currency?: Currency): UpsellFormData {
 function formDataToUpsell(data: UpsellFormData): Upsell {
   const benefits = data.benefits
     .split('\n')
-    .map(b => b.trim())
-    .filter(b => b.length > 0)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0)
 
   return {
     id: data.id,
@@ -130,18 +130,15 @@ export function UpsellEditDialog({
     }
   }, [open, upsell, defaultCurrency, upsellIndex])
 
-  function updateField<K extends keyof UpsellFormData>(
-    field: K,
-    value: UpsellFormData[K]
-  ): void {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  function updateField<K extends keyof UpsellFormData>(field: K, value: UpsellFormData[K]): void {
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   function handleCopyFrom(sourceId: string): void {
-    const source = existingUpsells.find(u => `${u.productName}:${u.id}` === sourceId)
+    const source = existingUpsells.find((u) => `${u.productName}:${u.id}` === sourceId)
     if (source) {
       // Copy content but keep current ID/slug and use target currency
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...upsellToFormData(source, defaultCurrency),
         id: prev.id,
         slug: prev.slug,
@@ -169,7 +166,7 @@ export function UpsellEditDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Add Upsell' : 'Edit Upsell'}</DialogTitle>
@@ -188,7 +185,7 @@ export function UpsellEditDialog({
                   <SelectValue placeholder="Select an upsell to copy..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {existingUpsells.map(u => (
+                  {existingUpsells.map((u) => (
                     <SelectItem key={`${u.productName}:${u.id}`} value={`${u.productName}:${u.id}`}>
                       {u.title} ({u.productName})
                     </SelectItem>
@@ -203,7 +200,7 @@ export function UpsellEditDialog({
             <Label className="text-xs">Title</Label>
             <Input
               value={formData.title}
-              onChange={e => updateField('title', e.target.value)}
+              onChange={(e) => updateField('title', e.target.value)}
               placeholder="Portfolio Coaching Session"
               className="h-9 text-sm"
             />
@@ -214,7 +211,7 @@ export function UpsellEditDialog({
             <Label className="text-xs">Subtitle (optional)</Label>
             <Input
               value={formData.subtitle}
-              onChange={e => updateField('subtitle', e.target.value)}
+              onChange={(e) => updateField('subtitle', e.target.value)}
               placeholder="One-time exclusive offer"
               className="h-9 text-sm"
             />
@@ -225,7 +222,7 @@ export function UpsellEditDialog({
             <Label className="text-xs">Description</Label>
             <Textarea
               value={formData.description}
-              onChange={e => updateField('description', e.target.value)}
+              onChange={(e) => updateField('description', e.target.value)}
               placeholder="Get personalized feedback on your portfolio..."
               className="text-sm"
               rows={2}
@@ -237,7 +234,7 @@ export function UpsellEditDialog({
             <Label className="text-xs">Benefits (one per line)</Label>
             <Textarea
               value={formData.benefits}
-              onChange={e => updateField('benefits', e.target.value)}
+              onChange={(e) => updateField('benefits', e.target.value)}
               placeholder="60-minute live session&#10;Personalized feedback&#10;Action plan"
               className="text-sm"
               rows={3}
@@ -251,7 +248,7 @@ export function UpsellEditDialog({
               <Input
                 type="number"
                 value={formData.priceAmount || ''}
-                onChange={e => updateField('priceAmount', parseFloat(e.target.value) || 0)}
+                onChange={(e) => updateField('priceAmount', parseFloat(e.target.value) || 0)}
                 placeholder="999"
                 className="h-9 text-sm"
               />
@@ -261,7 +258,7 @@ export function UpsellEditDialog({
               <Input
                 type="number"
                 value={formData.originalPrice || ''}
-                onChange={e => updateField('originalPrice', parseFloat(e.target.value) || 0)}
+                onChange={(e) => updateField('originalPrice', parseFloat(e.target.value) || 0)}
                 placeholder="1499"
                 className="h-9 text-sm"
               />
@@ -273,7 +270,7 @@ export function UpsellEditDialog({
             <Label className="text-xs">Urgency Text (optional)</Label>
             <Input
               value={formData.urgencyText}
-              onChange={e => updateField('urgencyText', e.target.value)}
+              onChange={(e) => updateField('urgencyText', e.target.value)}
               placeholder="This offer disappears when you leave this page"
               className="h-9 text-sm"
             />

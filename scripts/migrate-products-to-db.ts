@@ -63,14 +63,17 @@ async function main() {
     }
 
     try {
-      await db.insert(schema.products).values({
-        id: product.id,
-        slug: product.slug,
-        name: product.name,
-        config,
-        stripeSyncStatus: 'pending',
-        isActive: true,
-      }).onConflictDoNothing()
+      await db
+        .insert(schema.products)
+        .values({
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          config,
+          stripeSyncStatus: 'pending',
+          isActive: true,
+        })
+        .onConflictDoNothing()
 
       console.log(`  ✓ Migrated successfully`)
     } catch (error) {

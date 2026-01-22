@@ -34,10 +34,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const productId = searchParams.get('productId')
 
     if (!productId) {
-      return NextResponse.json(
-        { error: 'productId is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'productId is required' }, { status: 400 })
     }
 
     const offers = await db.query.productOffers.findMany({
@@ -49,7 +46,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
 
     return NextResponse.json({
-      offers: offers.map(link => ({
+      offers: offers.map((link) => ({
         id: link.id,
         offerId: link.offerId,
         offerName: link.offer?.name ?? 'Unknown',
@@ -64,10 +61,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
   } catch (error) {
     console.error('Failed to fetch product offers:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch product offers' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch product offers' }, { status: 500 })
   }
 }
 
@@ -87,25 +81,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     ])
 
     if (!mainProduct) {
-      return NextResponse.json(
-        { error: 'Main product not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Main product not found' }, { status: 404 })
     }
 
     if (!offerProduct) {
-      return NextResponse.json(
-        { error: 'Offer product not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Offer product not found' }, { status: 404 })
     }
 
     // Validate product types
     if (mainProduct.type !== 'main') {
-      return NextResponse.json(
-        { error: 'Can only link offers to main products' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Can only link offers to main products' }, { status: 400 })
     }
 
     const validOfferTypes = {
@@ -125,10 +110,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let position = data.position
     if (!position) {
       const existingOffers = await db.query.productOffers.findMany({
-        where: and(
-          eq(productOffers.productId, data.productId),
-          eq(productOffers.role, data.role)
-        ),
+        where: and(eq(productOffers.productId, data.productId), eq(productOffers.role, data.role)),
       })
       position = existingOffers.length + 1
     }
@@ -136,10 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // For downsell and bump, ensure only one can be linked
     if (data.role === 'downsell' || data.role === 'bump') {
       const existing = await db.query.productOffers.findFirst({
-        where: and(
-          eq(productOffers.productId, data.productId),
-          eq(productOffers.role, data.role)
-        ),
+        where: and(eq(productOffers.productId, data.productId), eq(productOffers.role, data.role)),
       })
 
       if (existing) {
@@ -150,13 +129,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    const newLink = await db.insert(productOffers).values({
-      productId: data.productId,
-      offerId: data.offerId,
-      role: data.role,
-      position,
-      enabled: data.enabled ?? true,
-    }).returning()
+    const newLink = await db
+      .insert(productOffers)
+      .values({
+        productId: data.productId,
+        offerId: data.offerId,
+        role: data.role,
+        position,
+        enabled: data.enabled ?? true,
+      })
+      .returning()
 
     return NextResponse.json({ offer: newLink[0] }, { status: 201 })
   } catch (error) {
@@ -176,10 +158,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     console.error('Failed to link offer:', error)
-    return NextResponse.json(
-      { error: 'Failed to link offer' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to link offer' }, { status: 500 })
   }
 }
 
@@ -197,22 +176,17 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     if (data.enabled !== undefined) updateData.enabled = data.enabled
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: 'No fields to update' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    const updated = await db.update(productOffers)
+    const updated = await db
+      .update(productOffers)
       .set(updateData)
       .where(eq(productOffers.id, data.id))
       .returning()
 
     if (updated.length === 0) {
-      return NextResponse.json(
-        { error: 'Offer link not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Offer link not found' }, { status: 404 })
     }
 
     return NextResponse.json({ offer: updated[0] })
@@ -224,10 +198,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       )
     }
     console.error('Failed to update offer link:', error)
-    return NextResponse.json(
-      { error: 'Failed to update offer link' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to update offer link' }, { status: 500 })
   }
 }
 
@@ -240,7 +211,8 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     const body = await request.json()
     const data = unlinkOfferSchema.parse(body)
 
-    const deleted = await db.delete(productOffers)
+    const deleted = await db
+      .delete(productOffers)
       .where(
         and(
           eq(productOffers.productId, data.productId),
@@ -251,10 +223,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       .returning()
 
     if (deleted.length === 0) {
-      return NextResponse.json(
-        { error: 'Offer link not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Offer link not found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
@@ -266,9 +235,6 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
       )
     }
     console.error('Failed to unlink offer:', error)
-    return NextResponse.json(
-      { error: 'Failed to unlink offer' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to unlink offer' }, { status: 500 })
   }
 }

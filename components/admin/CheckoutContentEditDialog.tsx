@@ -44,8 +44,8 @@ function contentToFormData(content: CheckoutContent): FormData {
 function formDataToContent(data: FormData, original: CheckoutContent): CheckoutContent {
   const benefits = data.benefits
     .split('\n')
-    .map(b => b.trim())
-    .filter(b => b.length > 0)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0)
 
   return {
     ...original, // Preserve testimonials, FAQ, etc.
@@ -82,7 +82,7 @@ export function CheckoutContentEditDialog({
   }, [open, content])
 
   function updateField<K extends keyof FormData>(field: K, value: FormData[K]): void {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   function handleSave(): void {
@@ -104,7 +104,7 @@ export function CheckoutContentEditDialog({
   if (!content) return null
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Checkout Page</DialogTitle>
@@ -116,7 +116,7 @@ export function CheckoutContentEditDialog({
             <Label className="text-xs">Headline</Label>
             <Input
               value={formData.title}
-              onChange={e => updateField('title', e.target.value)}
+              onChange={(e) => updateField('title', e.target.value)}
               placeholder="Master Danish Investing"
               className="h-9 text-sm"
             />
@@ -127,7 +127,7 @@ export function CheckoutContentEditDialog({
             <Label className="text-xs">Subtitle (optional)</Label>
             <Input
               value={formData.subtitle}
-              onChange={e => updateField('subtitle', e.target.value)}
+              onChange={(e) => updateField('subtitle', e.target.value)}
               placeholder="Learn to invest in Danish stocks"
               className="h-9 text-sm"
             />
@@ -138,7 +138,7 @@ export function CheckoutContentEditDialog({
             <Label className="text-xs">Product Image URL</Label>
             <Input
               value={formData.image}
-              onChange={e => updateField('image', e.target.value)}
+              onChange={(e) => updateField('image', e.target.value)}
               placeholder="https://..."
               className="h-9 text-sm"
             />
@@ -149,7 +149,7 @@ export function CheckoutContentEditDialog({
             <Label className="text-xs">Benefits (one per line)</Label>
             <Textarea
               value={formData.benefits}
-              onChange={e => updateField('benefits', e.target.value)}
+              onChange={(e) => updateField('benefits', e.target.value)}
               placeholder="Step-by-step video lessons&#10;Downloadable templates&#10;Lifetime access"
               className="text-sm"
               rows={4}
@@ -161,7 +161,7 @@ export function CheckoutContentEditDialog({
             <Label className="text-xs">Guarantee Text</Label>
             <Textarea
               value={formData.guarantee}
-              onChange={e => updateField('guarantee', e.target.value)}
+              onChange={(e) => updateField('guarantee', e.target.value)}
               placeholder="30-day money back guarantee. If you're not satisfied..."
               className="text-sm"
               rows={2}
@@ -174,7 +174,7 @@ export function CheckoutContentEditDialog({
             <Input
               type="number"
               value={formData.guaranteeDays || ''}
-              onChange={e => updateField('guaranteeDays', parseInt(e.target.value) || 0)}
+              onChange={(e) => updateField('guaranteeDays', parseInt(e.target.value) || 0)}
               placeholder="30"
               className="h-9 w-24 text-sm"
             />

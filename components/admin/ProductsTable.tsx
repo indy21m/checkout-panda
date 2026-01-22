@@ -205,13 +205,21 @@ export function ProductsTable({ products }: ProductsTableProps) {
   }
 
   async function handleLinkOffer(offerId: string, role: OfferRole): Promise<void> {
-    if (dialogState.type !== 'linkOffer') return
+    // Get productId from either linkOffer or replaceOffer dialog state
+    const productId =
+      dialogState.type === 'linkOffer'
+        ? dialogState.productId
+        : dialogState.type === 'replaceOffer'
+          ? dialogState.productId
+          : null
+
+    if (!productId) return
 
     const response = await fetch('/api/admin/product-offers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        productId: dialogState.productId,
+        productId,
         offerId,
         role,
       }),
@@ -244,44 +252,6 @@ export function ProductsTable({ products }: ProductsTableProps) {
     }
 
     setDialogState({ type: 'none' })
-    router.refresh()
-  }
-
-  async function handleReplaceOffer(newOfferId: string, role: OfferRole): Promise<void> {
-    if (dialogState.type !== 'replaceOffer') return
-
-    // First unlink the current offer
-    const unlinkResponse = await fetch('/api/admin/product-offers', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productId: dialogState.productId,
-        offerId: dialogState.currentOfferId,
-        role: dialogState.role,
-      }),
-    })
-
-    if (!unlinkResponse.ok) {
-      const error = await unlinkResponse.json()
-      throw new Error(error.error || 'Failed to unlink current offer')
-    }
-
-    // Then link the new offer
-    const linkResponse = await fetch('/api/admin/product-offers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productId: dialogState.productId,
-        offerId: newOfferId,
-        role,
-      }),
-    })
-
-    if (!linkResponse.ok) {
-      const error = await linkResponse.json()
-      throw new Error(error.error || 'Failed to link new offer')
-    }
-
     router.refresh()
   }
 
@@ -980,7 +950,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
       <OfferLinkDialog
         open={dialogState.type === 'replaceOffer'}
         onClose={() => setDialogState({ type: 'none' })}
-        onLink={handleReplaceOffer}
+        onLink={handleLinkOffer}
         productId={dialogState.type === 'replaceOffer' ? dialogState.productId : ''}
         role={dialogState.type === 'replaceOffer' ? dialogState.role : 'upsell'}
         availableOffers={availableOffers}
@@ -990,6 +960,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
             : []
         }
         isReplace
+        currentOfferId={dialogState.type === 'replaceOffer' ? dialogState.currentOfferId : undefined}
       />
 
       {/* Checkout Content Edit Dialog */}

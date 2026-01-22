@@ -30,17 +30,19 @@ interface OfferLinkDialogProps {
   availableOffers: ProductRecord[]
   linkedOfferIds: string[]
   isReplace?: boolean
+  currentOfferId?: string // For replace flow: the offer being replaced
 }
 
 export function OfferLinkDialog({
   open,
   onClose,
   onLink,
-  productId: _productId,
+  productId,
   role,
   availableOffers,
   linkedOfferIds,
   isReplace = false,
+  currentOfferId,
 }: OfferLinkDialogProps) {
   const [selectedOfferId, setSelectedOfferId] = useState<string>('')
   const [isLinking, setIsLinking] = useState(false)
@@ -62,6 +64,24 @@ export function OfferLinkDialog({
 
     setIsLinking(true)
     try {
+      // If replacing, first unlink the current offer
+      if (isReplace && currentOfferId) {
+        const unlinkResponse = await fetch('/api/admin/product-offers', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId,
+            offerId: currentOfferId,
+            role,
+          }),
+        })
+
+        if (!unlinkResponse.ok) {
+          const error = await unlinkResponse.json()
+          throw new Error(error.error || 'Failed to unlink current offer')
+        }
+      }
+
       await onLink(selectedOfferId, role)
       onClose()
     } catch (error) {

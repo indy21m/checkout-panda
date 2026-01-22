@@ -94,7 +94,7 @@ export function PaymentSection({
   // For one-time: show breakdown total (includes tax) or fallback
   const displayAmount = isInstallment
     ? installmentAmount + orderBumpAmount
-    : breakdown?.total ?? baseAmount + orderBumpAmount
+    : (breakdown?.total ?? baseAmount + orderBumpAmount)
   const currency = product.stripe.currency
 
   // Initialize payment when we have email and country (for tax calculation)

@@ -87,7 +87,7 @@ export async function getProductFromDb(slug: string): Promise<Product | undefine
           })
         } else if (link.role === 'downsell') {
           assembledDownsell = {
-            enabled: link.enabled && (offerConfig.enabled !== false),
+            enabled: link.enabled && offerConfig.enabled !== false,
             slug: offerProduct.slug,
             stripe: {
               productId: offerConfig.stripe.productId ?? offerProduct.stripeProductId ?? '',
@@ -104,7 +104,7 @@ export async function getProductFromDb(slug: string): Promise<Product | undefine
           }
         } else if (link.role === 'bump') {
           assembledOrderBump = {
-            enabled: link.enabled && (offerConfig.enabled !== false),
+            enabled: link.enabled && offerConfig.enabled !== false,
             stripe: {
               productId: offerConfig.stripe.productId ?? offerProduct.stripeProductId ?? '',
               priceId: offerConfig.stripe.priceId ?? '',
@@ -121,7 +121,11 @@ export async function getProductFromDb(slug: string): Promise<Product | undefine
 
       // Use assembled offers if we have linked offers, otherwise fall back to legacy nested config
       const hasLinkedOffers = linkedOffers.length > 0
-      const upsells = hasLinkedOffers ? (assembledUpsells.length > 0 ? assembledUpsells : undefined) : dbProduct.config.upsells
+      const upsells = hasLinkedOffers
+        ? assembledUpsells.length > 0
+          ? assembledUpsells
+          : undefined
+        : dbProduct.config.upsells
       const downsell = hasLinkedOffers ? assembledDownsell : dbProduct.config.downsell
       const orderBump = hasLinkedOffers ? assembledOrderBump : dbProduct.config.orderBump
 
@@ -134,7 +138,7 @@ export async function getProductFromDb(slug: string): Promise<Product | undefine
           priceId: dbProduct.config.stripe.priceId ?? '',
           priceAmount: dbProduct.config.stripe.priceAmount,
           currency: dbProduct.config.stripe.currency,
-          pricingTiers: dbProduct.config.stripe.pricingTiers?.map(tier => ({
+          pricingTiers: dbProduct.config.stripe.pricingTiers?.map((tier) => ({
             ...tier,
             priceId: tier.priceId ?? '',
           })),

@@ -92,9 +92,7 @@ export function OrderBumpEditDialog({
   defaultCurrency = 'DKK',
   existingOrderBumps = [],
 }: OrderBumpEditDialogProps) {
-  const [formData, setFormData] = useState<OrderBumpFormData>(
-    createEmptyFormData(defaultCurrency)
-  )
+  const [formData, setFormData] = useState<OrderBumpFormData>(createEmptyFormData(defaultCurrency))
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -112,11 +110,11 @@ export function OrderBumpEditDialog({
     field: K,
     value: OrderBumpFormData[K]
   ): void {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   function handleCopyFrom(productName: string): void {
-    const source = existingOrderBumps.find(ob => ob.productName === productName)
+    const source = existingOrderBumps.find((ob) => ob.productName === productName)
     if (source) {
       setFormData(orderBumpToFormData(source, defaultCurrency))
     }
@@ -142,7 +140,7 @@ export function OrderBumpEditDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Add Order Bump' : 'Edit Order Bump'}</DialogTitle>
@@ -161,7 +159,7 @@ export function OrderBumpEditDialog({
                   <SelectValue placeholder="Select an order bump to copy..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {existingOrderBumps.map(ob => (
+                  {existingOrderBumps.map((ob) => (
                     <SelectItem key={ob.productName} value={ob.productName}>
                       {ob.title} ({ob.productName})
                     </SelectItem>
@@ -179,7 +177,7 @@ export function OrderBumpEditDialog({
             </div>
             <Switch
               checked={formData.enabled}
-              onCheckedChange={checked => updateField('enabled', checked)}
+              onCheckedChange={(checked) => updateField('enabled', checked)}
             />
           </div>
 
@@ -188,7 +186,7 @@ export function OrderBumpEditDialog({
             <Label className="text-xs">Title</Label>
             <Input
               value={formData.title}
-              onChange={e => updateField('title', e.target.value)}
+              onChange={(e) => updateField('title', e.target.value)}
               placeholder="Add the Template Bundle"
               className="h-9 text-sm"
             />
@@ -199,7 +197,7 @@ export function OrderBumpEditDialog({
             <Label className="text-xs">Description</Label>
             <Textarea
               value={formData.description}
-              onChange={e => updateField('description', e.target.value)}
+              onChange={(e) => updateField('description', e.target.value)}
               placeholder="Get instant access to all premium templates..."
               className="text-sm"
               rows={2}
@@ -213,7 +211,7 @@ export function OrderBumpEditDialog({
               <Input
                 type="number"
                 value={formData.priceAmount || ''}
-                onChange={e => updateField('priceAmount', parseFloat(e.target.value) || 0)}
+                onChange={(e) => updateField('priceAmount', parseFloat(e.target.value) || 0)}
                 placeholder="199"
                 className="h-9 text-sm"
               />
@@ -223,7 +221,7 @@ export function OrderBumpEditDialog({
               <Input
                 type="number"
                 value={formData.savingsPercent || ''}
-                onChange={e => updateField('savingsPercent', parseInt(e.target.value) || 0)}
+                onChange={(e) => updateField('savingsPercent', parseInt(e.target.value) || 0)}
                 placeholder="30"
                 className="h-9 text-sm"
               />

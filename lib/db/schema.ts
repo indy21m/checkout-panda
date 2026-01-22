@@ -141,7 +141,9 @@ export const products = pgTable('products', {
   config: jsonb('config').notNull().$type<ProductConfig>(),
   stripeProductId: text('stripe_product_id'),
   stripeSyncedAt: timestamp('stripe_synced_at', { withTimezone: true }),
-  stripeSyncStatus: text('stripe_sync_status').$type<'pending' | 'synced' | 'error'>().default('pending'),
+  stripeSyncStatus: text('stripe_sync_status')
+    .$type<'pending' | 'synced' | 'error'>()
+    .default('pending'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -152,8 +154,12 @@ export const products = pgTable('products', {
  */
 export const productOffers = pgTable('product_offers', {
   id: uuid('id').primaryKey().defaultRandom(),
-  productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-  offerId: text('offer_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  offerId: text('offer_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
   role: text('role').$type<'upsell' | 'downsell' | 'bump'>().notNull(),
   position: integer('position').notNull().default(1),
   enabled: boolean('enabled').notNull().default(true),
@@ -191,7 +197,9 @@ export const productOffersRelations = relations(productOffers, ({ one }) => ({
  */
 export const stripePrices = pgTable('stripe_prices', {
   id: text('id').primaryKey(), // Format: "product-id:tier-id"
-  productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
   tierId: text('tier_id').notNull(),
   stripePriceId: text('stripe_price_id'),
   amount: integer('amount').notNull(),

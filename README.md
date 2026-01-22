@@ -173,6 +173,7 @@ On every successful payment, a webhook is sent with:
 ```
 
 Use this to:
+
 - Add tags in ConvertKit
 - Grant access in Circle
 - Send to your CRM

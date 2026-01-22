@@ -48,7 +48,7 @@ export function ProductCard({
   // For one-time: today = total (or base + order bump if no breakdown)
   const displayAmount = isInstallment
     ? (selectedTier.installments?.amountPerPayment ?? product.stripe.priceAmount) + orderBumpAmount
-    : breakdown?.total ?? baseAmount + orderBumpAmount
+    : (breakdown?.total ?? baseAmount + orderBumpAmount)
 
   // Calculate next payment date for installments
   const getNextPaymentDate = (): string => {
@@ -219,9 +219,7 @@ export function ProductCard({
 
           {/* Next payment date - only shown for installments */}
           {isInstallment && (
-            <p className="mt-2 text-sm text-gray-500">
-              Next payment: {getNextPaymentDate()}
-            </p>
+            <p className="mt-2 text-sm text-gray-500">Next payment: {getNextPaymentDate()}</p>
           )}
         </div>
       </div>

@@ -77,8 +77,8 @@ function downsellToFormData(downsell: Downsell, currency?: Currency): DownsellFo
 function formDataToDownsell(data: DownsellFormData): Downsell {
   const benefits = data.benefits
     .split('\n')
-    .map(b => b.trim())
-    .filter(b => b.length > 0)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0)
 
   return {
     enabled: data.enabled,
@@ -106,9 +106,7 @@ export function DownsellEditDialog({
   defaultCurrency = 'DKK',
   existingDownsells = [],
 }: DownsellEditDialogProps) {
-  const [formData, setFormData] = useState<DownsellFormData>(
-    createEmptyFormData(defaultCurrency)
-  )
+  const [formData, setFormData] = useState<DownsellFormData>(createEmptyFormData(defaultCurrency))
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -126,11 +124,11 @@ export function DownsellEditDialog({
     field: K,
     value: DownsellFormData[K]
   ): void {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   function handleCopyFrom(productName: string): void {
-    const source = existingDownsells.find(ds => ds.productName === productName)
+    const source = existingDownsells.find((ds) => ds.productName === productName)
     if (source) {
       setFormData(downsellToFormData(source, defaultCurrency))
     }
@@ -156,7 +154,7 @@ export function DownsellEditDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Add Downsell' : 'Edit Downsell'}</DialogTitle>
@@ -175,7 +173,7 @@ export function DownsellEditDialog({
                   <SelectValue placeholder="Select a downsell to copy..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {existingDownsells.map(ds => (
+                  {existingDownsells.map((ds) => (
                     <SelectItem key={ds.productName} value={ds.productName}>
                       {ds.title} ({ds.productName})
                     </SelectItem>
@@ -193,7 +191,7 @@ export function DownsellEditDialog({
             </div>
             <Switch
               checked={formData.enabled}
-              onCheckedChange={checked => updateField('enabled', checked)}
+              onCheckedChange={(checked) => updateField('enabled', checked)}
             />
           </div>
 
@@ -202,7 +200,7 @@ export function DownsellEditDialog({
             <Label className="text-xs">Title</Label>
             <Input
               value={formData.title}
-              onChange={e => updateField('title', e.target.value)}
+              onChange={(e) => updateField('title', e.target.value)}
               placeholder="Wait! Special Offer Just For You"
               className="h-9 text-sm"
             />
@@ -213,7 +211,7 @@ export function DownsellEditDialog({
             <Label className="text-xs">Subtitle (optional)</Label>
             <Input
               value={formData.subtitle}
-              onChange={e => updateField('subtitle', e.target.value)}
+              onChange={(e) => updateField('subtitle', e.target.value)}
               placeholder="Last chance at this price"
               className="h-9 text-sm"
             />
@@ -224,7 +222,7 @@ export function DownsellEditDialog({
             <Label className="text-xs">Description</Label>
             <Textarea
               value={formData.description}
-              onChange={e => updateField('description', e.target.value)}
+              onChange={(e) => updateField('description', e.target.value)}
               placeholder="Get a simplified version at a reduced price..."
               className="text-sm"
               rows={2}
@@ -236,7 +234,7 @@ export function DownsellEditDialog({
             <Label className="text-xs">Benefits (one per line)</Label>
             <Textarea
               value={formData.benefits}
-              onChange={e => updateField('benefits', e.target.value)}
+              onChange={(e) => updateField('benefits', e.target.value)}
               placeholder="Core templates included&#10;Basic support&#10;Lifetime access"
               className="text-sm"
               rows={3}
@@ -250,7 +248,7 @@ export function DownsellEditDialog({
               <Input
                 type="number"
                 value={formData.priceAmount || ''}
-                onChange={e => updateField('priceAmount', parseFloat(e.target.value) || 0)}
+                onChange={(e) => updateField('priceAmount', parseFloat(e.target.value) || 0)}
                 placeholder="499"
                 className="h-9 text-sm"
               />
@@ -260,7 +258,7 @@ export function DownsellEditDialog({
               <Input
                 type="number"
                 value={formData.originalPrice || ''}
-                onChange={e => updateField('originalPrice', parseFloat(e.target.value) || 0)}
+                onChange={(e) => updateField('originalPrice', parseFloat(e.target.value) || 0)}
                 placeholder="999"
                 className="h-9 text-sm"
               />

@@ -10,20 +10,26 @@ const stripeConfigSchema = z.object({
   priceId: z.string().nullable(),
   priceAmount: z.number().positive(),
   currency: z.enum(['USD', 'EUR', 'DKK']),
-  pricingTiers: z.array(z.object({
-    id: z.string(),
-    label: z.string(),
-    priceId: z.string().nullable(),
-    priceAmount: z.number().positive(),
-    originalPrice: z.number().optional(),
-    isDefault: z.boolean().optional(),
-    description: z.string().optional(),
-    installments: z.object({
-      count: z.number().positive(),
-      intervalLabel: z.string(),
-      amountPerPayment: z.number().positive(),
-    }).optional(),
-  })).optional(),
+  pricingTiers: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        priceId: z.string().nullable(),
+        priceAmount: z.number().positive(),
+        originalPrice: z.number().optional(),
+        isDefault: z.boolean().optional(),
+        description: z.string().optional(),
+        installments: z
+          .object({
+            count: z.number().positive(),
+            intervalLabel: z.string(),
+            amountPerPayment: z.number().positive(),
+          })
+          .optional(),
+      })
+    )
+    .optional(),
 })
 
 // Schema for main product config
@@ -46,14 +52,18 @@ const mainProductConfigSchema = z.object({
   thankYou: z.object({
     headline: z.string(),
     subheadline: z.string().optional(),
-    steps: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-    })),
-    ctaButton: z.object({
-      text: z.string(),
-      url: z.string(),
-    }).optional(),
+    steps: z.array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+      })
+    ),
+    ctaButton: z
+      .object({
+        text: z.string(),
+        url: z.string(),
+      })
+      .optional(),
   }),
   integrations: z.any().optional(),
   meta: z.any().optional(),
@@ -122,7 +132,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           })
           return {
             ...product,
-            usedIn: linkedTo.map(link => ({
+            usedIn: linkedTo.map((link) => ({
               productId: link.productId,
               productName: link.product?.name ?? 'Unknown',
               role: link.role,
@@ -140,7 +150,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         })
         return {
           ...product,
-          linkedOffers: offers.map(link => ({
+          linkedOffers: offers.map((link) => ({
             offerId: link.offerId,
             offerName: link.offer?.name ?? 'Unknown',
             role: link.role,
@@ -154,10 +164,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ products: productsWithUsage })
   } catch (error) {
     console.error('Failed to fetch products:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch products' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
 
@@ -166,15 +173,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = await request.json()
     const data = createProductSchema.parse(body)
 
-    const newProduct = await db.insert(products).values({
-      id: data.id,
-      slug: data.slug,
-      name: data.name,
-      type: data.type,
-      config: data.config as ProductConfig,
-      stripeSyncStatus: 'pending',
-      isActive: true,
-    }).returning()
+    const newProduct = await db
+      .insert(products)
+      .values({
+        id: data.id,
+        slug: data.slug,
+        name: data.name,
+        type: data.type,
+        config: data.config as ProductConfig,
+        stripeSyncStatus: 'pending',
+        isActive: true,
+      })
+      .returning()
 
     return NextResponse.json({ product: newProduct[0] }, { status: 201 })
   } catch (error) {
@@ -185,9 +195,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
     console.error('Failed to create product:', error)
-    return NextResponse.json(
-      { error: 'Failed to create product' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }

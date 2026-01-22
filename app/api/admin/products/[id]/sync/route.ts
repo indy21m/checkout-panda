@@ -8,10 +8,7 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
-export async function POST(
-  _request: NextRequest,
-  { params }: RouteParams
-): Promise<NextResponse> {
+export async function POST(_request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   const { id } = await params
 
   try {
@@ -20,16 +17,11 @@ export async function POST(
     })
 
     if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
     // Mark as syncing
-    await db.update(products)
-      .set({ stripeSyncStatus: 'pending' })
-      .where(eq(products.id, id))
+    await db.update(products).set({ stripeSyncStatus: 'pending' }).where(eq(products.id, id))
 
     // Sync to Stripe based on product type
     if (product.type === 'main') {
@@ -39,7 +31,8 @@ export async function POST(
     }
 
     // Update sync status
-    await db.update(products)
+    await db
+      .update(products)
       .set({
         stripeSyncStatus: 'synced',
         stripeSyncedAt: new Date(),
@@ -56,9 +49,7 @@ export async function POST(
     console.error('Stripe sync failed:', error)
 
     // Update sync status to error
-    await db.update(products)
-      .set({ stripeSyncStatus: 'error' })
-      .where(eq(products.id, id))
+    await db.update(products).set({ stripeSyncStatus: 'error' }).where(eq(products.id, id))
 
     return NextResponse.json(
       {
@@ -101,9 +92,7 @@ async function syncMainProductToStripe(
     stripeProductId = stripeProduct.id
 
     // Save Stripe product ID
-    await db.update(products)
-      .set({ stripeProductId })
-      .where(eq(products.id, productId))
+    await db.update(products).set({ stripeProductId }).where(eq(products.id, productId))
   }
 
   // Sync pricing tiers
@@ -142,7 +131,8 @@ async function syncMainProductToStripe(
       stripePriceId = stripePrice.id
 
       // Upsert price record
-      await db.insert(stripePrices)
+      await db
+        .insert(stripePrices)
         .values({
           id: `${productId}:${tier.id}`,
           productId,
@@ -172,7 +162,7 @@ async function syncMainProductToStripe(
   }
 
   // Update config with synced Stripe IDs
-  const defaultTier = updatedTiers.find(t => t.isDefault) ?? updatedTiers[0]
+  const defaultTier = updatedTiers.find((t) => t.isDefault) ?? updatedTiers[0]
   const updatedConfig: ProductConfig = {
     ...config,
     stripe: {
@@ -183,9 +173,7 @@ async function syncMainProductToStripe(
     },
   }
 
-  await db.update(products)
-    .set({ config: updatedConfig })
-    .where(eq(products.id, productId))
+  await db.update(products).set({ config: updatedConfig }).where(eq(products.id, productId))
 }
 
 /**
@@ -221,9 +209,7 @@ async function syncOfferProductToStripe(
     stripeProductId = stripeProduct.id
 
     // Save Stripe product ID
-    await db.update(products)
-      .set({ stripeProductId })
-      .where(eq(products.id, productId))
+    await db.update(products).set({ stripeProductId }).where(eq(products.id, productId))
   }
 
   // Create or update the single price for this offer
@@ -247,7 +233,8 @@ async function syncOfferProductToStripe(
     stripePriceId = stripePrice.id
 
     // Upsert price record
-    await db.insert(stripePrices)
+    await db
+      .insert(stripePrices)
       .values({
         id: `${productId}:default`,
         productId,
@@ -278,7 +265,5 @@ async function syncOfferProductToStripe(
     },
   }
 
-  await db.update(products)
-    .set({ config: updatedConfig })
-    .where(eq(products.id, productId))
+  await db.update(products).set({ config: updatedConfig }).where(eq(products.id, productId))
 }
