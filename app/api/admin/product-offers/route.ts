@@ -121,6 +121,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         where: and(eq(productOffers.productId, data.productId), eq(productOffers.role, data.role)),
       })
 
+      console.log(`[DEBUG] Checking existing ${data.role} for product ${data.productId}:`, existing)
+
       if (existing) {
         return NextResponse.json(
           { error: `A ${data.role} is already linked to this product. Unlink it first.` },

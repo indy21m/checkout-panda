@@ -148,6 +148,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             offer: true,
           },
         })
+
+        // Debug: log linked offers for troubleshooting
+        if (offers.length > 0 || product.name.includes('Investing')) {
+          console.log(`[DEBUG] Product "${product.name}" (${product.id}) has ${offers.length} linked offers:`,
+            offers.map(o => ({ offerId: o.offerId, role: o.role, offerExists: !!o.offer }))
+          )
+        }
+
         return {
           ...product,
           linkedOffers: offers.map((link) => ({
