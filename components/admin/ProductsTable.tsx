@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 // Extended product record with usage info from API
 interface ExtendedProductRecord extends ProductRecord {
@@ -127,11 +128,17 @@ export function ProductsTable({ products }: ProductsTableProps) {
       })
       if (!response.ok) {
         const error = await response.json()
-        console.error('Sync failed:', error)
+        toast.error(error.error || 'Sync failed')
+        return
       }
+
+      toast.success('Synced to Stripe')
       router.refresh()
+      // Keep spinner showing briefly while UI updates
+      await new Promise((resolve) => setTimeout(resolve, 500))
     } catch (error) {
       console.error('Sync failed:', error)
+      toast.error('Sync failed')
     } finally {
       setSyncingProductId(null)
     }
@@ -236,23 +243,30 @@ export function ProductsTable({ products }: ProductsTableProps) {
   async function handleUnlinkOffer(): Promise<void> {
     if (dialogState.type !== 'confirmUnlink') return
 
-    const response = await fetch('/api/admin/product-offers', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productId: dialogState.productId,
-        offerId: dialogState.offerId,
-        role: dialogState.role,
-      }),
-    })
+    try {
+      const response = await fetch('/api/admin/product-offers', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: dialogState.productId,
+          offerId: dialogState.offerId,
+          role: dialogState.role,
+        }),
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
+      if (!response.ok) {
+        const error = await response.json()
+        toast.error(error.error || 'Failed to unlink offer')
+        return
+      }
+
+      toast.success('Offer unlinked successfully')
+      setDialogState({ type: 'none' })
+      router.refresh()
+    } catch (error) {
       console.error('Failed to unlink:', error)
+      toast.error('Failed to unlink offer')
     }
-
-    setDialogState({ type: 'none' })
-    router.refresh()
   }
 
   async function handleDeleteProduct(): Promise<void> {

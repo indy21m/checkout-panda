@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ProductRecord } from '@/lib/db/schema'
 import type { OfferRole } from '@/types'
 
@@ -66,6 +67,7 @@ export function OfferLinkDialog({
     try {
       // If replacing, first unlink the current offer
       if (isReplace && currentOfferId) {
+        console.log('Replace flow: unlinking current offer', { productId, currentOfferId, role })
         const unlinkResponse = await fetch('/api/admin/product-offers', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -78,14 +80,20 @@ export function OfferLinkDialog({
 
         if (!unlinkResponse.ok) {
           const error = await unlinkResponse.json()
-          throw new Error(error.error || 'Failed to unlink current offer')
+          console.error('Unlink failed:', error)
+          toast.error(error.error || 'Failed to unlink current offer')
+          return
         }
+        console.log('Unlink successful, now linking new offer')
       }
 
       await onLink(selectedOfferId, role)
+      toast.success(isReplace ? 'Offer replaced successfully' : 'Offer linked successfully')
       onClose()
     } catch (error) {
       console.error('Failed to link offer:', error)
+      const message = error instanceof Error ? error.message : 'Failed to link offer'
+      toast.error(message)
     } finally {
       setIsLinking(false)
     }
