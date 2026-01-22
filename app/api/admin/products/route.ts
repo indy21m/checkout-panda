@@ -152,7 +152,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         return {
           ...product,
           linkedOffers: offers
-            .filter((link) => link.offer !== null)
+            .filter((link) => link.offer != null && link.offer.isActive !== false)
             .map((link) => ({
               offerId: link.offerId,
               offerName: link.offer?.name ?? 'Unknown',

@@ -46,7 +46,7 @@ export function OrderBump({ orderBump, currency, checked, onChange }: OrderBumpP
         {/* Content */}
         <div className="flex-1">
           <p className="font-semibold text-gray-900">
-            Yes! Add {orderBump.title} for just{' '}
+            {orderBump.title}{' '}
             <span className="text-green-600">
               {formatMoney(orderBump.stripe.priceAmount, currency)}
             </span>

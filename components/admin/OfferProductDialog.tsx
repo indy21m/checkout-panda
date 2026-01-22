@@ -246,8 +246,17 @@ export function OfferProductDialog({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title shown to customers"
+              placeholder={
+                productType === 'bump'
+                  ? 'Yes! Add the Deep Dive Extended for just'
+                  : 'Title shown to customers'
+              }
             />
+            {productType === 'bump' && (
+              <p className="text-xs text-gray-500">
+                Full text shown before the price (e.g., &quot;Yes! Add [product] for just&quot;)
+              </p>
+            )}
           </div>
 
           {productType !== 'bump' && (
