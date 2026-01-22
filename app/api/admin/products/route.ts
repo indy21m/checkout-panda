@@ -140,7 +140,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // For main products, get linked offers count
+        // For main products, get linked offers
         const offers = await db.query.productOffers.findMany({
           where: eq(productOffers.productId, product.id),
           orderBy: [asc(productOffers.position)],
@@ -148,13 +148,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             offer: true,
           },
         })
-
-        // Debug: log linked offers for troubleshooting
-        if (offers.length > 0 || product.name.includes('Investing')) {
-          console.log(`[DEBUG] Product "${product.name}" (${product.id}) has ${offers.length} linked offers:`,
-            offers.map(o => ({ offerId: o.offerId, role: o.role, offerExists: !!o.offer }))
-          )
-        }
 
         return {
           ...product,
