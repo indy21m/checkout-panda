@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Dialog,
@@ -54,28 +54,40 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
   const [currency, setCurrency] = useState<'USD' | 'EUR' | 'DKK'>('DKK')
   const [pricingTiers, setPricingTiers] = useState<PricingTierForm[]>([])
 
-  // Initialize form when product changes
-  useState(() => {
-    if (product) {
-      setName(product.name)
-      setCurrency(product.config.stripe.currency)
-      setPricingTiers(
-        (product.config.stripe.pricingTiers ?? []).map((tier) => ({
-          id: tier.id,
-          label: tier.label,
-          priceAmount: tier.priceAmount / 100, // Convert from cents for display
-          originalPrice: tier.originalPrice ? tier.originalPrice / 100 : undefined,
-          isDefault: tier.isDefault ?? false,
-          description: tier.description,
-          hasInstallments: !!tier.installments,
-          installmentCount: tier.installments?.count,
-          amountPerPayment: tier.installments
-            ? tier.installments.amountPerPayment / 100
-            : undefined,
-        }))
-      )
+  function mapPricingTiers(): PricingTierForm[] {
+    if (!product) return []
+    const tiers = product.config.stripe.pricingTiers ?? []
+    if (tiers.length === 0) {
+      return [
+        {
+          id: `tier-${Date.now()}`,
+          label: 'Pay in Full',
+          priceAmount: product.config.stripe.priceAmount / 100,
+          isDefault: true,
+          hasInstallments: false,
+        },
+      ]
     }
-  })
+    return tiers.map((tier) => ({
+      id: tier.id,
+      label: tier.label,
+      priceAmount: tier.priceAmount / 100, // Convert from cents for display
+      originalPrice: tier.originalPrice ? tier.originalPrice / 100 : undefined,
+      isDefault: tier.isDefault ?? false,
+      description: tier.description,
+      hasInstallments: !!tier.installments,
+      installmentCount: tier.installments?.count,
+      amountPerPayment: tier.installments ? tier.installments.amountPerPayment / 100 : undefined,
+    }))
+  }
+
+  // Initialize form when product changes
+  useEffect(() => {
+    if (!product) return
+    setName(product.name)
+    setCurrency(product.config.stripe.currency)
+    setPricingTiers(mapPricingTiers())
+  }, [product])
 
   // Reset form when dialog opens with new product
   const handleOpenChange = (isOpen: boolean) => {
@@ -86,21 +98,7 @@ export function ProductEditDialog({ product, open, onClose }: ProductEditDialogP
     if (product) {
       setName(product.name)
       setCurrency(product.config.stripe.currency)
-      setPricingTiers(
-        (product.config.stripe.pricingTiers ?? []).map((tier) => ({
-          id: tier.id,
-          label: tier.label,
-          priceAmount: tier.priceAmount / 100,
-          originalPrice: tier.originalPrice ? tier.originalPrice / 100 : undefined,
-          isDefault: tier.isDefault ?? false,
-          description: tier.description,
-          hasInstallments: !!tier.installments,
-          installmentCount: tier.installments?.count,
-          amountPerPayment: tier.installments
-            ? tier.installments.amountPerPayment / 100
-            : undefined,
-        }))
-      )
+      setPricingTiers(mapPricingTiers())
       setError(null)
       setSaveState('idle')
     }

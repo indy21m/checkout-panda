@@ -109,6 +109,15 @@ export function ProductsTable({ products }: ProductsTableProps) {
   const editingProduct = products.find((p) => p.id === editingProductId)
   const expandedProduct = products.find((p) => p.id === expandedProductId)
 
+  const getLastUpdatedLabel = (date: Date | null): string => {
+    if (!date) return 'Not updated yet'
+    return `Updated ${date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })}`
+  }
+
   // Filter products by type based on top tab
   const filteredProducts = products.filter((p) => {
     if (topTab === 'products') return p.type === 'main'
@@ -309,7 +318,11 @@ export function ProductsTable({ products }: ProductsTableProps) {
   }
 
   function toggleExpand(productId: string): void {
-    setExpandedProductId((prev) => (prev === productId ? null : productId))
+    setExpandedProductId((prev) => {
+      if (prev === productId) return null
+      return productId
+    })
+    setActiveTab('pages')
   }
 
   const topTabLabel = {
@@ -828,20 +841,23 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                       </h4>
                                       <Pencil className="h-3 w-3 text-gray-400" />
                                     </div>
-                                    <div className="space-y-1">
-                                      <p className="text-sm text-gray-700">{product.name}</p>
-                                      <p className="text-xs text-gray-500">
-                                        {product.config.stripe.currency} ·{' '}
-                                        {formatPrice(
-                                          product.config.stripe.priceAmount,
-                                          product.config.stripe.currency
-                                        )}
-                                      </p>
-                                      <p className="text-xs text-gray-400">
-                                        Edit price, tiers, and product name
-                                      </p>
-                                    </div>
+                                  <div className="space-y-1">
+                                    <p className="text-sm text-gray-700">{product.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {product.config.stripe.currency} ·{' '}
+                                      {formatPrice(
+                                        product.config.stripe.priceAmount,
+                                        product.config.stripe.currency
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                      Edit price, tiers, and product name
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                      {getLastUpdatedLabel(product.updatedAt)}
+                                    </p>
                                   </div>
+                                </div>
                                   {/* Checkout Page */}
                                   <div
                                     className="cursor-pointer rounded-lg border border-gray-200 p-4 transition-colors hover:border-gray-300 hover:bg-gray-50"
@@ -867,6 +883,11 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         {product.config.checkout.subtitle}
                                       </p>
                                     )}
+                                    <p className="text-xs text-gray-400">
+                                      {product.config.checkout?.image ? 'Image set' : 'No image'} ·
+                                      Benefits:{' '}
+                                      {product.config.checkout?.benefits?.length ?? 0}
+                                    </p>
                                   </div>
 
                                   {/* Thank You Page */}
@@ -894,6 +915,9 @@ export function ProductsTable({ products }: ProductsTableProps) {
                                         {product.config.thankYou.subheadline}
                                       </p>
                                     )}
+                                    <p className="text-xs text-gray-400">
+                                      Steps: {product.config.thankYou?.steps?.length ?? 0}
+                                    </p>
                                   </div>
                                 </div>
                               )}
