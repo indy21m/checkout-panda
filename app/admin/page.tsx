@@ -1,14 +1,10 @@
-import { db } from '@/lib/db'
-import { products } from '@/lib/db/schema'
-import { desc } from 'drizzle-orm'
+import { getProductsWithOffers } from '@/lib/db/products'
 import { ProductsTable } from '@/components/admin/ProductsTable'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  const allProducts = await db.query.products.findMany({
-    orderBy: [desc(products.createdAt)],
-  })
+  const allProducts = await getProductsWithOffers()
 
   return (
     <div className="space-y-6">

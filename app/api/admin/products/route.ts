@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { products, productOffers, type ProductConfig, type ProductType } from '@/lib/db/schema'
-import { desc, eq, and, asc } from 'drizzle-orm'
+import { products, type ProductConfig, type ProductType } from '@/lib/db/schema'
+import { getProductsWithOffers } from '@/lib/db/products'
 
 // Schema for stripe config (shared between all product types)
 const stripeConfigSchema = z.object({
@@ -107,99 +107,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const typeFilter = searchParams.get('type') as ProductType | null
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
-    let whereClause = includeInactive ? undefined : eq(products.isActive, true)
-
-    if (typeFilter) {
-      whereClause = includeInactive
-        ? eq(products.type, typeFilter)
-        : and(eq(products.isActive, true), eq(products.type, typeFilter))
-    }
-
-    const allProducts = await db.query.products.findMany({
-      where: whereClause,
-      orderBy: [desc(products.createdAt)],
+    const productsWithUsage = await getProductsWithOffers({
+      type: typeFilter,
+      includeInactive,
     })
-
-    // For each offer product, get which main products it's linked to
-    const productsWithUsage = await Promise.all(
-      allProducts.map(async (product) => {
-        if (product.type !== 'main') {
-          const linkedTo = await db.query.productOffers.findMany({
-            where: eq(productOffers.offerId, product.id),
-            with: {
-              product: true,
-            },
-          })
-          return {
-            ...product,
-            usedIn: linkedTo.map((link) => ({
-              productId: link.productId,
-              productName: link.product?.name ?? 'Unknown',
-              role: link.role,
-            })),
-          }
-        }
-
-        // For main products, get linked offers
-        const offerLinks = await db.query.productOffers.findMany({
-          where: eq(productOffers.productId, product.id),
-          orderBy: [asc(productOffers.position)],
-        })
-
-        // DEBUG: Log what we found
-        console.log('[DEBUG] Main product linkedOffers query:', {
-          productId: product.id,
-          productName: product.name,
-          offerLinksCount: offerLinks.length,
-          offerLinks: offerLinks.map((l) => ({
-            id: l.id,
-            offerId: l.offerId,
-            role: l.role,
-          })),
-        })
-
-        // Fetch offer products separately if we have links
-        const linkedOffers = await Promise.all(
-          offerLinks.map(async (link) => {
-            const offerProduct = await db.query.products.findFirst({
-              where: eq(products.id, link.offerId),
-            })
-
-            console.log('[DEBUG] Fetching offer product:', {
-              offerId: link.offerId,
-              found: !!offerProduct,
-              offerName: offerProduct?.name,
-              offerIsActive: offerProduct?.isActive,
-            })
-
-            if (!offerProduct) {
-              return null
-            }
-
-            return {
-              offerId: link.offerId,
-              offerName: offerProduct.name,
-              offerIsActive: offerProduct.isActive ?? true,
-              role: link.role,
-              position: link.position,
-              enabled: link.enabled,
-            }
-          })
-        )
-
-        const filteredOffers = linkedOffers.filter((o) => o != null)
-        console.log('[DEBUG] Final linkedOffers:', {
-          productId: product.id,
-          count: filteredOffers.length,
-          offers: filteredOffers,
-        })
-
-        return {
-          ...product,
-          linkedOffers: filteredOffers,
-        }
-      })
-    )
 
     return NextResponse.json({ products: productsWithUsage })
   } catch (error) {
