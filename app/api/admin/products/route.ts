@@ -152,10 +152,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         return {
           ...product,
           linkedOffers: offers
-            .filter((link) => link.offer != null && link.offer.isActive !== false)
+            .filter((link) => link.offer != null)
             .map((link) => ({
               offerId: link.offerId,
               offerName: link.offer?.name ?? 'Unknown',
+              offerIsActive: link.offer?.isActive ?? true,
               role: link.role,
               position: link.position,
               enabled: link.enabled,

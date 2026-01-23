@@ -39,6 +39,7 @@ interface ExtendedProductRecord extends ProductRecord {
   linkedOffers?: Array<{
     offerId: string
     offerName: string
+    offerIsActive: boolean
     role: string
     position: number
     enabled: boolean
