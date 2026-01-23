@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { productOffers, products } from '@/lib/db/schema'
+import { productOffers, products, type ProductConfig } from '@/lib/db/schema'
 import { eq, and, asc } from 'drizzle-orm'
 
 const linkOfferSchema = z.object({
@@ -221,6 +221,10 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     const body = await request.json()
     const data = unlinkOfferSchema.parse(body)
 
+    const mainProduct = await db.query.products.findFirst({
+      where: eq(products.id, data.productId),
+    })
+
     const deleted = await db
       .delete(productOffers)
       .where(
@@ -234,6 +238,21 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
 
     if (deleted.length === 0) {
       return NextResponse.json({ error: 'Offer link not found' }, { status: 404 })
+    }
+
+    if (data.role === 'bump' && mainProduct?.type === 'main' && mainProduct.config.orderBump) {
+      const updatedConfig: ProductConfig = {
+        ...mainProduct.config,
+        orderBump: {
+          ...mainProduct.config.orderBump,
+          enabled: false,
+        },
+      }
+
+      await db
+        .update(products)
+        .set({ config: updatedConfig, updatedAt: new Date() })
+        .where(eq(products.id, data.productId))
     }
 
     return NextResponse.json({ success: true })
