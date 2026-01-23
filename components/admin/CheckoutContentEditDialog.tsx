@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ImageUpload } from './ImageUpload'
 import type { CheckoutContent } from '@/types'
 
 interface CheckoutContentEditDialogProps {
@@ -133,14 +134,13 @@ export function CheckoutContentEditDialog({
             />
           </div>
 
-          {/* Image URL */}
+          {/* Image */}
           <div className="space-y-1">
-            <Label className="text-xs">Product Image URL</Label>
-            <Input
+            <Label className="text-xs">Product Image</Label>
+            <ImageUpload
               value={formData.image}
-              onChange={(e) => updateField('image', e.target.value)}
-              placeholder="https://..."
-              className="h-9 text-sm"
+              onChange={(value) => updateField('image', value)}
+              size="sm"
             />
           </div>
 

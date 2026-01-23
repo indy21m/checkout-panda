@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ImageUpload } from './ImageUpload'
-import { RefreshCw, Plus, Trash2, Check } from 'lucide-react'
+import { RefreshCw, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ProductConfig } from '@/lib/db/schema'
 import type { Currency } from '@/types'
@@ -59,7 +59,7 @@ export function ProductCreateDialog({ open, onClose }: ProductCreateDialogProps)
   const [checkoutTitle, setCheckoutTitle] = useState('')
   const [checkoutSubtitle, setCheckoutSubtitle] = useState('')
   const [image, setImage] = useState('')
-  const [benefits, setBenefits] = useState<string[]>([''])
+  const [benefits, setBenefits] = useState('')
   const [guarantee, setGuarantee] = useState('30-day money back guarantee')
 
   // Reset form when dialog opens
@@ -72,7 +72,7 @@ export function ProductCreateDialog({ open, onClose }: ProductCreateDialogProps)
       setCheckoutTitle('')
       setCheckoutSubtitle('')
       setImage('')
-      setBenefits([''])
+      setBenefits('')
       setGuarantee('30-day money back guarantee')
       setSaveState('idle')
       setError(null)
@@ -93,20 +93,6 @@ export function ProductCreateDialog({ open, onClose }: ProductCreateDialogProps)
     }
   }, [name, checkoutTitle])
 
-  function addBenefit(): void {
-    setBenefits([...benefits, ''])
-  }
-
-  function removeBenefit(index: number): void {
-    setBenefits(benefits.filter((_, i) => i !== index))
-  }
-
-  function updateBenefit(index: number, value: string): void {
-    const newBenefits = [...benefits]
-    newBenefits[index] = value
-    setBenefits(newBenefits)
-  }
-
   async function handleSave(): Promise<void> {
     if (!name || !slug || priceAmount <= 0 || !checkoutTitle) {
       setError('Please fill in all required fields')
@@ -119,7 +105,10 @@ export function ProductCreateDialog({ open, onClose }: ProductCreateDialogProps)
     try {
       const productId = generateId()
       const tierId = `tier-${Date.now()}`
-      const filteredBenefits = benefits.filter((b) => b.trim() !== '')
+      const filteredBenefits = benefits
+        .split('\n')
+        .map((benefit) => benefit.trim())
+        .filter((benefit) => benefit.length > 0)
 
       const config: ProductConfig = {
         stripe: {
@@ -305,41 +294,15 @@ export function ProductCreateDialog({ open, onClose }: ProductCreateDialogProps)
             </div>
 
             <div className="space-y-2">
-              <Label>Benefits</Label>
-              <div className="space-y-2">
-                {benefits.map((benefit, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={benefit}
-                      onChange={(e) => updateBenefit(index, e.target.value)}
-                      placeholder={`Benefit ${index + 1}`}
-                      disabled={isBusy}
-                    />
-                    {benefits.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeBenefit(index)}
-                        className="text-red-500"
-                        disabled={isBusy}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addBenefit}
+              <Label htmlFor="benefits">Benefits (one per line)</Label>
+              <Textarea
+                id="benefits"
+                value={benefits}
+                onChange={(e) => setBenefits(e.target.value)}
+                placeholder="Step-by-step video lessons&#10;Downloadable templates&#10;Lifetime access"
+                rows={4}
                 disabled={isBusy}
-              >
-                <Plus className="mr-1 h-4 w-4" />
-                Add Benefit
-              </Button>
+              />
             </div>
 
             <div className="space-y-2">
