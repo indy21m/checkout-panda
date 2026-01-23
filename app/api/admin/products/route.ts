@@ -146,19 +146,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           orderBy: [asc(productOffers.position)],
         })
 
+        // DEBUG: Log what we found
+        console.log('[DEBUG] Main product linkedOffers query:', {
+          productId: product.id,
+          productName: product.name,
+          offerLinksCount: offerLinks.length,
+          offerLinks: offerLinks.map((l) => ({
+            id: l.id,
+            offerId: l.offerId,
+            role: l.role,
+          })),
+        })
+
         // Fetch offer products separately if we have links
-        // (Drizzle relations can sometimes fail to join properly)
         const linkedOffers = await Promise.all(
           offerLinks.map(async (link) => {
             const offerProduct = await db.query.products.findFirst({
               where: eq(products.id, link.offerId),
             })
 
+            console.log('[DEBUG] Fetching offer product:', {
+              offerId: link.offerId,
+              found: !!offerProduct,
+              offerName: offerProduct?.name,
+              offerIsActive: offerProduct?.isActive,
+            })
+
             if (!offerProduct) {
-              console.log('[DEBUG] Orphaned link - offer not found:', {
-                linkId: link.id,
-                offerId: link.offerId,
-              })
               return null
             }
 
@@ -173,9 +187,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           })
         )
 
+        const filteredOffers = linkedOffers.filter((o) => o != null)
+        console.log('[DEBUG] Final linkedOffers:', {
+          productId: product.id,
+          count: filteredOffers.length,
+          offers: filteredOffers,
+        })
+
         return {
           ...product,
-          linkedOffers: linkedOffers.filter((o) => o != null),
+          linkedOffers: filteredOffers,
         }
       })
     )
