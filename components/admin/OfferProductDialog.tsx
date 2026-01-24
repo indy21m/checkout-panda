@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { RefreshCw, Plus, Trash2, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { ImageUpload } from './ImageUpload'
 import type { ProductRecord, ProductConfig, ProductType } from '@/lib/db/schema'
 import type { Currency } from '@/types'
 
@@ -378,13 +379,8 @@ export function OfferProductDialog({
 
           {/* Image */}
           <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://..."
-            />
+            <Label htmlFor="image">Image</Label>
+            <ImageUpload value={image} onChange={setImage} size="sm" />
           </div>
 
           {/* Upsell-specific: Urgency Text */}
