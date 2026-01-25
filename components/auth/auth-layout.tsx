@@ -43,7 +43,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg">
+      <div className="relative z-10" style={{ width: '100%', maxWidth: '32rem' }}>
         {/* Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
