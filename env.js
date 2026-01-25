@@ -11,8 +11,8 @@ export const env = createEnv({
     DATABASE_URL: z.string().url().optional(),
     // Admin access (comma-separated emails)
     ADMIN_EMAILS: z.string().optional(),
-    // Clerk (minimal - kept for infrastructure)
-    CLERK_SECRET_KEY: z.string(),
+    // Supabase (optional service role key for admin operations)
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     // Stripe
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
@@ -25,10 +25,9 @@ export const env = createEnv({
    * Must be prefixed with `NEXT_PUBLIC_`.
    */
   client: {
-    // Clerk
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().default('/sign-in'),
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().default('/sign-up'),
+    // Supabase
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string(),
     // Stripe
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
     // App
@@ -42,13 +41,12 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     ZAPIER_WEBHOOK_URL: process.env.ZAPIER_WEBHOOK_URL,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },

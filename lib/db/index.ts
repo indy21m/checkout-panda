@@ -1,27 +1,27 @@
-import { neon } from '@neondatabase/serverless'
-import { drizzle, type NeonHttpDatabase } from 'drizzle-orm/neon-http'
+import postgres from 'postgres'
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import * as schema from './schema'
 
 // Lazy initialization to avoid build-time errors
-let dbInstance: NeonHttpDatabase<typeof schema> | null = null
+let dbInstance: PostgresJsDatabase<typeof schema> | null = null
 
-export function getDb(): NeonHttpDatabase<typeof schema> {
+export function getDb(): PostgresJsDatabase<typeof schema> {
   if (!dbInstance) {
     const databaseUrl = process.env.DATABASE_URL
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not configured')
     }
-    const sql = neon(databaseUrl)
-    dbInstance = drizzle(sql, { schema })
+    const client = postgres(databaseUrl, { prepare: false })
+    dbInstance = drizzle(client, { schema })
   }
   return dbInstance
 }
 
 // For backwards compatibility - uses a proxy to lazy-load
-export const db = new Proxy({} as NeonHttpDatabase<typeof schema>, {
+export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
   get(_target, prop) {
-    return getDb()[prop as keyof NeonHttpDatabase<typeof schema>]
+    return getDb()[prop as keyof PostgresJsDatabase<typeof schema>]
   },
 })
 
-export type DB = NeonHttpDatabase<typeof schema>
+export type DB = PostgresJsDatabase<typeof schema>

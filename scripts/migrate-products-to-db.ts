@@ -12,8 +12,8 @@
  *   - Database tables created (run migrations/0001_create_products_tables.sql)
  */
 
-import { neon } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
+import postgres from 'postgres'
+import { drizzle } from 'drizzle-orm/postgres-js'
 import * as schema from '../lib/db/schema'
 import { products as configProducts } from '../config/products'
 import type { ProductConfig } from '../lib/db/schema'
@@ -27,8 +27,8 @@ async function main() {
   }
 
   console.log('Connecting to database...')
-  const sql = neon(databaseUrl)
-  const db = drizzle(sql, { schema })
+  const client = postgres(databaseUrl)
+  const db = drizzle(client, { schema })
 
   console.log(`Found ${Object.keys(configProducts).length} products to migrate\n`)
 
@@ -80,6 +80,9 @@ async function main() {
       console.error(`  ✗ Failed to migrate:`, error)
     }
   }
+
+  // Close the connection
+  await client.end()
 
   console.log('\nMigration complete!')
   console.log('Next steps:')

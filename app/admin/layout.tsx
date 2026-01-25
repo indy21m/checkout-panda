@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
 
@@ -9,13 +9,16 @@ function getAdminEmails(): string[] {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { userId, sessionClaims } = await auth()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!userId) {
+  if (!user) {
     redirect('/sign-in?redirect_url=/admin')
   }
 
-  const email = sessionClaims?.email as string | undefined
+  const email = user.email
   const adminEmails = getAdminEmails()
 
   // If no admin emails configured, allow any authenticated user (dev mode)
