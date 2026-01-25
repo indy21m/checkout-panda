@@ -8,6 +8,8 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     // Database (optional at build time, required for admin routes at runtime)
+    // Supports both Vercel's Supabase integration (POSTGRES_URL) and traditional naming (DATABASE_URL)
+    POSTGRES_URL: z.string().url().optional(),
     DATABASE_URL: z.string().url().optional(),
     // Admin access (comma-separated emails)
     ADMIN_EMAILS: z.string().optional(),
@@ -39,6 +41,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    POSTGRES_URL: process.env.POSTGRES_URL,
     DATABASE_URL: process.env.DATABASE_URL,
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,

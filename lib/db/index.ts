@@ -7,9 +7,10 @@ let dbInstance: PostgresJsDatabase<typeof schema> | null = null
 
 export function getDb(): PostgresJsDatabase<typeof schema> {
   if (!dbInstance) {
-    const databaseUrl = process.env.DATABASE_URL
+    // Support both Vercel's Supabase integration (POSTGRES_URL) and traditional naming (DATABASE_URL)
+    const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL
     if (!databaseUrl) {
-      throw new Error('DATABASE_URL is not configured')
+      throw new Error('Database URL is not configured (set POSTGRES_URL or DATABASE_URL)')
     }
     const client = postgres(databaseUrl, { prepare: false })
     dbInstance = drizzle(client, { schema })

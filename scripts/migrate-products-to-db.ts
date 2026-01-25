@@ -8,7 +8,7 @@
  *   npx tsx scripts/migrate-products-to-db.ts
  *
  * Prerequisites:
- *   - DATABASE_URL environment variable set
+ *   - POSTGRES_URL or DATABASE_URL environment variable set
  *   - Database tables created (run migrations/0001_create_products_tables.sql)
  */
 
@@ -20,9 +20,9 @@ import type { ProductConfig } from '../lib/db/schema'
 import type { Product, PricingTier } from '../types'
 
 async function main() {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL
   if (!databaseUrl) {
-    console.error('ERROR: DATABASE_URL environment variable is not set')
+    console.error('ERROR: POSTGRES_URL or DATABASE_URL environment variable is not set')
     process.exit(1)
   }
 
