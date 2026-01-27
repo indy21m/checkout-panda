@@ -210,6 +210,65 @@ export const stripePrices = pgTable('stripe_prices', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 })
 
+/**
+ * Calendar settings table - single-row config for scheduling
+ */
+export const calendarSettings = pgTable('calendar_settings', {
+  id: text('id').primaryKey().default('default'),
+  timezone: text('timezone').notNull().default('Europe/Copenhagen'),
+  weeklySchedule: jsonb('weekly_schedule')
+    .notNull()
+    .$type<import('@/types').WeeklySchedule>()
+    .default({
+      monday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      tuesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      wednesday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      thursday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      friday: { enabled: true, startTime: '09:00', endTime: '17:00' },
+      saturday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+      sunday: { enabled: false, startTime: '09:00', endTime: '17:00' },
+    }),
+  slotDurationMinutes: integer('slot_duration_minutes').notNull().default(30),
+  minNoticeHours: integer('min_notice_hours').notNull().default(24),
+  maxDaysInAdvance: integer('max_days_in_advance').notNull().default(30),
+  bufferMinutes: integer('buffer_minutes').notNull().default(15),
+  meetingTypes: jsonb('meeting_types')
+    .notNull()
+    .$type<import('@/types').MeetingType[]>()
+    .default([
+      { id: 'google-meet', label: 'Google Meet', enabled: true },
+      { id: 'phone', label: 'Phone Call', enabled: true },
+    ]),
+  googleCalendarConnected: boolean('google_calendar_connected').default(false),
+  googleAccessToken: text('google_access_token'),
+  googleRefreshToken: text('google_refresh_token'),
+  googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
+  googleCalendarId: text('google_calendar_id').default('primary'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+})
+
+/**
+ * Bookings table - stores scheduling bookings from the public page
+ */
+export const bookings = pgTable('bookings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  startTime: timestamp('start_time', { withTimezone: true }).notNull(),
+  endTime: timestamp('end_time', { withTimezone: true }).notNull(),
+  guestName: text('guest_name').notNull(),
+  guestEmail: text('guest_email').notNull(),
+  message: text('message'),
+  meetingType: text('meeting_type').notNull(),
+  status: text('status').$type<import('@/types').BookingStatus>().notNull().default('confirmed'),
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  cancellationReason: text('cancellation_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+})
+
+export type CalendarSettingsRecord = typeof calendarSettings.$inferSelect
+export type BookingRecord = typeof bookings.$inferSelect
+export type NewBooking = typeof bookings.$inferInsert
+
 export type ProductRecord = typeof products.$inferSelect
 export type NewProduct = typeof products.$inferInsert
 export type ProductOfferRecord = typeof productOffers.$inferSelect

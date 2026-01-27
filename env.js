@@ -20,6 +20,12 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: z.string(),
     // Integrations (optional)
     ZAPIER_WEBHOOK_URL: z.string().url().optional(),
+    // Google Calendar OAuth (for calendar scheduling)
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_REDIRECT_URI: z.string().url().optional(),
+    // Email (Resend)
+    RESEND_API_KEY: z.string().optional(),
   },
 
   /**
@@ -48,6 +54,10 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     ZAPIER_WEBHOOK_URL: process.env.ZAPIER_WEBHOOK_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,

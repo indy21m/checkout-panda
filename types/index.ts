@@ -286,3 +286,67 @@ export interface LinkedOffer {
 export interface AssembledProduct extends Product {
   linkedOffers?: LinkedOffer[]
 }
+
+// ============================================
+// Calendar Scheduling Types
+// ============================================
+
+export interface DaySchedule {
+  enabled: boolean
+  startTime: string // "09:00" (HH:mm format)
+  endTime: string // "17:00"
+}
+
+export interface WeeklySchedule {
+  monday: DaySchedule
+  tuesday: DaySchedule
+  wednesday: DaySchedule
+  thursday: DaySchedule
+  friday: DaySchedule
+  saturday: DaySchedule
+  sunday: DaySchedule
+}
+
+export type DayOfWeek = keyof WeeklySchedule
+
+export interface MeetingType {
+  id: string // e.g., 'google-meet', 'phone'
+  label: string // e.g., 'Google Meet', 'Phone Call'
+  enabled: boolean
+}
+
+export type BookingStatus = 'confirmed' | 'cancelled'
+
+export interface TimeSlot {
+  start: string // ISO 8601 datetime
+  end: string // ISO 8601 datetime
+}
+
+export interface BookingRecord {
+  id: string
+  startTime: Date
+  endTime: Date
+  guestName: string
+  guestEmail: string
+  message: string | null
+  meetingType: string
+  status: BookingStatus
+  cancelledAt: Date | null
+  cancellationReason: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CalendarSettingsRecord {
+  id: string
+  timezone: string
+  weeklySchedule: WeeklySchedule
+  slotDurationMinutes: number
+  minNoticeHours: number
+  maxDaysInAdvance: number
+  bufferMinutes: number
+  meetingTypes: MeetingType[]
+  googleCalendarConnected: boolean
+  googleCalendarId: string | null
+  updatedAt: Date
+}
