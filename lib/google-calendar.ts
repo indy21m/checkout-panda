@@ -2,6 +2,7 @@ import 'server-only'
 import { db } from '@/lib/db'
 import { calendarSettings } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { env } from '@/env'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -22,8 +23,8 @@ interface BusyPeriod {
  * Generate the Google OAuth consent URL
  */
 export function getGoogleAuthUrl(): string | null {
-  const clientId = process.env.GOOGLE_CLIENT_ID
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI
+  const clientId = env.GOOGLE_CLIENT_ID
+  const redirectUri = env.GOOGLE_REDIRECT_URI
 
   if (!clientId || !redirectUri) return null
 
@@ -48,9 +49,9 @@ export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens>
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+      client_id: env.GOOGLE_CLIENT_ID!,
+      client_secret: env.GOOGLE_CLIENT_SECRET!,
+      redirect_uri: env.GOOGLE_REDIRECT_URI!,
       grant_type: 'authorization_code',
     }),
   })
@@ -72,8 +73,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<GoogleTo
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       refresh_token: refreshToken,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id: env.GOOGLE_CLIENT_ID!,
+      client_secret: env.GOOGLE_CLIENT_SECRET!,
       grant_type: 'refresh_token',
     }),
   })
