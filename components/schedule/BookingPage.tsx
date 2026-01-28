@@ -116,7 +116,7 @@ export function BookingPage({ meetingTypes }: BookingPageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto" style={{ width: '100%', maxWidth: '28rem' }}>
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {/* Header */}
         <div className="border-b border-gray-100 bg-gray-50 px-6 py-5">
@@ -196,7 +196,6 @@ export function BookingPage({ meetingTypes }: BookingPageProps) {
 
           {step === 'form' && selectedSlot && (
             <BookingForm
-              selectedSlot={selectedSlot}
               meetingTypes={meetingTypes}
               onSubmit={handleSubmitBooking}
               submitting={submitting}

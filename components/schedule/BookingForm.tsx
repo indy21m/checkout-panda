@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import type { MeetingType, TimeSlot } from '@/types'
+import type { MeetingType } from '@/types'
 
 const bookingFormSchema = z.object({
   guestName: z.string().min(1, 'Name is required'),
@@ -18,7 +18,6 @@ const bookingFormSchema = z.object({
 type BookingFormData = z.infer<typeof bookingFormSchema>
 
 interface BookingFormProps {
-  selectedSlot: TimeSlot
   meetingTypes: MeetingType[]
   onSubmit: (data: BookingFormData) => Promise<void>
   submitting: boolean

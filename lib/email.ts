@@ -25,7 +25,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Bookings <bookings@checkout-panda.com>',
+        from: 'Bookings <bookings@mail.zoostack.com>',
         to,
         subject,
         html,
