@@ -54,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_start_time ON bookings(start_time);
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_guest_email ON bookings(guest_email);
 CREATE INDEX IF NOT EXISTS idx_bookings_upcoming ON bookings(start_time)
-  WHERE status = 'confirmed' AND start_time > NOW();
+  WHERE status = 'confirmed';
 
 -- Constraints
 ALTER TABLE bookings ADD CONSTRAINT bookings_status_check

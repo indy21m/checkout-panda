@@ -10,8 +10,16 @@ export async function GET(): Promise<NextResponse> {
 
   const url = getGoogleAuthUrl()
   if (!url) {
+    // Debug: show which env vars are missing
+    const missing = []
+    if (!process.env.GOOGLE_CLIENT_ID) missing.push('GOOGLE_CLIENT_ID')
+    if (!process.env.GOOGLE_CLIENT_SECRET) missing.push('GOOGLE_CLIENT_SECRET')
+    if (!process.env.GOOGLE_REDIRECT_URI) missing.push('GOOGLE_REDIRECT_URI')
+
     return NextResponse.json(
-      { error: 'Google Calendar is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI.' },
+      {
+        error: `Google Calendar is not configured. Missing: ${missing.join(', ') || 'unknown - check env var values'}`,
+      },
       { status: 500 }
     )
   }
