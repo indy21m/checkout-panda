@@ -2,11 +2,24 @@ import 'server-only'
 import { db } from '@/lib/db'
 import { calendarSettings } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { env } from '@/env'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_FREEBUSY_URL = 'https://www.googleapis.com/calendar/v3/freeBusy'
+
+// Read Google OAuth credentials at runtime (not build time) to support
+// environment variables added after deployment on Vercel
+function getGoogleCredentials(): {
+  clientId: string | undefined
+  clientSecret: string | undefined
+  redirectUri: string | undefined
+} {
+  return {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri: process.env.GOOGLE_REDIRECT_URI,
+  }
+}
 
 interface GoogleTokens {
   access_token: string
@@ -23,8 +36,7 @@ interface BusyPeriod {
  * Generate the Google OAuth consent URL
  */
 export function getGoogleAuthUrl(): string | null {
-  const clientId = env.GOOGLE_CLIENT_ID
-  const redirectUri = env.GOOGLE_REDIRECT_URI
+  const { clientId, redirectUri } = getGoogleCredentials()
 
   if (!clientId || !redirectUri) return null
 
@@ -44,14 +56,20 @@ export function getGoogleAuthUrl(): string | null {
  * Exchange an authorization code for tokens
  */
 export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens> {
+  const { clientId, clientSecret, redirectUri } = getGoogleCredentials()
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error('Google Calendar credentials not configured')
+  }
+
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id: env.GOOGLE_CLIENT_ID!,
-      client_secret: env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: env.GOOGLE_REDIRECT_URI!,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),
   })
@@ -68,13 +86,19 @@ export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens>
  * Refresh an expired access token
  */
 export async function refreshAccessToken(refreshToken: string): Promise<GoogleTokens> {
+  const { clientId, clientSecret } = getGoogleCredentials()
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Google Calendar credentials not configured')
+  }
+
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       refresh_token: refreshToken,
-      client_id: env.GOOGLE_CLIENT_ID!,
-      client_secret: env.GOOGLE_CLIENT_SECRET!,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: 'refresh_token',
     }),
   })
