@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createBooking, getCalendarSettings } from '@/lib/db/calendar'
+import { createBooking, getCalendarSettings, updateBookingWithMeetLink } from '@/lib/db/calendar'
 import { isSlotAvailable } from '@/lib/schedule'
 import { sendEmail } from '@/lib/email'
 import { bookingConfirmationEmail } from '@/lib/email-templates'
+import { createCalendarEvent, ensureValidAccessToken } from '@/lib/google-calendar'
 
 const bookingSchema = z.object({
   startTime: z.string().datetime(),
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // Create the booking
+    // Create the booking first
     const booking = await createBooking({
       startTime,
       endTime,
@@ -50,12 +51,54 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       meetingType: data.meetingType,
     })
 
+    let googleMeetLink: string | undefined
+
+    // If Google Calendar is connected and meeting type is Google Meet, create a calendar event
+    const isGoogleMeet = data.meetingType === 'google-meet'
+    if (settings.googleCalendarConnected && isGoogleMeet) {
+      try {
+        const accessToken = await ensureValidAccessToken({
+          googleAccessToken: settings.googleAccessToken,
+          googleRefreshToken: settings.googleRefreshToken,
+          googleTokenExpiresAt: settings.googleTokenExpiresAt,
+        })
+
+        if (accessToken) {
+          const calendarEvent = await createCalendarEvent({
+            accessToken,
+            calendarId: settings.googleCalendarId ?? 'primary',
+            summary: `Meeting with ${data.guestName}`,
+            description: data.message || `Booking via Checkout Panda`,
+            startTime,
+            endTime,
+            attendeeEmail: data.guestEmail,
+            attendeeName: data.guestName,
+            createMeetLink: true,
+          })
+
+          googleMeetLink = calendarEvent.hangoutLink
+
+          // Update booking with Meet link
+          if (googleMeetLink && booking) {
+            await updateBookingWithMeetLink(booking.id, {
+              googleMeetLink,
+              googleCalendarEventId: calendarEvent.id,
+            })
+          }
+        }
+      } catch (err) {
+        // Log but don't fail the booking if calendar event creation fails
+        console.error('Failed to create calendar event:', err)
+      }
+    }
+
     // Send confirmation email (non-blocking)
     const emailData = bookingConfirmationEmail({
       guestName: data.guestName,
       startTime,
       endTime,
       meetingType: meetingType.label,
+      googleMeetLink,
     })
     sendEmail({
       to: data.guestEmail,
@@ -63,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       html: emailData.html,
     }).catch((err) => console.error('Failed to send confirmation email:', err))
 
-    return NextResponse.json({ booking }, { status: 201 })
+    return NextResponse.json({ booking: { ...booking, googleMeetLink } }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

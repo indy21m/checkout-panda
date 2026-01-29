@@ -143,8 +143,25 @@ export async function createBooking(data: {
   guestEmail: string
   message?: string
   meetingType: string
+  googleMeetLink?: string
+  googleCalendarEventId?: string
 }) {
   const result = await db.insert(bookings).values(data).returning()
+  return result[0]
+}
+
+/**
+ * Update a booking with Google Meet link
+ */
+export async function updateBookingWithMeetLink(
+  id: string,
+  data: { googleMeetLink: string; googleCalendarEventId: string }
+) {
+  const result = await db
+    .update(bookings)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(bookings.id, id))
+    .returning()
   return result[0]
 }
 

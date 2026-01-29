@@ -39,6 +39,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <a href="/admin/calendar" className="text-sm text-gray-600 hover:text-gray-900">
                 Calendar
               </a>
+              <a
+                href="/schedule"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-emerald-600 hover:text-emerald-700"
+              >
+                View Booking Page
+              </a>
             </nav>
           </div>
           <span className="text-sm text-gray-500">{email}</span>

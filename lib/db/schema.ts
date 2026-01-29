@@ -258,6 +258,8 @@ export const bookings = pgTable('bookings', {
   guestEmail: text('guest_email').notNull(),
   message: text('message'),
   meetingType: text('meeting_type').notNull(),
+  googleMeetLink: text('google_meet_link'),
+  googleCalendarEventId: text('google_calendar_event_id'),
   status: text('status').$type<import('@/types').BookingStatus>().notNull().default('confirmed'),
   cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
   cancellationReason: text('cancellation_reason'),

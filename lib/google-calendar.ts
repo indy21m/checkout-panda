@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_FREEBUSY_URL = 'https://www.googleapis.com/calendar/v3/freeBusy'
+const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars'
 
 // Read Google OAuth credentials at runtime (not build time) to support
 // environment variables added after deployment on Vercel
@@ -40,11 +41,17 @@ export function getGoogleAuthUrl(): string | null {
 
   if (!clientId || !redirectUri) return null
 
+  // Request both freebusy (for availability) and events (for creating meetings with Meet links)
+  const scopes = [
+    'https://www.googleapis.com/auth/calendar.freebusy',
+    'https://www.googleapis.com/auth/calendar.events',
+  ].join(' ')
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: 'https://www.googleapis.com/auth/calendar.freebusy',
+    scope: scopes,
     access_type: 'offline',
     prompt: 'consent',
   })
@@ -180,4 +187,84 @@ export async function getFreeBusyPeriods(
     start: new Date(period.start),
     end: new Date(period.end),
   }))
+}
+
+interface CalendarEvent {
+  id: string
+  htmlLink: string
+  hangoutLink?: string
+}
+
+interface CreateEventParams {
+  accessToken: string
+  calendarId: string
+  summary: string
+  description?: string
+  startTime: Date
+  endTime: Date
+  attendeeEmail: string
+  attendeeName: string
+  createMeetLink: boolean
+}
+
+/**
+ * Create a calendar event with optional Google Meet link
+ */
+export async function createCalendarEvent({
+  accessToken,
+  calendarId,
+  summary,
+  description,
+  startTime,
+  endTime,
+  attendeeEmail,
+  attendeeName,
+  createMeetLink,
+}: CreateEventParams): Promise<CalendarEvent> {
+  const event: Record<string, unknown> = {
+    summary,
+    description,
+    start: {
+      dateTime: startTime.toISOString(),
+      timeZone: 'UTC',
+    },
+    end: {
+      dateTime: endTime.toISOString(),
+      timeZone: 'UTC',
+    },
+    attendees: [{ email: attendeeEmail, displayName: attendeeName }],
+  }
+
+  // Add conference data request for Google Meet
+  if (createMeetLink) {
+    event.conferenceData = {
+      createRequest: {
+        requestId: `meet-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        conferenceSolutionKey: { type: 'hangoutsMeet' },
+      },
+    }
+  }
+
+  const url = `${GOOGLE_CALENDAR_API}/${encodeURIComponent(calendarId)}/events${createMeetLink ? '?conferenceDataVersion=1' : ''}`
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(event),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to create calendar event: ${error}`)
+  }
+
+  const data = await response.json()
+  return {
+    id: data.id,
+    htmlLink: data.htmlLink,
+    hangoutLink: data.hangoutLink,
+  }
 }
