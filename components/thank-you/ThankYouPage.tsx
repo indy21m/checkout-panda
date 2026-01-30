@@ -4,19 +4,25 @@ import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import Link from 'next/link'
-import { CheckCircle, ArrowRight, Mail, Users, BookOpen } from 'lucide-react'
+import { CheckCircle, ArrowRight, Mail, Users, BookOpen, MessageSquarePlus } from 'lucide-react'
+import { TestimonialCarousel } from '@/components/testimonials'
 import type { Product } from '@/types'
+import type { TestimonialRecord } from '@/lib/db/schema'
 
 interface ThankYouPageProps {
   product: Product
   purchasedItems?: string[]
   paymentIntentId?: string
+  testimonials?: TestimonialRecord[]
+  testimonialFormSlug?: string
 }
 
 export function ThankYouPage({
   product,
   purchasedItems = ['main'],
   paymentIntentId: _paymentIntentId,
+  testimonials = [],
+  testimonialFormSlug,
 }: ThankYouPageProps) {
   const { thankYou } = product
 
@@ -172,11 +178,51 @@ export function ThankYouPage({
           </motion.div>
         )}
 
+        {/* Testimonials Section */}
+        {testimonials.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-10"
+          >
+            <h2 className="mb-4 text-center font-semibold text-gray-900">
+              What Others Are Saying
+            </h2>
+            <TestimonialCarousel testimonials={testimonials} />
+          </motion.div>
+        )}
+
+        {/* Share Your Experience CTA */}
+        {testimonialFormSlug && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95 }}
+            className="mt-8 rounded-xl border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-5 text-center"
+          >
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+              <MessageSquarePlus className="h-6 w-6 text-purple-600" />
+            </div>
+            <h3 className="font-semibold text-purple-900">Share Your Experience</h3>
+            <p className="mt-1 text-sm text-purple-700">
+              Loved {product.name}? Help others by sharing your story!
+            </p>
+            <Link
+              href={`/testimonials/${testimonialFormSlug}`}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-purple-700"
+            >
+              Write a Testimonial
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </motion.div>
+        )}
+
         {/* Support Section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.1 }}
           className="mt-12 rounded-lg border border-gray-100 bg-gray-50 p-4 text-center"
         >
           <h4 className="text-sm font-medium text-gray-700">Need Help?</h4>

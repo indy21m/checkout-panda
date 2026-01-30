@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getProductFromDb, getProductSlugs } from '@/config/products'
 import { CheckoutPage } from '@/components/checkout'
+import { getTestimonialsForProduct } from '@/lib/db/testimonials'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -43,5 +44,8 @@ export default async function ProductCheckoutPage({ params }: PageProps) {
     notFound()
   }
 
-  return <CheckoutPage product={product} />
+  // Fetch testimonials for this product (approved, featured first)
+  const testimonials = await getTestimonialsForProduct(product.id)
+
+  return <CheckoutPage product={product} testimonials={testimonials} />
 }

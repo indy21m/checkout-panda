@@ -7,14 +7,16 @@ import { ProductCard } from './ProductCard'
 import { PaymentSection } from './PaymentSection'
 import { formatMoney } from '@/lib/currency'
 import { DEFAULT_COUNTRY } from '@/lib/countries'
-import { Star } from 'lucide-react'
+import { TestimonialCarousel } from '@/components/testimonials'
 import type { Product, PriceBreakdown } from '@/types'
+import type { TestimonialRecord } from '@/lib/db/schema'
 
 interface CheckoutPageProps {
   product: Product
+  testimonials?: TestimonialRecord[]
 }
 
-export function CheckoutPage({ product }: CheckoutPageProps) {
+export function CheckoutPage({ product, testimonials = [] }: CheckoutPageProps) {
   const router = useRouter()
 
   // Checkout state
@@ -165,64 +167,9 @@ export function CheckoutPage({ product }: CheckoutPageProps) {
               couponCode={couponCode}
             />
 
-            {/* Testimonials */}
-            {(product.checkout.testimonials || product.checkout.testimonial) && (
-              <div className="space-y-4">
-                {product.checkout.testimonials
-                  ? product.checkout.testimonials.map((testimonial, index) => (
-                      <div
-                        key={index}
-                        className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-                      >
-                        {/* Star Rating */}
-                        <div className="mb-3 flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-                        <p className="text-sm leading-relaxed text-gray-700">{testimonial.quote}</p>
-                        <div className="mt-4 flex items-center gap-3">
-                          {/* Avatar */}
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
-                            {testimonial.author
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            {testimonial.author}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  : product.checkout.testimonial && (
-                      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                        <div className="mb-3 flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </div>
-                        <p className="text-sm leading-relaxed text-gray-700">
-                          {product.checkout.testimonial.quote}
-                        </p>
-                        <div className="mt-4 flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-semibold text-white">
-                            {product.checkout.testimonial.author
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            {product.checkout.testimonial.author}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-              </div>
+            {/* Dynamic Testimonials Carousel */}
+            {testimonials.length > 0 && (
+              <TestimonialCarousel testimonials={testimonials} />
             )}
           </div>
 

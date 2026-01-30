@@ -241,6 +241,14 @@ export async function getTestimonialsForProduct(
   })
 }
 
+export async function getTestimonialFormByProductId(
+  productId: string
+): Promise<TestimonialFormRecord | undefined> {
+  return db.query.testimonialForms.findFirst({
+    where: eq(testimonialForms.productId, productId),
+  })
+}
+
 // ============================================================================
 // WIDGET DATA FETCHING (combines widget config with testimonials)
 // ============================================================================

@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getProductFromDb } from '@/config/products'
 import { ThankYouPage } from '@/components/thank-you'
+import { getTestimonialsForProduct } from '@/lib/db/testimonials'
+import { getTestimonialFormByProductId } from '@/lib/db/testimonials'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -41,11 +43,19 @@ export default async function ProductThankYouPage({ params, searchParams }: Page
 
   const purchasedItems = purchases?.split(',') || ['main']
 
+  // Fetch testimonials and form for this product
+  const [testimonials, testimonialForm] = await Promise.all([
+    getTestimonialsForProduct(product.id),
+    getTestimonialFormByProductId(product.id),
+  ])
+
   return (
     <ThankYouPage
       product={product}
       purchasedItems={purchasedItems}
       paymentIntentId={payment_intent}
+      testimonials={testimonials}
+      testimonialFormSlug={testimonialForm?.slug}
     />
   )
 }

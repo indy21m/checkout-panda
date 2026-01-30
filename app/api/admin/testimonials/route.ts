@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { testimonials, testimonialForms, type TestimonialStatus } from '@/lib/db/schema'
 import { and, desc, eq } from 'drizzle-orm'
+import { createTestimonial } from '@/lib/db/testimonials'
 
 // GET: List testimonials with filters
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -60,6 +61,57 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error('Failed to fetch testimonials:', error)
     return NextResponse.json({ error: 'Failed to fetch testimonials' }, { status: 500 })
+  }
+}
+
+// POST: Create a new testimonial (manual add from admin)
+const createSchema = z.object({
+  formId: z.string().uuid('Invalid form ID'),
+  customerName: z.string().min(1, 'Name is required'),
+  customerEmail: z.string().email().nullable().optional(),
+  customerCompany: z.string().nullable().optional(),
+  rating: z.number().int().min(1).max(5),
+  content: z.string().min(1, 'Content is required'),
+  status: z.enum(['pending', 'approved', 'rejected']).default('approved'),
+  featured: z.boolean().default(false),
+})
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  try {
+    const body = await request.json()
+    const data = createSchema.parse(body)
+
+    // Verify form exists
+    const form = await db.query.testimonialForms.findFirst({
+      where: eq(testimonialForms.id, data.formId),
+    })
+
+    if (!form) {
+      return NextResponse.json({ error: 'Form not found' }, { status: 404 })
+    }
+
+    // Create the testimonial
+    const testimonial = await createTestimonial({
+      formId: data.formId,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail ?? '',
+      customerCompany: data.customerCompany ?? null,
+      content: data.content,
+      rating: data.rating,
+      status: data.status,
+      featured: data.featured,
+    })
+
+    return NextResponse.json({ testimonial }, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.issues },
+        { status: 400 }
+      )
+    }
+    console.error('Failed to create testimonial:', error)
+    return NextResponse.json({ error: 'Failed to create testimonial' }, { status: 500 })
   }
 }
 
