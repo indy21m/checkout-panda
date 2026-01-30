@@ -1,14 +1,51 @@
-import { FileText } from 'lucide-react'
+import { db } from '@/lib/db'
+import { testimonialForms, testimonials } from '@/lib/db/schema'
+import { eq, sql, count } from 'drizzle-orm'
+import { TestimonialFormsTable } from '@/components/admin/TestimonialFormsTable'
+import { getProductsWithOffers } from '@/lib/db/products'
 
-export default function TestimonialFormsPage() {
+export const dynamic = 'force-dynamic'
+
+async function getFormsWithCounts() {
+  return db
+    .select({
+      id: testimonialForms.id,
+      name: testimonialForms.name,
+      slug: testimonialForms.slug,
+      productId: testimonialForms.productId,
+      config: testimonialForms.config,
+      createdAt: testimonialForms.createdAt,
+      submissionCount: count(testimonials.id),
+    })
+    .from(testimonialForms)
+    .leftJoin(testimonials, eq(testimonials.formId, testimonialForms.id))
+    .groupBy(testimonialForms.id)
+    .orderBy(sql`${testimonialForms.createdAt} DESC`)
+}
+
+export default async function TestimonialFormsPage() {
+  // Fetch forms and products in parallel
+  const [forms, allProducts] = await Promise.all([
+    getFormsWithCounts(),
+    getProductsWithOffers({ type: 'main' }),
+  ])
+
+  // Transform products for the dropdown
+  const products = allProducts.map((p) => ({
+    id: p.id,
+    name: p.name,
+  }))
+
   return (
-    <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-      <FileText className="mx-auto h-12 w-12 text-gray-400" />
-      <h3 className="mt-4 text-lg font-medium text-gray-900">Collection Forms</h3>
-      <p className="mt-2 text-sm text-gray-500">
-        Create and manage testimonial collection forms.
-      </p>
-      <p className="mt-1 text-xs text-gray-400">Coming in Phase 2b</p>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Testimonial Forms</h2>
+        <p className="text-sm text-gray-500">
+          Create and manage forms to collect testimonials from your customers.
+        </p>
+      </div>
+
+      <TestimonialFormsTable forms={forms} products={products} />
     </div>
   )
 }
