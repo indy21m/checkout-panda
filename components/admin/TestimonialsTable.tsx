@@ -34,7 +34,9 @@ import {
   Trash2,
   Eye,
   Clock,
+  Plus,
 } from 'lucide-react'
+import { TestimonialAddDialog } from '@/components/admin/TestimonialAddDialog'
 import type { TestimonialStatus } from '@/lib/db/schema'
 
 interface TestimonialWithForm {
@@ -151,6 +153,7 @@ export function TestimonialsTable({ testimonials, forms }: TestimonialsTableProp
   const [viewingTestimonial, setViewingTestimonial] = useState<TestimonialWithForm | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   // Filter testimonials
   const filteredTestimonials = testimonials.filter((t) => {
@@ -267,9 +270,15 @@ export function TestimonialsTable({ testimonials, forms }: TestimonialsTableProp
           </Select>
         </div>
 
-        <div className="ml-auto text-sm text-gray-500">
-          {filteredTestimonials.length} testimonial
-          {filteredTestimonials.length !== 1 ? 's' : ''}
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            {filteredTestimonials.length} testimonial
+            {filteredTestimonials.length !== 1 ? 's' : ''}
+          </span>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Testimonial
+          </Button>
         </div>
       </div>
 
@@ -490,6 +499,13 @@ export function TestimonialsTable({ testimonials, forms }: TestimonialsTableProp
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Testimonial Dialog */}
+      <TestimonialAddDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        forms={forms}
+      />
     </>
   )
 }
