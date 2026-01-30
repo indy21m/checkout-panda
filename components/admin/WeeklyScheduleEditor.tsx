@@ -53,7 +53,7 @@ function TimeSelect({
       <SelectTrigger
         aria-label={label}
         className="h-9 border-gray-200 bg-white px-3 text-sm font-medium hover:border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500/20"
-        style={{ width: '7.5rem' }}
+        style={{ width: '8.5rem' }}
       >
         <SelectValue>
           {selectedOption && (

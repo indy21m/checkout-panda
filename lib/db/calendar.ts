@@ -45,6 +45,8 @@ export async function updateGoogleTokens(data: {
   googleCalendarConnected: boolean
   googleCalendarId?: string
   googleEmail?: string
+  googleName?: string
+  googlePicture?: string
 }) {
   const result = await db
     .update(calendarSettings)
@@ -66,8 +68,27 @@ export async function disconnectGoogleCalendar() {
       googleRefreshToken: null,
       googleTokenExpiresAt: null,
       googleEmail: null,
+      googleName: null,
+      googlePicture: null,
       updatedAt: new Date(),
     })
+    .where(eq(calendarSettings.id, 'default'))
+    .returning()
+  return result[0]
+}
+
+/**
+ * Update booking page profile settings
+ */
+export async function updateBookingPageSettings(data: {
+  displayName?: string
+  profilePicture?: string
+  meetingTitle?: string
+  introText?: string
+}) {
+  const result = await db
+    .update(calendarSettings)
+    .set({ ...data, updatedAt: new Date() })
     .where(eq(calendarSettings.id, 'default'))
     .returning()
   return result[0]

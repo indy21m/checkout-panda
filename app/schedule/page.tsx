@@ -12,9 +12,19 @@ export default async function SchedulePage() {
   const settings = await getCalendarSettings()
   const enabledMeetingTypes = settings.meetingTypes.filter((t) => t.enabled)
 
+  // Use custom display name/picture if set, otherwise fall back to Google profile
+  const profile = {
+    name: settings.displayName || settings.googleName || null,
+    picture: settings.profilePicture || settings.googlePicture || null,
+    meetingTitle: settings.meetingTitle || 'Intro Call',
+    introText: settings.introText || null,
+    duration: settings.slotDurationMinutes,
+    timezone: settings.timezone,
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <BookingPage meetingTypes={enabledMeetingTypes} />
+      <BookingPage meetingTypes={enabledMeetingTypes} profile={profile} />
     </div>
   )
 }

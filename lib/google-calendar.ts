@@ -42,11 +42,12 @@ export function getGoogleAuthUrl(): string | null {
 
   if (!clientId || !redirectUri) return null
 
-  // Request freebusy, events, and email scopes
+  // Request freebusy, events, email, and profile scopes
   const scopes = [
     'https://www.googleapis.com/auth/calendar.freebusy',
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
   ].join(' ')
 
   const params = new URLSearchParams({
@@ -91,10 +92,16 @@ export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens>
   return response.json()
 }
 
+export interface GoogleUserProfile {
+  email: string | null
+  name: string | null
+  picture: string | null
+}
+
 /**
- * Get user email from Google userinfo API
+ * Get user profile from Google userinfo API
  */
-export async function getUserEmail(accessToken: string): Promise<string | null> {
+export async function getUserProfile(accessToken: string): Promise<GoogleUserProfile> {
   const response = await fetch(GOOGLE_USERINFO_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -102,12 +109,24 @@ export async function getUserEmail(accessToken: string): Promise<string | null> 
   })
 
   if (!response.ok) {
-    console.error('Failed to get user email from Google:', await response.text())
-    return null
+    console.error('Failed to get user profile from Google:', await response.text())
+    return { email: null, name: null, picture: null }
   }
 
   const data = await response.json()
-  return data.email ?? null
+  return {
+    email: data.email ?? null,
+    name: data.name ?? null,
+    picture: data.picture ?? null,
+  }
+}
+
+/**
+ * Get user email from Google userinfo API (deprecated, use getUserProfile)
+ */
+export async function getUserEmail(accessToken: string): Promise<string | null> {
+  const profile = await getUserProfile(accessToken)
+  return profile.email
 }
 
 /**

@@ -245,6 +245,12 @@ export const calendarSettings = pgTable('calendar_settings', {
   googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
   googleCalendarId: text('google_calendar_id').default('primary'),
   googleEmail: text('google_email'),
+  googleName: text('google_name'),
+  googlePicture: text('google_picture'),
+  displayName: text('display_name'),
+  profilePicture: text('profile_picture'),
+  meetingTitle: text('meeting_title').default('Intro Call'),
+  introText: text('intro_text'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
 
