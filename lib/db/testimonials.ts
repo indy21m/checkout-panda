@@ -214,6 +214,34 @@ export async function deleteTestimonialWidget(id: string): Promise<boolean> {
 }
 
 // ============================================================================
+// PRODUCT TESTIMONIALS (for checkout/thank-you pages)
+// ============================================================================
+
+export async function getTestimonialsForProduct(
+  productId: string,
+  options?: { limit?: number }
+): Promise<TestimonialRecord[]> {
+  // Find forms linked to this product
+  const forms = await db.query.testimonialForms.findMany({
+    where: eq(testimonialForms.productId, productId),
+  })
+
+  if (forms.length === 0) return []
+
+  const formIds = forms.map((f) => f.id)
+
+  // Get approved testimonials, featured first
+  return db.query.testimonials.findMany({
+    where: and(
+      inArray(testimonials.formId, formIds),
+      eq(testimonials.status, 'approved')
+    ),
+    orderBy: [desc(testimonials.featured), desc(testimonials.createdAt)],
+    limit: options?.limit,
+  })
+}
+
+// ============================================================================
 // WIDGET DATA FETCHING (combines widget config with testimonials)
 // ============================================================================
 
