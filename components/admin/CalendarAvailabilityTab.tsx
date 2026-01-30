@@ -310,7 +310,7 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
               value={meetingTitle}
               onChange={(e) => setMeetingTitle(e.target.value)}
               placeholder="Intro Call"
-              className="max-w-sm"
+              className="w-full max-w-md"
             />
             <p className="mt-1 text-xs text-gray-500">
               Displayed as the main heading on your booking page
@@ -328,8 +328,8 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
               value={introText}
               onChange={(e) => setIntroText(e.target.value)}
               placeholder="Tell visitors what this meeting is about..."
-              rows={3}
-              className="max-w-md resize-none"
+              rows={4}
+              className="w-full max-w-lg resize-none"
             />
             <p className="mt-1 text-xs text-gray-500">
               A brief description shown below your name on the booking page
