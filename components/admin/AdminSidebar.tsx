@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -76,6 +76,10 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
   const [isHovering, setIsHovering] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  
+  // Use refs to prevent hover state thrashing
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -85,11 +89,38 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
     }
   }, [])
 
-  const toggleSidebar = (): void => {
-    const newState = !sidebarCollapsed
-    setSidebarCollapsed(newState)
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(newState))
-  }
+  const toggleSidebar = useCallback((): void => {
+    setSidebarCollapsed(prev => {
+      const newState = !prev
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(newState))
+      return newState
+    })
+  }, [])
+
+  // Debounced hover handlers to prevent flickering
+  const handleMouseEnter = useCallback((): void => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+      hoverTimeoutRef.current = null
+    }
+    setIsHovering(true)
+  }, [])
+
+  const handleMouseLeave = useCallback((): void => {
+    // Small delay before collapsing to prevent flicker during animation
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovering(false)
+    }, 100)
+  }, [])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -100,7 +131,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [sidebarCollapsed])
+  }, [toggleSidebar])
 
   useEffect(() => {
     setMobileMenuOpen(false)
@@ -110,7 +141,9 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
     return null
   }
 
-  const sidebarWidth = sidebarCollapsed && !isHovering ? 80 : 280
+  // Only expand on hover if sidebar is collapsed
+  const isExpanded = !sidebarCollapsed || isHovering
+  const sidebarWidth = isExpanded ? 280 : 80
 
   const isNavItemActive = (item: NavItem): boolean => {
     if (item.href === '/admin') {
@@ -124,21 +157,18 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
       {/* Logo Section */}
       <div className="p-6">
         <Link href="/admin" className="flex items-center gap-3">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-            className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg"
-          >
+          <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg transition-transform duration-200 hover:scale-105">
             <span className="text-xl">🐼</span>
-          </motion.div>
-          <AnimatePresence>
-            {(isMobile || !sidebarCollapsed || isHovering) && (
+          </div>
+          <AnimatePresence mode="wait">
+            {(isMobile || isExpanded) && (
               <motion.h2
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                key="title"
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-xl font-bold text-transparent"
+                className="overflow-hidden whitespace-nowrap bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-xl font-bold text-transparent"
               >
                 Checkout Panda
               </motion.h2>
@@ -150,17 +180,12 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto px-3">
         <ul className="space-y-1">
-          {navigation.map((item, index) => {
+          {navigation.map((item) => {
             const isActive = isNavItemActive(item)
             const Icon = item.icon
 
             return (
-              <motion.li
-                key={item.name}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
+              <li key={item.name}>
                 <Link
                   href={item.href}
                   className={cn(
@@ -180,9 +205,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
                   )}
 
                   <div className="relative z-10">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                    <div
                       className={cn(
                         'rounded-lg p-2 transition-all duration-200',
                         isActive
@@ -191,16 +214,18 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
                       )}
                     >
                       <Icon className="h-5 w-5" />
-                    </motion.div>
+                    </div>
                   </div>
 
-                  <AnimatePresence>
-                    {(isMobile || !sidebarCollapsed || isHovering) && (
+                  <AnimatePresence mode="wait">
+                    {(isMobile || isExpanded) && (
                       <motion.span
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        className="relative z-10 font-medium"
+                        key="label"
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="relative z-10 overflow-hidden whitespace-nowrap font-medium"
                       >
                         {item.name}
                       </motion.span>
@@ -208,10 +233,10 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
                   </AnimatePresence>
 
                   {!isActive && (
-                    <motion.div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-100/0 to-gray-100/0 transition-all duration-300 group-hover:from-gray-100/50 group-hover:to-gray-200/50" />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gray-100/0 to-gray-100/0 transition-all duration-300 group-hover:from-gray-100/50 group-hover:to-gray-200/50" />
                   )}
                 </Link>
-              </motion.li>
+              </li>
             )
           })}
         </ul>
@@ -223,18 +248,20 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
           <div
             className={cn(
               'flex items-center gap-3',
-              !isMobile && sidebarCollapsed && !isHovering && 'justify-center'
+              !isMobile && !isExpanded && 'justify-center'
             )}
           >
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 text-sm font-medium text-emerald-700">
               {userEmail.charAt(0).toUpperCase()}
             </div>
-            <AnimatePresence>
-              {(isMobile || !sidebarCollapsed || isHovering) && (
+            <AnimatePresence mode="wait">
+              {(isMobile || isExpanded) && (
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
+                  key="user-info"
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.15 }}
                   className="flex-1 overflow-hidden"
                 >
                   <p className="truncate text-sm font-medium text-gray-900">{userEmail}</p>
@@ -247,15 +274,17 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
       )}
 
       {/* Keyboard shortcut hint */}
-      <AnimatePresence>
-        {(isMobile || !sidebarCollapsed || isHovering) && (
+      <AnimatePresence mode="wait">
+        {(isMobile || isExpanded) && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="border-t border-gray-200/50 px-4 py-3"
+            key="shortcut"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden border-t border-gray-200/50"
           >
-            <p className="text-center text-xs text-gray-400">
+            <p className="px-4 py-3 text-center text-xs text-gray-400">
               <kbd className="rounded bg-gray-100 px-1.5 py-0.5">⌘</kbd>
               <span className="mx-1">+</span>
               <kbd className="rounded bg-gray-100 px-1.5 py-0.5">\</kbd>
@@ -313,21 +342,20 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
       {/* Desktop Sidebar */}
       <motion.nav
+        ref={sidebarRef}
         initial={false}
         animate={{ width: sidebarWidth }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className="relative hidden flex-col border-r border-white/20 bg-white/60 backdrop-blur-xl lg:flex"
       >
         <SidebarContent />
 
-        <motion.button
+        <button
           type="button"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
           onClick={toggleSidebar}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-lg transition-shadow duration-200 hover:shadow-xl"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 rounded-full border border-gray-200 bg-white p-1.5 shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl"
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {sidebarCollapsed ? (
@@ -335,7 +363,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
           ) : (
             <ChevronLeft className="h-3 w-3 text-gray-600" />
           )}
-        </motion.button>
+        </button>
       </motion.nav>
     </>
   )
