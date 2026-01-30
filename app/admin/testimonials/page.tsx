@@ -1,26 +1,41 @@
-import { MessageSquare } from 'lucide-react'
+import { db } from '@/lib/db'
+import { testimonials, testimonialForms } from '@/lib/db/schema'
+import { desc, eq } from 'drizzle-orm'
+import { TestimonialsTable } from '@/components/admin/TestimonialsTable'
 
-export default function TestimonialsPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Testimonials</h2>
-        <p className="text-sm text-gray-500">
-          Collect and display customer testimonials on your checkout pages.
-        </p>
-      </div>
+export const dynamic = 'force-dynamic'
 
-      <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-12 text-center">
-        <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">Coming Soon</h3>
-        <p className="mt-2 text-sm text-gray-500">
-          Testimonial management is being integrated from Testimonial Tiger.
-        </p>
-        <p className="mt-1 text-xs text-gray-400">
-          You&apos;ll be able to collect, curate, and embed testimonials directly in your checkout
-          flow.
-        </p>
-      </div>
-    </div>
-  )
+export default async function TestimonialsPage() {
+  // Fetch testimonials with form info
+  const testimonialResults = await db
+    .select({
+      id: testimonials.id,
+      formId: testimonials.formId,
+      customerName: testimonials.customerName,
+      customerEmail: testimonials.customerEmail,
+      customerCompany: testimonials.customerCompany,
+      customerPhoto: testimonials.customerPhoto,
+      content: testimonials.content,
+      rating: testimonials.rating,
+      status: testimonials.status,
+      featured: testimonials.featured,
+      createdAt: testimonials.createdAt,
+      approvedAt: testimonials.approvedAt,
+      formName: testimonialForms.name,
+      formSlug: testimonialForms.slug,
+    })
+    .from(testimonials)
+    .leftJoin(testimonialForms, eq(testimonials.formId, testimonialForms.id))
+    .orderBy(desc(testimonials.createdAt))
+
+  // Fetch all forms for the filter dropdown
+  const forms = await db
+    .select({
+      id: testimonialForms.id,
+      name: testimonialForms.name,
+    })
+    .from(testimonialForms)
+    .orderBy(desc(testimonialForms.createdAt))
+
+  return <TestimonialsTable testimonials={testimonialResults} forms={forms} />
 }
