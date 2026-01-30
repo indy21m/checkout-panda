@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
+import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
 function getAdminEmails(): string[] {
   const adminEmails = env.ADMIN_EMAILS
@@ -27,24 +28,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-semibold text-gray-900">Checkout Panda Admin</h1>
-            <nav className="flex gap-4">
-              <a href="/admin" className="text-sm text-gray-600 hover:text-gray-900">
-                Products
-              </a>
-              <a href="/admin/calendar" className="text-sm text-gray-600 hover:text-gray-900">
-                Calendar
-              </a>
-            </nav>
-          </div>
-          <span className="text-sm text-gray-500">{email}</span>
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl p-6">{children}</main>
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <AdminSidebar userEmail={email} />
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+          <div className="mx-auto max-w-6xl">{children}</div>
+        </main>
+      </div>
     </div>
   )
 }
