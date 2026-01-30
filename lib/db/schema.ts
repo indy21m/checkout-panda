@@ -274,6 +274,107 @@ export const bookings = pgTable('bookings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
 
+/**
+ * Testimonial status enum
+ */
+export type TestimonialStatus = 'pending' | 'approved' | 'rejected'
+
+/**
+ * Testimonial form config stored as JSONB
+ */
+export interface TestimonialFormConfig {
+  heading?: string
+  description?: string
+  thankYouMessage?: string
+  collectCompany?: boolean
+  collectPhoto?: boolean
+  requireRating?: boolean
+  customFields?: Array<{
+    id: string
+    label: string
+    type: 'text' | 'textarea'
+    required?: boolean
+  }>
+}
+
+/**
+ * Testimonial widget config stored as JSONB
+ */
+export interface TestimonialWidgetConfig {
+  filterByForms?: string[] // Form IDs to filter by
+  selectedIds?: string[] // Specific testimonial IDs to show
+  testimonialOrder?: 'newest' | 'oldest' | 'rating' | 'random'
+  maxItems?: number
+  onlyFeatured?: boolean
+  layout?: 'grid' | 'carousel' | 'list' | 'masonry'
+  showRating?: boolean
+  showCompany?: boolean
+  showPhoto?: boolean
+}
+
+/**
+ * Testimonial forms table - collection forms for gathering testimonials
+ */
+export const testimonialForms = pgTable('testimonial_forms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: text('product_id').references(() => products.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  config: jsonb('config').$type<TestimonialFormConfig>().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})
+
+/**
+ * Testimonials table - individual testimonial submissions
+ */
+export const testimonials = pgTable('testimonials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  formId: uuid('form_id')
+    .notNull()
+    .references(() => testimonialForms.id, { onDelete: 'cascade' }),
+  customerName: text('customer_name').notNull(),
+  customerEmail: text('customer_email').notNull(),
+  customerCompany: text('customer_company'),
+  customerPhoto: text('customer_photo'),
+  content: text('content').notNull(),
+  rating: integer('rating').notNull(), // 1-5
+  status: text('status').$type<TestimonialStatus>().notNull().default('pending'),
+  featured: boolean('featured').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+})
+
+/**
+ * Testimonial widgets table - configurable display widgets
+ */
+export const testimonialWidgets = pgTable('testimonial_widgets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  config: jsonb('config').$type<TestimonialWidgetConfig>().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})
+
+/**
+ * Relations for testimonial forms
+ */
+export const testimonialFormsRelations = relations(testimonialForms, ({ one, many }) => ({
+  product: one(products, {
+    fields: [testimonialForms.productId],
+    references: [products.id],
+  }),
+  testimonials: many(testimonials),
+}))
+
+/**
+ * Relations for testimonials
+ */
+export const testimonialsRelations = relations(testimonials, ({ one }) => ({
+  form: one(testimonialForms, {
+    fields: [testimonials.formId],
+    references: [testimonialForms.id],
+  }),
+}))
+
 export type CalendarSettingsRecord = typeof calendarSettings.$inferSelect
 export type BookingRecord = typeof bookings.$inferSelect
 export type NewBooking = typeof bookings.$inferInsert
@@ -284,3 +385,10 @@ export type ProductOfferRecord = typeof productOffers.$inferSelect
 export type NewProductOffer = typeof productOffers.$inferInsert
 export type StripePriceRecord = typeof stripePrices.$inferSelect
 export type NewStripePrice = typeof stripePrices.$inferInsert
+
+export type TestimonialFormRecord = typeof testimonialForms.$inferSelect
+export type NewTestimonialForm = typeof testimonialForms.$inferInsert
+export type TestimonialRecord = typeof testimonials.$inferSelect
+export type NewTestimonial = typeof testimonials.$inferInsert
+export type TestimonialWidgetRecord = typeof testimonialWidgets.$inferSelect
+export type NewTestimonialWidget = typeof testimonialWidgets.$inferInsert
