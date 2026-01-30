@@ -1,6 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 import type { TimeSlot } from '@/types'
 
 interface TimeSlotPickerProps {
@@ -8,6 +9,7 @@ interface TimeSlotPickerProps {
   selectedSlot: TimeSlot | null
   onSelectSlot: (slot: TimeSlot) => void
   loading: boolean
+  timezone?: string
 }
 
 export function TimeSlotPicker({
@@ -15,7 +17,18 @@ export function TimeSlotPicker({
   selectedSlot,
   onSelectSlot,
   loading,
+  timezone,
 }: TimeSlotPickerProps) {
+  const formatTime = (isoTime: string) => {
+    try {
+      if (timezone) {
+        return formatInTimeZone(new Date(isoTime), timezone, 'h:mm a')
+      }
+      return format(new Date(isoTime), 'h:mm a')
+    } catch {
+      return format(new Date(isoTime), 'h:mm a')
+    }
+  }
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -36,7 +49,6 @@ export function TimeSlotPicker({
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {slots.map((slot) => {
         const isSelected = selectedSlot?.start === slot.start
-        const startTime = format(new Date(slot.start), 'h:mm a')
 
         return (
           <button
@@ -46,12 +58,12 @@ export function TimeSlotPicker({
             className={`
               rounded-lg border px-4 py-3 text-sm font-medium transition-colors
               ${isSelected
-                ? 'border-blue-600 bg-blue-600 text-white'
-                : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                ? 'border-emerald-600 bg-emerald-600 text-white'
+                : 'border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50'
               }
             `}
           >
-            {startTime}
+            {formatTime(slot.start)}
           </button>
         )
       })}

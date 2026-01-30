@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { WeeklyScheduleEditor } from '@/components/admin/WeeklyScheduleEditor'
 import { BookingRulesEditor } from '@/components/admin/BookingRulesEditor'
 import { GoogleCalendarConnect } from '@/components/admin/GoogleCalendarConnect'
@@ -18,6 +19,7 @@ import {
   Plus,
   X,
   Save,
+  FileText,
 } from 'lucide-react'
 import type { WeeklySchedule, MeetingType } from '@/types'
 import { cn } from '@/lib/utils'
@@ -32,6 +34,8 @@ interface CalendarAvailabilityTabProps {
     bufferMinutes: number
     meetingTypes: MeetingType[]
     googleCalendarConnected: boolean
+    meetingTitle: string
+    introText: string | null
   }
 }
 
@@ -49,6 +53,15 @@ const COMMON_TIMEZONES = [
   'Australia/Sydney',
   'Pacific/Auckland',
 ]
+
+// Ensure we always have a valid timezone list that includes the current value
+function getTimezoneOptions(currentTimezone: string): string[] {
+  if (!currentTimezone || COMMON_TIMEZONES.includes(currentTimezone)) {
+    return COMMON_TIMEZONES
+  }
+  // Add current timezone at the top if it's not in the list
+  return [currentTimezone, ...COMMON_TIMEZONES]
+}
 
 interface SectionCardProps {
   icon: React.ReactNode
@@ -106,6 +119,8 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
   const [googleConnected, setGoogleConnected] = useState(
     initialSettings.googleCalendarConnected
   )
+  const [meetingTitle, setMeetingTitle] = useState(initialSettings.meetingTitle)
+  const [introText, setIntroText] = useState(initialSettings.introText ?? '')
   const [saving, setSaving] = useState(false)
   const [newTypeLabel, setNewTypeLabel] = useState('')
 
@@ -120,6 +135,8 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
           weeklySchedule: schedule,
           ...rules,
           meetingTypes,
+          meetingTitle,
+          introText: introText || null,
         }),
       })
 
@@ -173,7 +190,7 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
           onChange={(e) => setTimezone(e.target.value)}
           className="w-full max-w-xs rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm font-medium text-gray-900 transition-colors hover:border-gray-300 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
         >
-          {COMMON_TIMEZONES.map((tz) => (
+          {getTimezoneOptions(initialSettings.timezone).map((tz) => (
             <option key={tz} value={tz}>
               {tz.replace(/_/g, ' ')}
             </option>
@@ -208,15 +225,15 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
         description="Choose which meeting formats guests can select"
         delay={0.15}
       >
-        <div className="space-y-3">
+        <div className="space-y-2">
           {meetingTypes.map((type) => (
             <div
               key={type.id}
               className={cn(
-                'flex items-center justify-between rounded-lg border px-4 py-3 transition-all',
+                'flex items-center justify-between rounded-lg border px-4 py-2.5 transition-all',
                 type.enabled
-                  ? 'border-emerald-200 bg-emerald-50/50'
-                  : 'border-gray-200 bg-gray-50/50'
+                  ? 'border-gray-200 bg-white'
+                  : 'border-gray-100 bg-gray-50/50'
               )}
             >
               <div className="flex items-center gap-3">
@@ -273,12 +290,60 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
         </div>
       </SectionCard>
 
+      {/* Booking Page Settings */}
+      <SectionCard
+        icon={<FileText className="h-5 w-5" />}
+        title="Booking Page"
+        description="Customize how your booking page appears to visitors"
+        delay={0.2}
+      >
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="meeting-title"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Meeting Title
+            </label>
+            <Input
+              id="meeting-title"
+              value={meetingTitle}
+              onChange={(e) => setMeetingTitle(e.target.value)}
+              placeholder="Intro Call"
+              className="max-w-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Displayed as the main heading on your booking page
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor="intro-text"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Description
+            </label>
+            <Textarea
+              id="intro-text"
+              value={introText}
+              onChange={(e) => setIntroText(e.target.value)}
+              placeholder="Tell visitors what this meeting is about..."
+              rows={3}
+              className="max-w-md resize-none"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              A brief description shown below your name on the booking page
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
       {/* Integrations */}
       <SectionCard
         icon={<Plug className="h-5 w-5" />}
         title="Integrations"
         description="Connect external calendars to sync your availability"
-        delay={0.2}
+        delay={0.25}
       >
         <GoogleCalendarConnect
           connected={googleConnected}
@@ -290,7 +355,7 @@ export function CalendarAvailabilityTab({ initialSettings }: CalendarAvailabilit
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.25 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
         className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-gradient-to-r from-gray-50 to-white p-4"
       >
         <p className="text-sm text-gray-500">

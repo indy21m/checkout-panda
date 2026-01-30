@@ -26,6 +26,8 @@ export async function updateCalendarSettings(data: {
   maxDaysInAdvance?: number
   bufferMinutes?: number
   meetingTypes?: MeetingType[]
+  meetingTitle?: string
+  introText?: string | null
 }) {
   const result = await db
     .update(calendarSettings)

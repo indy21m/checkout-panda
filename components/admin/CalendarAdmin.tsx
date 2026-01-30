@@ -16,6 +16,8 @@ interface CalendarSettings {
   bufferMinutes: number
   meetingTypes: MeetingType[]
   googleCalendarConnected: boolean
+  meetingTitle: string
+  introText: string | null
 }
 
 interface Booking {
@@ -119,6 +121,8 @@ export function CalendarAdmin({ settings, bookings }: CalendarAdminProps) {
                 bufferMinutes: settings.bufferMinutes,
                 meetingTypes: settings.meetingTypes,
                 googleCalendarConnected: settings.googleCalendarConnected,
+                meetingTitle: settings.meetingTitle,
+                introText: settings.introText,
               }}
             />
           </TabsContent>

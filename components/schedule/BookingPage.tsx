@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { format } from 'date-fns'
-import { ArrowLeft, Clock, Globe } from 'lucide-react'
+import { formatInTimeZone } from 'date-fns-tz'
+import { ArrowLeft, Clock, Globe, ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import { DatePicker } from '@/components/schedule/DatePicker'
 import { TimeSlotPicker } from '@/components/schedule/TimeSlotPicker'
@@ -11,6 +12,35 @@ import { BookingConfirmation } from '@/components/schedule/BookingConfirmation'
 import type { MeetingType, TimeSlot } from '@/types'
 
 type Step = 'date' | 'time' | 'form' | 'confirmation'
+
+const COMMON_TIMEZONES = [
+  { value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
+  { value: 'America/Denver', label: 'Mountain Time (US)' },
+  { value: 'America/Chicago', label: 'Central Time (US)' },
+  { value: 'America/New_York', label: 'Eastern Time (US)' },
+  { value: 'Europe/London', label: 'London' },
+  { value: 'Europe/Paris', label: 'Paris' },
+  { value: 'Europe/Berlin', label: 'Berlin' },
+  { value: 'Europe/Copenhagen', label: 'Copenhagen' },
+  { value: 'Asia/Tokyo', label: 'Tokyo' },
+  { value: 'Asia/Shanghai', label: 'Shanghai' },
+  { value: 'Australia/Sydney', label: 'Sydney' },
+  { value: 'Pacific/Auckland', label: 'Auckland' },
+]
+
+function getTimezoneLabel(tz: string): string {
+  const found = COMMON_TIMEZONES.find((t) => t.value === tz)
+  if (found) return found.label
+  return tz.replace(/_/g, ' ').replace(/^.*\//, '')
+}
+
+function detectUserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    return 'America/New_York'
+  }
+}
 
 interface Profile {
   name: string | null
@@ -43,6 +73,24 @@ export function BookingPage({ meetingTypes, profile }: BookingPageProps) {
   const [submitting, setSubmitting] = useState(false)
   const [confirmation, setConfirmation] = useState<ConfirmationData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTimezone, setSelectedTimezone] = useState(() => detectUserTimezone())
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
+
+  // Build timezone options ensuring selected and host timezones are included
+  const timezoneOptions = useMemo(() => {
+    const values = new Set(COMMON_TIMEZONES.map((t) => t.value))
+    const result = [...COMMON_TIMEZONES]
+
+    // Add selected timezone if not in list
+    if (selectedTimezone && !values.has(selectedTimezone)) {
+      result.unshift({ value: selectedTimezone, label: getTimezoneLabel(selectedTimezone) })
+    }
+    // Add host timezone if not in list
+    if (profile.timezone && !values.has(profile.timezone) && profile.timezone !== selectedTimezone) {
+      result.push({ value: profile.timezone, label: getTimezoneLabel(profile.timezone) + ' (Host)' })
+    }
+    return result
+  }, [selectedTimezone, profile.timezone])
 
   const handleMonthChange = useCallback(async (year: number, month: number) => {
     try {
@@ -136,16 +184,18 @@ export function BookingPage({ meetingTypes, profile }: BookingPageProps) {
       })
       const parts = formatter.formatToParts(now)
       const tzPart = parts.find((p) => p.type === 'timeZoneName')
-      const timeFormatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-      const time = timeFormatter.format(now)
-      return `${tz.replace(/_/g, ' ')} (${time}) ${tzPart?.value || ''}`
+      return `${getTimezoneLabel(tz)} ${tzPart?.value || ''}`
     } catch {
-      return tz.replace(/_/g, ' ')
+      return getTimezoneLabel(tz)
+    }
+  }
+
+  // Format time in selected timezone
+  const formatTimeInZone = (isoTime: string) => {
+    try {
+      return formatInTimeZone(new Date(isoTime), selectedTimezone, 'h:mm a')
+    } catch {
+      return format(new Date(isoTime), 'h:mm a')
     }
   }
 
@@ -229,11 +279,10 @@ export function BookingPage({ meetingTypes, profile }: BookingPageProps) {
               <h2 className="text-lg font-semibold text-gray-900">Enter Details</h2>
               <div className="mt-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 <p className="font-medium">
-                  {format(new Date(selectedSlot.start), 'EEEE, MMMM d, yyyy')}
+                  {formatInTimeZone(new Date(selectedSlot.start), selectedTimezone, 'EEEE, MMMM d, yyyy')}
                 </p>
                 <p>
-                  {format(new Date(selectedSlot.start), 'h:mm a')} –{' '}
-                  {format(new Date(selectedSlot.end), 'h:mm a')}
+                  {formatTimeInZone(selectedSlot.start)} – {formatTimeInZone(selectedSlot.end)}
                 </p>
               </div>
             </div>
@@ -262,6 +311,7 @@ export function BookingPage({ meetingTypes, profile }: BookingPageProps) {
               selectedSlot={selectedSlot}
               onSelectSlot={handleSelectSlot}
               loading={slotsLoading}
+              timezone={selectedTimezone}
             />
           )}
 
@@ -273,10 +323,45 @@ export function BookingPage({ meetingTypes, profile }: BookingPageProps) {
             />
           )}
 
-          {/* Timezone display */}
-          <div className="mt-6 flex items-center gap-2 text-sm text-gray-500">
-            <Globe className="h-4 w-4" />
-            <span>{formatTimezone(profile.timezone)}</span>
+          {/* Timezone selector */}
+          <div className="relative mt-6">
+            <button
+              type="button"
+              onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+            >
+              <Globe className="h-4 w-4" />
+              <span>{formatTimezone(selectedTimezone)}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showTimezoneDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showTimezoneDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowTimezoneDropdown(false)}
+                />
+                <div className="absolute bottom-full left-0 z-20 mb-1 max-h-64 w-64 overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                  {timezoneOptions.map((tz) => (
+                    <button
+                      key={tz.value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTimezone(tz.value)
+                        setShowTimezoneDropdown(false)
+                      }}
+                      className={`w-full px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50 ${
+                        selectedTimezone === tz.value
+                          ? 'bg-emerald-50 text-emerald-700 font-medium'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {tz.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

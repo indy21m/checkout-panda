@@ -35,6 +35,8 @@ const updateSettingsSchema = z.object({
       })
     )
     .optional(),
+  meetingTitle: z.string().min(1).max(100).optional(),
+  introText: z.string().max(500).nullable().optional(),
 })
 
 export async function GET(): Promise<NextResponse> {

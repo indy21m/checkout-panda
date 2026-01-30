@@ -35,6 +35,8 @@ export default async function CalendarPage() {
         bufferMinutes: settings.bufferMinutes,
         meetingTypes: settings.meetingTypes,
         googleCalendarConnected: settings.googleCalendarConnected ?? false,
+        meetingTitle: settings.meetingTitle ?? 'Intro Call',
+        introText: settings.introText,
       }}
       bookings={serializedBookings}
     />
