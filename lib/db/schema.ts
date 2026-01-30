@@ -244,6 +244,7 @@ export const calendarSettings = pgTable('calendar_settings', {
   googleRefreshToken: text('google_refresh_token'),
   googleTokenExpiresAt: timestamp('google_token_expires_at', { withTimezone: true }),
   googleCalendarId: text('google_calendar_id').default('primary'),
+  googleEmail: text('google_email'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
 

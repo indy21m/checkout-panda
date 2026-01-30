@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { createBooking, getCalendarSettings, updateBookingWithMeetLink } from '@/lib/db/calendar'
 import { isSlotAvailable } from '@/lib/schedule'
 import { sendEmail } from '@/lib/email'
-import { bookingConfirmationEmail } from '@/lib/email-templates'
+import { bookingConfirmationEmail, newBookingNotificationEmail } from '@/lib/email-templates'
 import { createCalendarEvent, ensureValidAccessToken } from '@/lib/google-calendar'
 
 const bookingSchema = z.object({
@@ -92,8 +92,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Send confirmation email (non-blocking)
-    const emailData = bookingConfirmationEmail({
+    // Send confirmation email to guest (non-blocking)
+    const guestEmailData = bookingConfirmationEmail({
       guestName: data.guestName,
       startTime,
       endTime,
@@ -102,9 +102,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
     sendEmail({
       to: data.guestEmail,
-      subject: emailData.subject,
-      html: emailData.html,
+      subject: guestEmailData.subject,
+      html: guestEmailData.html,
     }).catch((err) => console.error('Failed to send confirmation email:', err))
+
+    // Send notification email to admin if Google email is configured (non-blocking)
+    if (settings.googleEmail) {
+      const adminEmailData = newBookingNotificationEmail({
+        guestName: data.guestName,
+        guestEmail: data.guestEmail,
+        startTime,
+        endTime,
+        meetingType: meetingType.label,
+        message: data.message,
+        googleMeetLink,
+      })
+      sendEmail({
+        to: settings.googleEmail,
+        subject: adminEmailData.subject,
+        html: adminEmailData.html,
+      }).catch((err) => console.error('Failed to send admin notification email:', err))
+    }
 
     return NextResponse.json({ booking: { ...booking, googleMeetLink } }, { status: 201 })
   } catch (error) {

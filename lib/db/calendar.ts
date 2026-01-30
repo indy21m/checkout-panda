@@ -44,6 +44,7 @@ export async function updateGoogleTokens(data: {
   googleTokenExpiresAt: Date
   googleCalendarConnected: boolean
   googleCalendarId?: string
+  googleEmail?: string
 }) {
   const result = await db
     .update(calendarSettings)
@@ -64,6 +65,7 @@ export async function disconnectGoogleCalendar() {
       googleAccessToken: null,
       googleRefreshToken: null,
       googleTokenExpiresAt: null,
+      googleEmail: null,
       updatedAt: new Date(),
     })
     .where(eq(calendarSettings.id, 'default'))

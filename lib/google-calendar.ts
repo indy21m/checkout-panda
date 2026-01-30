@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
 const GOOGLE_FREEBUSY_URL = 'https://www.googleapis.com/calendar/v3/freeBusy'
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3/calendars'
 
@@ -41,10 +42,11 @@ export function getGoogleAuthUrl(): string | null {
 
   if (!clientId || !redirectUri) return null
 
-  // Request both freebusy (for availability) and events (for creating meetings with Meet links)
+  // Request freebusy, events, and email scopes
   const scopes = [
     'https://www.googleapis.com/auth/calendar.freebusy',
     'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/userinfo.email',
   ].join(' ')
 
   const params = new URLSearchParams({
@@ -87,6 +89,25 @@ export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens>
   }
 
   return response.json()
+}
+
+/**
+ * Get user email from Google userinfo API
+ */
+export async function getUserEmail(accessToken: string): Promise<string | null> {
+  const response = await fetch(GOOGLE_USERINFO_URL, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    console.error('Failed to get user email from Google:', await response.text())
+    return null
+  }
+
+  const data = await response.json()
+  return data.email ?? null
 }
 
 /**

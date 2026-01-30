@@ -68,6 +68,63 @@ export function bookingCancellationEmail(data: {
 }
 
 /**
+ * New booking notification email sent to the admin
+ */
+export function newBookingNotificationEmail(data: {
+  guestName: string
+  guestEmail: string
+  startTime: Date
+  endTime: Date
+  meetingType: string
+  message?: string
+  googleMeetLink?: string
+}): { subject: string; html: string } {
+  const date = format(data.startTime, 'EEEE, MMMM d, yyyy')
+  const time = `${format(data.startTime, 'h:mm a')} – ${format(data.endTime, 'h:mm a')}`
+
+  const meetLinkSection = data.googleMeetLink
+    ? `
+      <div style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+        <p style="margin: 0 0 12px 0; color: white; font-weight: 600;">Google Meet Link</p>
+        <a href="${data.googleMeetLink}" style="display: inline-block; background: white; color: #10b981; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+          Join Meeting
+        </a>
+        <p style="margin: 12px 0 0 0; color: rgba(255,255,255,0.8); font-size: 12px;">${data.googleMeetLink}</p>
+      </div>
+    `
+    : ''
+
+  const messageSection = data.message
+    ? `
+      <div style="background: #fefce8; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <p style="margin: 0 0 8px 0; color: #854d0e; font-weight: 600; font-size: 12px; text-transform: uppercase;">Guest Message</p>
+        <p style="margin: 0; color: #713f12; white-space: pre-wrap;">${escapeHtml(data.message)}</p>
+      </div>
+    `
+    : ''
+
+  return {
+    subject: `New booking: ${escapeHtml(data.guestName)} on ${date}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #111; margin-bottom: 8px;">New Booking Received</h2>
+        <p style="color: #555; margin-bottom: 24px;">You have a new meeting scheduled.</p>
+        <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+          <p style="margin: 0 0 8px 0; color: #333;"><strong>Guest:</strong> ${escapeHtml(data.guestName)}</p>
+          <p style="margin: 0 0 8px 0; color: #333;"><strong>Email:</strong> <a href="mailto:${escapeHtml(data.guestEmail)}" style="color: #10b981;">${escapeHtml(data.guestEmail)}</a></p>
+          <p style="margin: 0 0 8px 0; color: #333;"><strong>Date:</strong> ${date}</p>
+          <p style="margin: 0 0 8px 0; color: #333;"><strong>Time:</strong> ${time}</p>
+          <p style="margin: 0; color: #333;"><strong>Type:</strong> ${escapeHtml(data.meetingType)}</p>
+        </div>
+        ${messageSection}
+        ${meetLinkSection}
+        <p style="color: #888; font-size: 14px;">This booking has been added to your calendar.</p>
+      </div>
+    `,
+  }
+}
+
+/**
  * Admin message email sent to the guest
  */
 export function adminMessageEmail(data: {

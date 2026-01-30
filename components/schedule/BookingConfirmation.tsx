@@ -28,7 +28,7 @@ export function BookingConfirmation({
       <p className="mb-6 text-gray-600">
         Thanks, {guestName}! Your meeting has been scheduled.
       </p>
-      <div className="mx-auto max-w-sm rounded-xl border border-gray-200 bg-gray-50 p-6 text-left">
+      <div className="mx-auto rounded-xl border border-gray-200 bg-gray-50 p-6 text-left" style={{ width: '100%', maxWidth: '24rem' }}>
         <div className="space-y-3">
           <div>
             <p className="text-xs font-medium uppercase text-gray-500">Date</p>

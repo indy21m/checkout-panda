@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminRequest } from '@/lib/auth'
-import { exchangeCodeForTokens } from '@/lib/google-calendar'
+import { exchangeCodeForTokens, getUserEmail } from '@/lib/google-calendar'
 import { updateGoogleTokens } from '@/lib/db/calendar'
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -30,11 +30,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const tokens = await exchangeCodeForTokens(code)
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000)
 
+    // Fetch user email from Google
+    const googleEmail = await getUserEmail(tokens.access_token)
+
     await updateGoogleTokens({
       googleAccessToken: tokens.access_token,
       googleRefreshToken: tokens.refresh_token ?? '',
       googleTokenExpiresAt: expiresAt,
       googleCalendarConnected: true,
+      googleEmail: googleEmail ?? undefined,
     })
 
     return NextResponse.redirect(

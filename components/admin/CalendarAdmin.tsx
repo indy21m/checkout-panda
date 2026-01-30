@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CalendarAvailabilityTab } from '@/components/admin/CalendarAvailabilityTab'
 import { CalendarBookingsTab } from '@/components/admin/CalendarBookingsTab'
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, Users, ExternalLink } from 'lucide-react'
 import type { WeeklySchedule, MeetingType } from '@/types'
 
 interface CalendarSettings {
@@ -55,7 +55,7 @@ export function CalendarAdmin({ settings, bookings }: CalendarAdminProps) {
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
 
-        <div className="relative">
+        <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
               <Calendar className="h-6 w-6" />
@@ -67,6 +67,15 @@ export function CalendarAdmin({ settings, bookings }: CalendarAdminProps) {
               </p>
             </div>
           </div>
+          <a
+            href="/schedule"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm transition-all hover:bg-white/30"
+          >
+            View Booking Page
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
       </motion.div>
 
@@ -77,17 +86,17 @@ export function CalendarAdmin({ settings, bookings }: CalendarAdminProps) {
         transition={{ duration: 0.4, delay: 0.1 }}
       >
         <Tabs defaultValue="availability" className="w-full">
-          <TabsList className="mb-6 grid w-full max-w-md grid-cols-2 bg-gray-100/80 p-1">
+          <TabsList className="mb-6 bg-gray-100/80 p-1" style={{ width: '100%', maxWidth: '28rem' }}>
             <TabsTrigger
               value="availability"
-              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <Calendar className="h-4 w-4" />
               Availability
             </TabsTrigger>
             <TabsTrigger
               value="bookings"
-              className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm"
             >
               <Users className="h-4 w-4" />
               Bookings
